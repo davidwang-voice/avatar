@@ -1,0 +1,193 @@
+/****************************************************************************
+ Copyright (c) 2017-2018 Xiamen Yaji Software Co., Ltd.
+ 
+ http://www.cocos2d-x.org
+ 
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ 
+ The above copyright notice and this permission notice shall be included in
+ all copies or substantial portions of the Software.
+ 
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ THE SOFTWARE.
+ ****************************************************************************/
+
+#include "AppDelegate.h"
+#include "RoomScene.h"
+
+// #define USE_AUDIO_ENGINE 1
+// #define USE_SIMPLE_AUDIO_ENGINE 1
+
+#if USE_AUDIO_ENGINE && USE_SIMPLE_AUDIO_ENGINE
+#error "Don't use AudioEngine and SimpleAudioEngine at the same time. Please just select one in your game!"
+#endif
+
+#if USE_AUDIO_ENGINE
+#include "audio/include/AudioEngine.h"
+using namespace cocos2d::experimental;
+#elif USE_SIMPLE_AUDIO_ENGINE
+#include "audio/include/SimpleAudioEngine.h"
+using namespace CocosDenshion;
+#endif
+
+USING_NS_CC;
+
+
+typedef struct tagResource {
+    cocos2d::Size size;		// Size
+    char directory[100];	// Path of resource
+} Resource;
+
+int AppDelegate::g_lastOrientation = 0;
+
+static cocos2d::Size designResolutionSize = cocos2d::Size(960, 1);
+
+void AppDelegate::setDesignResolutionSize(float width, float height) {
+    designResolutionSize.width = width;
+    designResolutionSize.height = height;
+}
+
+const Size& AppDelegate::getDesignResolutionSize() {
+    return designResolutionSize;
+}
+
+AppDelegate::AppDelegate()
+{
+}
+
+AppDelegate::~AppDelegate() 
+{
+#if USE_AUDIO_ENGINE
+    AudioEngine::end();
+#elif USE_SIMPLE_AUDIO_ENGINE
+    SimpleAudioEngine::end();
+#endif
+}
+
+// if you want a different context, modify the value of glContextAttrs
+// it will affect all platforms
+void AppDelegate::initGLContextAttrs()
+{
+    // set OpenGL context attributes: red,green,blue,alpha,depth,stencil
+    GLContextAttrs glContextAttrs = {8, 8, 8, 8, 24, 8, 0};
+
+    GLView::setGLContextAttrs(glContextAttrs);
+}
+
+// if you want to use the package manager to install more packages,  
+// don't modify or remove this function
+static int register_all_packages()
+{
+    return 0; //flag for packages manager
+}
+
+bool AppDelegate::applicationDidFinishLaunching() {
+    // initialize director
+    auto director = Director::getInstance();
+    auto glview = director->getOpenGLView();
+    AppDelegate::g_lastOrientation = 0;
+
+    if (!glview) {
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32) || (CC_TARGET_PLATFORM == CC_PLATFORM_MAC) || (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX)
+        glview = GLViewImpl::createWithRect("libkkcocos2dx", cocos2d::Rect(0, 0, designResolutionSize.width, designResolutionSize.height));
+#else
+        glview = GLViewImpl::create("ccgameroom");
+#endif
+        director->setOpenGLView(glview);
+    }
+
+    // turn on display FPS
+    director->setDisplayStats(false);
+
+    // set FPS. the default value is 1.0/60 if you don't call this
+    director->setAnimationInterval(1.0f / 60);
+
+    // Set the design resolution
+    auto screenSize = glview->getFrameSize();
+    if (screenSize.height > screenSize.width)
+        glview->setDesignResolutionSize(designResolutionSize.width, designResolutionSize.height, ResolutionPolicy::FIXED_WIDTH);
+    else
+        glview->setDesignResolutionSize(designResolutionSize.height, designResolutionSize.width, ResolutionPolicy::FIXED_WIDTH);
+
+    auto winSize = Director::getInstance()->getWinSize();
+    auto winSizeInPixel = Director::getInstance()->getWinSizeInPixels();
+    auto visibleSize = Director::getInstance()->getVisibleSize();
+
+
+    log("designResolutionSize width: %f, designResolutionSize height: %f", designResolutionSize.width, designResolutionSize.height);
+
+    log("Screen width: %f, screen height: %f", screenSize.width, screenSize.height);
+    log("WinSize width: %f, WinSize height: %f", winSize.width, winSize.height);
+    log("WinSizeInPixel width: %f, WinSizeInPixel height: %f", winSizeInPixel.width, winSizeInPixel.height);
+    log("VisibleSize width: %f, VisibleSize height: %f", visibleSize.width, visibleSize.height);
+    log("Visible origin X: %f, Visible origin Y: %f", Director::getInstance()->getVisibleOrigin().x, Director::getInstance()->getVisibleOrigin().y);
+
+    // if the screen's height is larger than the height of medium size.
+    // if (screenSize.height > mediumResolutionSize.height)
+    // {
+    //     director->setContentScaleFactor(MIN(largeResolutionSize.height/designResolutionSize.height, largeResolutionSize.width/designResolutionSize.width));
+    // }
+    // // if the screen's height is larger than the height of small size.
+    // else if (screenSize.height > smallResolutionSize.height)
+    // {        
+    //     director->setContentScaleFactor(MIN(mediumResolutionSize.height/designResolutionSize.height, mediumResolutionSize.width/designResolutionSize.width));
+    // }
+    // // if the screen's height is smaller than the height of medium size.
+    // else
+    // {        
+    //     director->setContentScaleFactor(MIN(smallResolutionSize.height/designResolutionSize.height, smallResolutionSize.width/designResolutionSize.width));
+    // }
+
+    register_all_packages();
+
+    // create a scene. it's an autorelease object
+    auto scene = RoomScene::createScene();
+
+    // run
+    director->runWithScene(scene);
+
+    return true;
+}
+
+// This function will be called when the app is inactive. Note, when receiving a phone call it is invoked.
+void AppDelegate::applicationDidEnterBackground() {
+    Director::getInstance()->stopAnimation();
+    log("Screen applicationDidEnterBackground");
+
+#if USE_AUDIO_ENGINE
+    AudioEngine::pauseAll();
+#elif USE_SIMPLE_AUDIO_ENGINE
+    SimpleAudioEngine::getInstance()->pauseBackgroundMusic();
+    SimpleAudioEngine::getInstance()->pauseAllEffects();
+#endif
+}
+
+// this function will be called when the app is active again
+void AppDelegate::applicationWillEnterForeground() {
+    Director::getInstance()->startAnimation();
+    log("Screen applicationWillEnterForeground");
+
+#if USE_AUDIO_ENGINE
+    AudioEngine::resumeAll();
+#elif USE_SIMPLE_AUDIO_ENGINE
+    SimpleAudioEngine::getInstance()->resumeBackgroundMusic();
+    SimpleAudioEngine::getInstance()->resumeAllEffects();
+#endif
+}
+
+void AppDelegate::applicationScreenSizeChanged(int newWidth, int newHeight) {
+    log("applicationScreenSizeChanged");
+    Scene *runningScene = Director::getInstance()->getRunningScene();
+    if (auto scene = dynamic_cast<RoomScene*>(runningScene))
+        scene->changeDirection(newWidth, newHeight);
+}
