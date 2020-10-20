@@ -13,62 +13,71 @@
 using namespace std;
 using namespace cocos2d;
 
+typedef struct {
+    int rank;
+    const char *path;
+    const char *uid;
+    const char *name;
+    bool ssr;
+
+    bool mute;
+    bool wave;
+} _Avatar_I;
+
+
 class RoomManager {
 
 private:
-    const float RANK_1_MARGIN_TOP = 1080; // in pixel according to 1920x1080 map
-    const int MAX_ROWS_LAND = 5;
-    const int MAX_ROWS_PORT = 8;
-    const int ROW_OFFSET_LAND = 110;
-    const int ROW_OFFSET_PORT = 130;
-    const int ROLE_OFFSET_LAND = 72;
-    const int ROLE_OFFSET_PORT = 80;
-    const int ROLE_OFFSET_FIRST_ROW = 80;
+    static const int _STAND_ARC_HEIGHT = 60;
+    static const int _STAND_MAX_ROW_COUNT = 7;
+    static const int _STAND_ROW_HEIGHT = 140;
+    static const int _STAND_FRONT_ROW_HEIGHT = 150;
+    static const int _STAND_FRONT_ROW_TOP = 1100;
 
-    Scene* scene;
-
-    Vec2 visibleOrigin = Vec2::ZERO;
-    Size visibleSize = Size::ZERO;
-    float contentFactor;
-    Vec2 topMiddlePoint;
-    bool isPortrait;
+    static const int _STAGE_BLOCK_COUNT = 3;
+    static const int _STAGE_BLOCK_WIDTH = 120;
+    static const int _STAGE_BLOCK_TOP = 600;
 
 
-    Vector<RoomAvatar*> avatarList; // (id, avatar sprite)
-//    map<int, RoomAvatar*> avatarMap; // (id, avatar sprite)
-    Vector<RoomGift*> giftList; // (gift sprite)
+    static const int _GIFT_TABLE_WIDTH = 960;
+    static const int _GIFT_TABLE_HEIGHT = 90;
+    static const int _GIFT_TABLE_TOP = 915;
 
+    Scene* _scene;
+    Vec2 _visibleOrigin = Vec2::ZERO;
+    Size _visibleSize = Size::ZERO;
+    Vec2 _centerPosition;
+    float _scaleFactor;
+    int _standRowCount[_STAND_MAX_ROW_COUNT];
+    Vector<RoomAvatar*> _standAvatars;
+    Vector<RoomAvatar*> _stageAvatars;
+    Vector<RoomGift*> _giftHolder;
 
-    mutable map<int, int> rowSeatsAccMapLand;
-    mutable map<int, int> rowSeatsAccMapPort;
+    const Vec2 getStagePosition(int index) const;
+    const Vec2 getStandPosition(int index) const;
+    RoomAvatar* findStageAvatar(const char* uid);
+    RoomAvatar* findStandAvatar(const char* uid);
+    RoomAvatar* findAvatar(const char* uid);
+    RoomAvatar* createAvatar(int rank, const char* uid, const char* name, const char* path, const Vec2 &pos);
+    RoomAvatar* removeAvatar(const char* uid);
 
-    void initRowSeats();
-    const int getRowByRank(int rank, bool isPortrait) const;
-    const int getRankInRow(int rank, int rowIndex, bool isPortrait) const;
+    void reorganizeStageAvatars();
+    void reorganizeStandAvatars();
 
-    void tryRemoveGift();
-
-    void reorganizeAvatars();
-    void presentGift(const Vec2& pos, const char* imagePath);
-
-    RoomAvatar* addAvatar(int id, int ranking, const char* imagePath, const char* name);
-    void removeAvatar(int id);
-    RoomAvatar* findAvatar(int id);
+    void createAndPresentGift(const Vec2& pos, const char* imagePath);
+    void limitGiftHolderSize();
 
 public:
-    void initScene(Scene* scene);
     virtual ~RoomManager();
-    virtual const Vec2 getPosition(int rank, bool isPortrait) const;
-
-
-
-    void receiveGiftMessage(int id, const char* imagePath);
-    void receiveChatMessage(int id, const char* content);
+    void init(Scene* scene);
 
     void updateStageAvatars(const char* json);
     void updateStandAvatars(const char* json);
-    void backOffStageAvatar(int id);
-    void backOffStandAvatar(int id);
+    void backOffStageAvatar(const char* uid);
+    void backOffStandAvatar(const char* uid);
+
+    void receiveGiftMessage(const char* uid, const char* imagePath);
+    void receiveChatMessage(const char* uid, const char* content);
 
     void releaseResource();
 

@@ -4,6 +4,7 @@
 
 #include <cmath>
 #include <utility>
+#include <cocos/editor-support/cocostudio/DictionaryHelper.h>
 #include "AppDelegate.h"
 #include "RoomManager.h"
 #include "AudioManager.h"
@@ -12,18 +13,6 @@
 #include "json/document.h"
 
 using namespace rapidjson;
-
-
-
-typedef struct {
-    int rank;
-    char *path;
-    char *id;
-    char *name;
-    bool ssr;
-} _Avatar_I;
-
-
 
 USING_NS_CC;
 
@@ -36,365 +25,346 @@ RoomManager *RoomManager::getInstance() {
     return instance;
 }
 
-void RoomManager::initScene(Scene* scene) {
-    this->scene = scene;
-    this->visibleOrigin = Director::getInstance()->getVisibleOrigin();
-    this->visibleSize = Director::getInstance()->getVisibleSize();
-    this->contentFactor = Director::getInstance()->getContentScaleFactor();
-    auto centerX = visibleOrigin.x + visibleSize.width/2;
-    auto topY = visibleOrigin.y + visibleSize.height;
-    this->topMiddlePoint = Vec2(centerX, topY);
-
-    auto size = Director::getInstance()->getOpenGLView()->getFrameSize();
-    this->isPortrait = size.width < size.height;
-
-    initRowSeats();
-}
-//
-//VoiceRoomManager::VoiceRoomManager(Scene* scene) {
-//    this->scene = scene;
-//    this->visibleOrigin = Director::getInstance()->getVisibleOrigin();
-//    this->visibleSize = Director::getInstance()->getVisibleSize();
-//    this->contentFactor = Director::getInstance()->getContentScaleFactor();
-//    auto centerX = visibleOrigin.x + visibleSize.width/2;
-//    auto topY = visibleOrigin.y + visibleSize.height;
-//    this->topMiddlePoint = Vec2(centerX, topY);
-//
-//    auto size = Director::getInstance()->getOpenGLView()->getFrameSize();
-//    this->isPortrait = size.width < size.height;
-//
-//    initRowSeats();
-//}
-
 RoomManager::~RoomManager() {
-    avatarList.clear();
-//    map<int, RoomAvatar*>::iterator iter;
-//    iter = avatarMap.begin();
-//    while (iter != avatarMap.end()) {
-//        delete iter->second;
-//        iter++;
-//    }
-//
-//    avatarMap.clear();
+    _giftHolder.clear();
+    _standAvatars.clear();
+    _stageAvatars.clear();
 }
 
-void RoomManager::initRowSeats() {
-    int seats = 0;
+void RoomManager::init(Scene* scene) {
+    this->_scene = scene;
+    this->_visibleOrigin = Director::getInstance()->getVisibleOrigin();
+    this->_visibleSize = Director::getInstance()->getVisibleSize();
+    this->_scaleFactor = Director::getInstance()->getContentScaleFactor();
+    this->_centerPosition = Vec2(_visibleOrigin.x + _visibleSize.width / 2, _visibleOrigin.y + _visibleSize.height);
 
-    // init acc map for portrait
-    // 13, 12, 13, 12, 13, 12, 13, 12
-    for (int i = 0; i < MAX_ROWS_PORT; i++) {
-        int seatsInRow = (i % 2) == 0 ? 13 : 12;
-        seats += seatsInRow;
-        rowSeatsAccMapPort[i] = seats;
+//    auto size = Director::getInstance()->getOpenGLView()->getFrameSize();
+
+
+    for (int i = 0; i < _STAND_MAX_ROW_COUNT; ++i) {
+        if (i == 0) {
+            _standRowCount[0] = 13;
+        } else {
+            _standRowCount[i] = _standRowCount[i - 1] + 13;
+        }
     }
-
-    // init acc map for landscape
-    // 13, 22, 23, 22, 20
-    rowSeatsAccMapLand[0] = 13;
-    rowSeatsAccMapLand[1] = 35;
-    rowSeatsAccMapLand[2] = 58;
-    rowSeatsAccMapLand[3] = 80;
-    rowSeatsAccMapLand[4] = 100;
 }
 
 
 void RoomManager::updateStageAvatars(const char* json) {
-
-    log("updateStageAvatars %s", json);
-    
-    rapidjson::Document document;
-    document.Parse<rapidjson::kParseDefaultFlags>(json);
-
-    if (document.HasParseError()) {
-
-        log("GetParseError %s\n", document.GetParseError());
+    rapidjson::Document _document;
+    _document.Parse<rapidjson::kParseDefaultFlags>(json);
+    if (_document.HasParseError()) {
+        log("parse stage avatar json error %s\n", _document.GetParseError());
         return;
     }
+    if (!_document.IsArray()) {
+        log("stage json is not array %s\n", json);
+        return;
+    }
+    rapidjson::Value& _data_arr = _document;
 
-    std::vector<_Avatar_I> _avatar_arr;
+    Vector<RoomAvatar*> _new_stage_avatars;
+    for (int i = 0; i < _data_arr.Size(); ++i) {
+        auto _position = getStagePosition(i);
+        if (_position.isZero()) continue;
 
-    if (document.IsArray()) {
+        rapidjson::Value& _value = _data_arr[i];
+        const char *_path = cocostudio::DICTOOL->getStringValue_json(_value, "path");
+        const char *_uid = cocostudio::DICTOOL->getStringValue_json(_value, "uid");
+        const char *_name = cocostudio::DICTOOL->getStringValue_json(_value, "name");
 
-        rapidjson::Value& array = document;
+        bool _ssr = cocostudio::DICTOOL->getBooleanValue_json(_value, "ssr");
 
-        for (int i = 0; i < array.Size(); ++i) {
-            rapidjson::Value& _id = array[i];
+        bool _mute = cocostudio::DICTOOL->getBooleanValue_json(_value, "mute");
+        bool _wave = cocostudio::DICTOOL->getBooleanValue_json(_value, "wave");
 
-            _Avatar_I _avatar;
-            _avatar.rank = _id["rank"].GetInt();
-            _avatar.path = const_cast<char *>(_id["path"].GetString());
-            _avatar.id = const_cast<char *>(_id["id"].GetString());
-            _avatar.name = const_cast<char *>(_id["name"].GetString());
-            _avatar.ssr = _id["ssr"].GetBool();
-            _avatar_arr.push_back(_avatar);
+        auto _old_stage_avatar = this->findStageAvatar(_uid);
+        if (nullptr != _old_stage_avatar) {
+            _new_stage_avatars.pushBack(_old_stage_avatar);
+        } else {
+            auto _old_stand_avatar = this->findStandAvatar(_uid);
+            if (nullptr != _old_stand_avatar) {
+                _old_stand_avatar->jumpTo(_position);
+
+                _standAvatars.eraseObject(_old_stand_avatar);
+
+                _new_stage_avatars.pushBack(_old_stand_avatar);
+            } else {
+
+                auto _new_stage_avatar = createAvatar(i + 1, _uid, _name, _path, _position);
+                _new_stage_avatars.pushBack(_new_stage_avatar);
+            }
         }
     }
 
-    for (int i = 0; i < _avatar_arr.size(); ++i) {
-        auto _avatar = _avatar_arr.at(i);
-        addAvatar(_avatar.rank, _avatar.rank, _avatar.path, _avatar.name);
+    for (int i = 0; i < _stageAvatars.size(); ++i) {
+        auto _avatar = _stageAvatars.at(i);
+        if (!_new_stage_avatars.contains(_avatar)) {
+            if (_scene) {
+                _scene->removeChild(_avatar);
+            }
+        }
     }
-
+    _stageAvatars.clear();
+    _stageAvatars.pushBack(_new_stage_avatars);
+    reorganizeStageAvatars();
+    reorganizeStandAvatars();
 }
 
 void RoomManager::updateStandAvatars(const char* json) {
+    rapidjson::Document _document;
+    _document.Parse<rapidjson::kParseDefaultFlags>(json);
+    if (_document.HasParseError()) {
+        log("parse stand avatar json error %s\n", _document.GetParseError());
+        return;
+    }
+    if (!_document.IsArray()) {
+        log("stand json is not array %s\n", json);
+        return;
+    }
+    rapidjson::Value& _data_arr = _document;
+
+    Vector<RoomAvatar*> _new_stand_avatars;
+    for (int i = 0; i < _data_arr.Size(); ++i) {
+        auto _position = getStandPosition(i);
+        if (_position.isZero()) continue;
+
+        rapidjson::Value& _value = _data_arr[i];
+
+        const char *_path = cocostudio::DICTOOL->getStringValue_json(_value, "path");
+        const char *_uid = cocostudio::DICTOOL->getStringValue_json(_value, "uid");
+        const char *_name = cocostudio::DICTOOL->getStringValue_json(_value, "name");
+
+        auto _old_stand_avatar = this->findStandAvatar(_uid);
+        if (nullptr != _old_stand_avatar) {
+            _new_stand_avatars.pushBack(_old_stand_avatar);
+        } else {
+            auto _new_stand_avatar = createAvatar(i + 1, _uid, _name, _path, _position);
+            _new_stand_avatars.pushBack(_new_stand_avatar);
+        }
+    }
+
+
+    for (int i = 0; i < _standAvatars.size(); ++i) {
+        auto _avatar = _standAvatars.at(i);
+        if (!_new_stand_avatars.contains(_avatar)) {
+            if (_scene) {
+                _scene->removeChild(_avatar);
+            }
+        }
+    }
+
+    _standAvatars.clear();
+    _standAvatars.pushBack(_new_stand_avatars);
+    reorganizeStandAvatars();
+}
+
+
+void RoomManager::backOffStageAvatar(const char* uid) {
 
 }
 
-void RoomManager::backOffStageAvatar(int id) {
+void RoomManager::backOffStandAvatar(const char* uid) {
 
 }
 
-void RoomManager::backOffStandAvatar(int id) {
+void RoomManager::receiveGiftMessage(const char* uid, const char* imagePath) {
+    auto _avatar = this->findAvatar(uid);
+    if (nullptr == _avatar) return;
+    _avatar->jumpPresent();
+    createAndPresentGift(_avatar->getPosition(), imagePath);
+}
 
+void RoomManager::receiveChatMessage(const char* uid, const char* content) {
+    auto _avatar = this->findAvatar(uid);
+    if (nullptr == _avatar) return;
+    _avatar->popChatBubble(content);
 }
 
 void RoomManager::releaseResource() {
 
+    
 }
 
-RoomAvatar* RoomManager::addAvatar(int id, int ranking, const char *imagePath, const char* name) {
 
-    auto avatar = RoomAvatar::create(id, ranking, imagePath, name);
-
-    // setup position
-    auto targetPos = getPosition(ranking, isPortrait);
-    if (AppDelegate::g_lastOrientation == 1) {
-        // entry action, divided into left/right sides
-        if (targetPos.x < visibleOrigin.x + visibleSize.width / 2) {
-            avatar->setPosition(Vec2(visibleOrigin.x - avatar->getContentSize().width, targetPos.y));
-        } else {
-            avatar->setPosition(
-                    Vec2(visibleOrigin.x + visibleSize.width + avatar->getContentSize().width,
-                         targetPos.y));
-        }
-        avatar->moveTo(targetPos);
-    } else if (AppDelegate::g_lastOrientation == 1 && !isPortrait) {
-        // portrait to landscape
-        log("portrait to landscape");
-        auto startPos = getPosition(ranking, !isPortrait);
-        avatar->setPosition(startPos);
-        avatar->jumpTo(targetPos);
-    } else if (AppDelegate::g_lastOrientation == 2 && isPortrait) {
-        // landscape to portrait
-        log("landscape to portrait");
-        auto startPos = getPosition(ranking, !isPortrait);
-        avatar->setPosition(startPos);
-        avatar->jumpTo(targetPos);
-    }
-
-    if (scene) {
-        avatarList.pushBack(avatar);
-//        avatarList.insert(id - 1, avatar);
-//        avatarMap.insert(pair<int, RoomAvatar*>(id, avatar));
-        //avatarMap.insert(std::pair<int, VoiceRoomAvatar*>(id, avatar)); // TODO: fix this
-        scene->addChild(avatar, 1);
-    }
-    return avatar;
+const Vec2 RoomManager::getStagePosition(int index) const {
+    if (index >= _STAGE_BLOCK_COUNT) return Vec2::ZERO;
+    float _right_x = _visibleOrigin.x + _visibleSize.width;
+    float _target_x = _right_x - (_STAGE_BLOCK_COUNT - index) * _STAGE_BLOCK_WIDTH / _scaleFactor;
+    float _target_y = _centerPosition.y - _STAGE_BLOCK_TOP / _scaleFactor;
+    return Vec2(_target_x , _target_y);
 }
 
-void RoomManager::removeAvatar(int id) {
+const Vec2 RoomManager::getStandPosition(int index) const {
 
-
-    auto avatar = findAvatar(id);
-    if (nullptr != avatar) {
-        avatarList.eraseObject(avatar);
-        if(scene) {
-            scene->removeChild(avatar);
+    int _row = -1;
+    for (int i = 0; i < _STAND_MAX_ROW_COUNT; ++i) {
+        if (index < _standRowCount[i]) {
+            _row = i;
+            break;
         }
     }
-    reorganizeAvatars();
+    if (_row < 0) return Vec2::ZERO;
+    int _column = _row == 0 ? index : index - _standRowCount[_row - 1];
 
+    int _count = _row == 0 ? _standRowCount[0] : _standRowCount[_row] - _standRowCount[_row - 1];
+    float _block_w = (float) _visibleSize.width / _count;
+
+    float _refer_x = _centerPosition.x;
+    float _refer_y = _centerPosition.y - _STAND_FRONT_ROW_TOP / _scaleFactor -
+            (_row == 0 ? 0 : (_STAND_FRONT_ROW_HEIGHT + (_row - 1) * _STAND_ROW_HEIGHT) / _scaleFactor);
+    float _arc_seg = _STAND_ARC_HEIGHT / (_count / 2) / _scaleFactor;
+
+
+    int _direct_x = (float) pow(-1, _column % 2);
+    float _offset_x = _count % 2 == 0 ? _block_w / 2 : 0;
+    float _target_x = _refer_x + (_offset_x + ((_count % 2 + _column) / 2) * _block_w) * _direct_x;
+    float _target_y = _refer_y + (_column / 2) * _arc_seg;
+
+    return Vec2(_target_x , _target_y);
 }
 
-RoomAvatar* RoomManager::findAvatar(int id) {
-
-    int length = avatarList.size();
-    for (int i = 0; i < length; ++i) {
-        auto avatar = avatarList.at(i);
-        if (id == avatar->getId())
-            return avatar;
+RoomAvatar* RoomManager::findStageAvatar(const char *uid) {
+    for (int i = 0; i < _stageAvatars.size(); ++i) {
+        auto _avatar = _stageAvatars.at(i);
+        if (strcmp(uid, _avatar->getUid()) == 0) return _avatar;
     }
-
     return nullptr;
-
-//    map<int, RoomAvatar*>::iterator iter;
-//    iter = avatarMap.find(id);
-//    if (iter != avatarMap.end()) {
-//        return iter->second;
-//    } else {
-//        return nullptr;
-//    }
 }
 
-void RoomManager::receiveGiftMessage(int id, const char* imagePath) {
-    auto avatar = findAvatar(id);
-    if (nullptr != avatar) {
-        avatar->jumpPresent();
-        presentGift(avatar->getPosition(), imagePath);
+RoomAvatar* RoomManager::findStandAvatar(const char *uid) {
+    for (int i = 0; i < _standAvatars.size(); ++i) {
+        auto _avatar = _standAvatars.at(i);
+        if (strcmp(uid, _avatar->getUid()) == 0) return _avatar;
+    }
+    return nullptr;
+}
+
+RoomAvatar* RoomManager::findAvatar(const char *uid) {
+
+    auto _avatar = this->findStageAvatar(uid);
+    if (nullptr != _avatar) {
+        return _avatar;
+    } else {
+        return this->findStandAvatar(uid);
     }
 }
 
-void RoomManager::receiveChatMessage(int id, const char* content) {
-    auto avatar = findAvatar(id);
 
-    if (nullptr != avatar) {
-        avatar->popChatBubble(content);
+RoomAvatar* RoomManager::createAvatar(int rank, const char* uid, const char* name, const char* path, const Vec2 &pos) {
+
+    auto _avatar = RoomAvatar::create(rank, rank, uid, path, name);
+    if (pos.x < _centerPosition.x) {
+        _avatar->setPosition(Vec2(_visibleOrigin.x - _avatar->getContentSize().width, pos.y));
+    } else {
+        _avatar->setPosition(Vec2(_visibleOrigin.x + _visibleSize.width + _avatar->getContentSize().width, pos.y));
     }
+    if (_scene) {
+        _scene->addChild(_avatar, 1);
+    }
+    return _avatar;
 }
 
-void RoomManager::presentGift(const Vec2& pos, const char* imagePath) {
 
-    AudioManager::getInstance()->playBG();
+RoomAvatar* RoomManager::removeAvatar(const char *uid) {
+    auto _avatar = findStageAvatar(uid);
+    if (nullptr != _avatar) {
+        _stageAvatars.eraseObject(_avatar);
+        if(_scene) {
+            _scene->removeChild(_avatar);
+        }
+    } else {
+        _avatar = findStandAvatar(uid);
+        if (nullptr != _avatar) {
+
+            _standAvatars.eraseObject(_avatar);
+            if(_scene) {
+                _scene->removeChild(_avatar);
+            }
+        }
+    }
+    reorganizeStandAvatars();
+    return _avatar;
+}
+
+void RoomManager::createAndPresentGift(const Vec2& pos, const char* imagePath) {
+
+//    AudioManager::getInstance()->playBG();
 
     float start_x = pos.x;
     float start_y = pos.y + 60;
 
-
-    int index = giftList.size();
+    int index = _giftHolder.size();
     auto gift = RoomGift::create(index, index, "gift/heart.png");
     gift->setPosition(Vec2(start_x, start_y));
 
+    float _coord_x = _GIFT_TABLE_WIDTH / 2;
+    float _coord_y = _GIFT_TABLE_HEIGHT / 2;
+    float _space_x = 40;
+    float _space_y = 0;
 
-    float target_x = (rand() % (600)) + topMiddlePoint.x - 300;
-    float target_y = (rand() % (30)) + topMiddlePoint.y - RANK_1_MARGIN_TOP/contentFactor + 120;
+    float _rand_x = rand() % (int)((_coord_x - _space_x) * 2) - (_coord_x - _space_x);
+    float _rand_y = std::sqrt((1 - _rand_x * _rand_x / _coord_x / _coord_x) * _coord_y * _coord_y);
 
+    float _target_x = _rand_x + _centerPosition.x;
+    float _target_y = _centerPosition.y - (_GIFT_TABLE_TOP + rand() % (int)((_rand_y - _space_y) * 2) - (_rand_y - _space_y));
 
-    gift->present(Vec2(target_x, target_y));
-    if (scene) {
-        giftList.pushBack(gift);
-        scene->addChild(gift, 10000);
+    gift->present(Vec2(_target_x, _target_y));
+    if (_scene) {
+        _scene->addChild(gift, 10000);
     }
-
-    tryRemoveGift();
+    _giftHolder.pushBack(gift);
+    limitGiftHolderSize();
 }
 
 
-void RoomManager::tryRemoveGift() {
-    int length = giftList.size();
-    int limit = 20;
-    if(length > limit * 2) {
-        auto removeList = Vector<RoomGift*>(limit);
+void RoomManager::limitGiftHolderSize() {
+    int _length = _giftHolder.size();
+    int _limit = 200;
+    if(_length > _limit * 2) {
+        auto _removeList = Vector<RoomGift*>(_limit);
 
-        for (int i = 0; i < length; ++i) {
-            if (i < limit) {
-                removeList.pushBack(giftList.at(i));
+        for (int i = 0; i < _length; ++i) {
+            if (i < _limit) {
+                _removeList.pushBack(_giftHolder.at(i));
             } else {
                 break;
             }
         }
 
-        auto moveBy = MoveBy::create(1, Vec2(0, 20));
-        auto fadeTo = FadeTo::create(1, 0);
-        auto action = Spawn::createWithTwoActions(moveBy, fadeTo);
+        for (int i = 0; i < _limit; ++i) {
+            auto _gift = dynamic_cast<RoomGift*>(_removeList.at(i));
 
-        for (int i = 0; i < limit; ++i) {
-            auto object = removeList.at(i);
-            auto gift = dynamic_cast<RoomGift*>(object);
-
-            auto removeCall = CallFunc::create([&](){
-                if (scene) {
-                    scene->removeChild(gift);
-                }
+            auto _removeFunc = CallFunc::create([_gift](){
+                _gift->removeFromParentAndCleanup(true);
             });
-            auto sequence = Sequence::create(action->clone(), removeCall, nullptr);
-            gift->runAction(sequence);
-
-            giftList.eraseObject(gift);
+            auto _action = Spawn::createWithTwoActions(
+                    MoveBy::create(0.5, Vec2(0, 40)),
+                    FadeOut::create(0.5)
+                    );
+            auto _sequence = Sequence::create(_action, _removeFunc, nullptr);
+            _gift->runAction(_sequence);
+            _giftHolder.eraseObject(_gift);
         }
-        removeList.clear();
+        _removeList.clear();
     }
 }
 
-
-void RoomManager::reorganizeAvatars() {
-
-    int length = avatarList.size();
-    for (int i = 0; i < length; ++i) {
-        auto avatar = avatarList.at(i);
-        avatar->jumpTo(getPosition(i + 1, true));
-    }
-
-}
-
-
-const Vec2 RoomManager::getPosition(int rank, bool isPortrait) const {
-    if (rank < 1) {
-        log("invalid rank = %d", rank);
-        return Vec2::ZERO;
-    }
-
-    auto rank1Pos = Vec2(topMiddlePoint.x,
-                         topMiddlePoint.y - RANK_1_MARGIN_TOP/contentFactor);
-
-    if (rank == 1) {
-        return rank1Pos;
-    }
-
-    int row = this->getRowByRank(rank, isPortrait);
-    int rankInRow = this->getRankInRow(rank, row, isPortrait);
-    if (row == 0) {
-        float offsetX = ((rankInRow / 2) * ROLE_OFFSET_FIRST_ROW * (float)pow(-1, (rankInRow+1)%2)) / contentFactor;
-        float offsetY = (-24 + 8 * ((rankInRow - 2)/2)) / contentFactor;
-        rank1Pos.add(Vec2(offsetX, offsetY));
-        return rank1Pos;
-    }
-
-    int rowOffset = isPortrait ? ROW_OFFSET_PORT : ROW_OFFSET_LAND;
-    int roleOffsetX = isPortrait ? ROLE_OFFSET_PORT : ROLE_OFFSET_LAND;
-
-    float offsetX = (rankInRow/2) * roleOffsetX * (float)pow(-1, (rankInRow)%2) / contentFactor;
-    float offsetY = -rowOffset * row / contentFactor;
-    float additionalX = (row%2 == 0 ? 0: -40)/ contentFactor;
-    rank1Pos.add(Vec2(offsetX + additionalX, offsetY));
-    return rank1Pos;
-}
-
-const int RoomManager::getRowByRank(int rank, bool isPortrait) const {
-    if (isPortrait) {
-        if (rank <= rowSeatsAccMapPort[0]) {
-            return 0;
-        } else if (rank <= rowSeatsAccMapPort[1]) {
-            return 1;
-        } else if (rank <= rowSeatsAccMapPort[2]) {
-            return 2;
-        } else if (rank <= rowSeatsAccMapPort[3]) {
-            return 3;
-        } else if (rank <= rowSeatsAccMapPort[4]) {
-            return 4;
-        } else if (rank <= rowSeatsAccMapPort[5]) {
-            return 5;
-        } else if (rank <= rowSeatsAccMapPort[6]) {
-            return 6;
-        } else if (rank <= rowSeatsAccMapPort[7]) {
-            return 7;
-        }
-        return MAX_ROWS_PORT;
-    } else {
-        if (rank <= rowSeatsAccMapLand[0]) {
-            return 0;
-        } else if (rank <= rowSeatsAccMapLand[1]) {
-            return 1;
-        } else if (rank <= rowSeatsAccMapLand[2]) {
-            return 2;
-        } else if (rank <= rowSeatsAccMapLand[3]) {
-            return 3;
-        } else if (rank <= rowSeatsAccMapLand[4]) {
-            return 4;
-        }
-        return MAX_ROWS_LAND;
+void RoomManager::reorganizeStageAvatars() {
+    for (int i = 0; i < _stageAvatars.size(); ++i) {
+        auto _position = getStagePosition(i);
+        if (_position.isZero()) continue;
+        auto _avatar = _stageAvatars.at(i);
+        _avatar->jumpTo(_position);
     }
 }
 
-const int RoomManager::getRankInRow(int rank, int rowIndex, bool isPortrait) const {
-    if (rowIndex == 0) {
-        return rank;
-    }
-
-    if (isPortrait) {
-        return rank - rowSeatsAccMapPort[rowIndex - 1];
-    } else {
-        return rank - rowSeatsAccMapLand[rowIndex - 1];
+void RoomManager::reorganizeStandAvatars() {
+    for (int i = 0; i < _standAvatars.size(); ++i) {
+        auto _position = getStandPosition(i);
+        if (_position.isZero()) continue;
+        auto _avatar = _standAvatars.at(i);
+        _avatar->jumpTo(_position);
     }
 }

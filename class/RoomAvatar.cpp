@@ -6,6 +6,7 @@
 
 #include <utility>
 #include "RoomAvatar.h"
+#include <iomanip>
 
 USING_NS_CC;
 
@@ -14,8 +15,8 @@ using namespace cocos2d::network;
 //#include "extensions/cocos-ext.h"
 //USING_NS_CC_EXT;
 
-RoomAvatar *RoomAvatar::create(int id, int ranking, string skin, string name, int priority) {
-    auto avatar = new (nothrow) RoomAvatar(id, ranking, move(skin), move(name), priority);
+RoomAvatar *RoomAvatar::create(int id, int ranking, string uid, string skin, string name, int priority) {
+    auto avatar = new (nothrow) RoomAvatar(id, ranking, uid, move(skin), move(name), priority);
     if (avatar && avatar->init()) {
         avatar->autorelease();
     } else {
@@ -63,6 +64,7 @@ void RoomAvatar::initAvatar() {
     addChild(nameLabel);
 
 
+    _loaded = false;
 
 }
 
@@ -73,21 +75,15 @@ void RoomAvatar::setImageTexture() {
 
     auto image_url = "https://avatar.csdn.net/A/6/5/" + _skin;
 
-    string path = CCFileUtils::sharedFileUtils()->getWritablePath() + _skin;
-
-    if (CCFileUtils::sharedFileUtils()->isFileExist(path)) {
-
-    }
+    string image_path = CCFileUtils::sharedFileUtils()->getWritablePath() + _skin;
 
     setTexture(default_skin);
-    loadImage(image_url.c_str());
 
-//    Texture2D *texture = Director::getInstance()->getTextureCache()->addImage(path);
-//    if (nullptr == texture) {
+//    if (CCFileUtils::sharedFileUtils()->isFileExist(image_path)) {
+//        setTexture(image_path);
+//    } else {
 //        setTexture(default_skin);
 //        loadImage(image_url.c_str());
-//    } else {
-//        setTexture(path);
 //    }
 }
 
@@ -168,51 +164,56 @@ void RoomAvatar::shakingBody() {
 }
 
 void RoomAvatar::setPosition(const Vec2 &position) {
+
+//    const Vec2& _target = roundPoint(position);
+
     Sprite::setPosition(position);
-    log("sprite x: %f, y: %f", getPosition().x, getPosition().y);
+//    log("sprite x: %f, y: %f", getPosition().x, getPosition().y);
 }
 
-void RoomAvatar::jump() {
-    auto jumpR = JumpBy::create(1.0, Vec2(0, 0), 80, 1);
-    runAction(jumpR);
+const char* RoomAvatar::getUid() {
+    return _uid.c_str();
 }
 
 void RoomAvatar::jumpTo(const Vec2 &target) {
-    auto currentPosition = getPosition();
-    if (currentPosition.equals(target)) {
+
+    auto _cur_position = this->getPosition();
+    if (_cur_position.equals(target)) {
         // already at target position
-        log("already at target position");
+        log("already at target position  %f, %f", target.x, target.y);
         return;
     }
 
-    _positionX = target.x;
-    _positionY = target.y;
-    auto action = getActionByTag(10002);
-    if (nullptr != action && !action->isDone()) {
-        stopAction(action);
+
+    auto _move_action = getActionByTag(10002);
+    if (nullptr != _move_action && !_move_action->isDone()) {
+        stopAction(_move_action);
     }
 
-    auto jumpTo = JumpTo::create(0.5, target, 80, 1);
-    jumpTo->setTag(10002);
-    runAction(jumpTo);
-    log("jumpTo %f, %f", target.x, target.y);
-}
-
-
-void RoomAvatar::moveTo(const Vec2 &target) {
-    auto currentPosition = getPosition();
-    if (currentPosition.equals(target)) {
-        // already at target position
-        log("already at target position");
-        return;
+    auto _jump_action = getActionByTag(10003);
+    if (nullptr != _jump_action && !_jump_action->isDone()) {
+        stopAction(_jump_action);
     }
 
-    _positionX = target.x;
-    _positionY = target.y;
-    auto jumpTo = MoveTo::create(0.3, target);
-    runAction(jumpTo);
-    log("moveTo %f, %f", target.x, target.y);
+    auto _callback = CallFunc::create([this, target](){
+        this->setPosition(target);
+    });
+
+    if (_loaded) {
+        auto _jumpTo = JumpTo::create(0.5, target, 80, 1);
+        auto _action = Sequence::create(_jumpTo, _callback, nullptr);
+        _action->setTag(10002);
+        runAction(_action);
+
+    } else {
+        auto _moveTo = MoveTo::create(0.3, target);
+        auto _action = Sequence::create(_moveTo, _callback, nullptr);
+        _action->setTag(10003);
+        runAction(_action);
+    }
+    _loaded = true;
 }
+
 
 
 void RoomAvatar::jumpPresent() {
@@ -276,16 +277,16 @@ void RoomAvatar::popChatBubble(const char* content) {
 
 
     auto moveBy = MoveBy::create(2, Vec2(0, 30));
+    auto fadeOut = FadeOut::create(2);
 
 
     auto fadeCall = CallFunc::create([label, drawNode](){
-        label->runAction(FadeTo::create(2, 0));
-        drawNode->runAction(FadeTo::create(2, 0));
+        label->runAction(FadeOut::create(2));
+        drawNode->runAction(FadeOut::create(2));
     });
 
-    auto removeCall = CallFunc::create([this, bubble](){
-        removeChild(bubble, false);
-//        removeChildByTag(2000, false);
+    auto removeCall = CallFunc::create([bubble](){
+        bubble->removeFromParentAndCleanup(true);
     });
 
 
@@ -371,4 +372,21 @@ void RoomAvatar::drawRoundRect(DrawNode *drawNode, const Vec2 &origin, const Vec
     drawNode->drawSolidPoly(vertices, segments, color);
 
     CC_SAFE_DELETE_ARRAY(vertices);
+}
+
+const Vec2 RoomAvatar::roundPoint(const Vec2 &origin) const {
+
+    float _target_x = origin.x;
+    float _target_y = origin.y;
+
+    std::stringstream _value_x;
+    std::stringstream _value_y;
+//    cout<<endl;
+    _value_x << fixed << setprecision(2) << _target_x;
+    _value_y << fixed << setprecision(2) << _target_y;
+
+    float _ret_x = atof(_value_x.str().c_str());
+    float _ret_y = atof(_value_y.str().c_str());
+
+    return Vec2(_ret_x, _ret_y);
 }

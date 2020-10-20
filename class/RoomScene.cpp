@@ -48,7 +48,7 @@ bool RoomScene::init() {
 
     // avatar
     auto avatarManager = RoomManager::getInstance();
-    avatarManager->initScene(this);
+    avatarManager->init(this);
 
     auto size = Director::getInstance()->getOpenGLView()->getFrameSize();
     bool isPortrait = size.width < size.height;

@@ -25,6 +25,7 @@ protected:
             , _skin(move(skin)) {}
 
 public:
+    virtual ~RoomGift() = default;
     static RoomGift* create(int id, int ranking, string skin, int priority = 0);
     void present(const Vec2& target);
 };
