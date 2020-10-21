@@ -23,7 +23,7 @@
  ****************************************************************************/
 
 #include "AppDelegate.h"
-#include "RoomScene.h"
+#include "CCRoomScene.h"
 
 // #define USE_AUDIO_ENGINE 1
 // #define USE_SIMPLE_AUDIO_ENGINE 1
@@ -151,7 +151,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
     register_all_packages();
 
     // create a scene. it's an autorelease object
-    auto scene = RoomScene::createScene();
+    auto scene = CCRoomScene::createScene();
 
     // run
     director->runWithScene(scene);
@@ -188,6 +188,6 @@ void AppDelegate::applicationWillEnterForeground() {
 void AppDelegate::applicationScreenSizeChanged(int newWidth, int newHeight) {
     log("applicationScreenSizeChanged");
     Scene *runningScene = Director::getInstance()->getRunningScene();
-    if (auto scene = dynamic_cast<RoomScene*>(runningScene))
+    if (auto scene = dynamic_cast<CCRoomScene*>(runningScene))
         scene->changeDirection(newWidth, newHeight);
 }

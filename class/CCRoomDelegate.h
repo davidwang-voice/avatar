@@ -6,8 +6,9 @@
 #define __VOICE_ROOM_MANAGER_H_
 
 #include "cocos2d.h"
-#include "RoomAvatar.h"
-#include "RoomGift.h"
+#include "CCGameAvatar.h"
+#include "CCGameStep.h"
+#include "CCGameGift.h"
 #include <map>
 
 using namespace std;
@@ -25,9 +26,11 @@ typedef struct {
 } _Avatar_I;
 
 
-class RoomManager {
+class CCRoomDelegate {
 
 private:
+    static const int _TAG_STAGE_BACKGROUND = 101;
+
     static const int _STAND_ARC_HEIGHT = 60;
     static const int _STAND_MAX_ROW_COUNT = 7;
     static const int _STAND_ROW_HEIGHT = 140;
@@ -49,17 +52,18 @@ private:
     Vec2 _centerPosition;
     float _scaleFactor;
     int _standRowCount[_STAND_MAX_ROW_COUNT];
-    Vector<RoomAvatar*> _standAvatars;
-    Vector<RoomAvatar*> _stageAvatars;
-    Vector<RoomGift*> _giftHolder;
+    Vector<CCGameAvatar*> _standAvatars;
+    Vector<CCGameAvatar*> _stageAvatars;
+    Vector<CCGameStep*> _stageSteps;
+    Vector<CCGameGift*> _giftHolder;
 
     const Vec2 getStagePosition(int index) const;
     const Vec2 getStandPosition(int index) const;
-    RoomAvatar* findStageAvatar(const char* uid);
-    RoomAvatar* findStandAvatar(const char* uid);
-    RoomAvatar* findAvatar(const char* uid);
-    RoomAvatar* createAvatar(int rank, const char* uid, const char* name, const char* path, const Vec2 &pos);
-    RoomAvatar* removeAvatar(const char* uid);
+    CCGameAvatar* findStageAvatar(const char* uid);
+    CCGameAvatar* findStandAvatar(const char* uid);
+    CCGameAvatar* findAvatar(const char* uid);
+    CCGameAvatar* createAvatar(int rank, const char* uid, const char* name, const char* path, const Vec2 &pos);
+    CCGameAvatar* removeAvatar(const char* uid);
 
     void reorganizeStageAvatars();
     void reorganizeStandAvatars();
@@ -68,8 +72,10 @@ private:
     void limitGiftHolderSize();
 
 public:
-    virtual ~RoomManager();
+    virtual ~CCRoomDelegate();
     void init(Scene* scene);
+
+    void setStageBackground(const char* path);
 
     void updateStageAvatars(const char* json);
     void updateStandAvatars(const char* json);
@@ -78,11 +84,11 @@ public:
 
     void receiveGiftMessage(const char* uid, const char* imagePath);
     void receiveChatMessage(const char* uid, const char* content);
-
+    void receiveVoiceWave(const char* uids);
     void releaseResource();
 
     // Static Methods
-    static RoomManager *getInstance();
+    static CCRoomDelegate *getInstance();
 
 protected:
 

@@ -6,7 +6,7 @@
 #include <utility>
 #include <cocos/editor-support/cocostudio/DictionaryHelper.h>
 #include "AppDelegate.h"
-#include "RoomManager.h"
+#include "CCRoomDelegate.h"
 #include "AudioManager.h"
 
 #include "json/rapidjson.h"
@@ -16,22 +16,22 @@ using namespace rapidjson;
 
 USING_NS_CC;
 
-static RoomManager *instance = NULL;
+static CCRoomDelegate *instance = NULL;
 
-RoomManager *RoomManager::getInstance() {
+CCRoomDelegate *CCRoomDelegate::getInstance() {
     if (!instance) {
-        instance = new RoomManager();
+        instance = new CCRoomDelegate();
     }
     return instance;
 }
 
-RoomManager::~RoomManager() {
+CCRoomDelegate::~CCRoomDelegate() {
     _giftHolder.clear();
     _standAvatars.clear();
     _stageAvatars.clear();
 }
 
-void RoomManager::init(Scene* scene) {
+void CCRoomDelegate::init(Scene* scene) {
     this->_scene = scene;
     this->_visibleOrigin = Director::getInstance()->getVisibleOrigin();
     this->_visibleSize = Director::getInstance()->getVisibleSize();
@@ -50,8 +50,42 @@ void RoomManager::init(Scene* scene) {
     }
 }
 
+void CCRoomDelegate::setStageBackground(const char *path) {
 
-void RoomManager::updateStageAvatars(const char* json) {
+    if (_scene) {
+        auto _child = _scene->getChildByTag(_TAG_STAGE_BACKGROUND);
+        if (_child) {
+            _child->removeFromParent();
+        }
+    }
+
+    auto _stage_background = CCBaseSprite::create();
+    _stage_background->loadTexture(path, "bg-night.jpg");
+    float _target_x = _centerPosition.x;
+    float _target_y = _centerPosition.y - _stage_background->getContentSize().height / 2;
+    _stage_background->setPosition(Vec2(_target_x, _target_y));
+
+    if (_scene) {
+        _scene->addChild(_stage_background, 0, _TAG_STAGE_BACKGROUND);
+    }
+}
+
+void CCRoomDelegate::updateStageAvatars(const char* json) {
+
+    if (_stageSteps.empty()) {
+
+
+        for (int i = 0; i < _STAGE_BLOCK_COUNT; ++i) {
+            auto _stage_step = CCGameStep::create(i, i, "gift/heart.png");
+            auto _stage_pos = this->getStagePosition(i);
+            _stage_step->setPosition(Vec2(_stage_pos.x, _stage_pos.y - 40));
+            if (_scene) {
+                _scene->addChild(_stage_step);
+            }
+            _stageSteps.pushBack(_stage_step);
+        }
+    }
+
     rapidjson::Document _document;
     _document.Parse<rapidjson::kParseDefaultFlags>(json);
     if (_document.HasParseError()) {
@@ -64,8 +98,9 @@ void RoomManager::updateStageAvatars(const char* json) {
     }
     rapidjson::Value& _data_arr = _document;
 
-    Vector<RoomAvatar*> _new_stage_avatars;
-    for (int i = 0; i < _data_arr.Size(); ++i) {
+    Vector<CCGameAvatar*> _new_stage_avatars;
+    int length = MIN(_data_arr.Size(), _STAGE_BLOCK_COUNT);
+    for (int i = 0; i < length; ++i) {
         auto _position = getStagePosition(i);
         if (_position.isZero()) continue;
 
@@ -85,7 +120,7 @@ void RoomManager::updateStageAvatars(const char* json) {
         } else {
             auto _old_stand_avatar = this->findStandAvatar(_uid);
             if (nullptr != _old_stand_avatar) {
-                _old_stand_avatar->jumpTo(_position);
+                _old_stand_avatar->jumpToPosition(_position);
 
                 _standAvatars.eraseObject(_old_stand_avatar);
 
@@ -96,6 +131,11 @@ void RoomManager::updateStageAvatars(const char* json) {
                 _new_stage_avatars.pushBack(_new_stage_avatar);
             }
         }
+
+        _new_stage_avatars.back()->updateStatus(_mute, _ssr);
+
+
+        _stageSteps.at(i)->setUid(_uid);
     }
 
     for (int i = 0; i < _stageAvatars.size(); ++i) {
@@ -112,7 +152,7 @@ void RoomManager::updateStageAvatars(const char* json) {
     reorganizeStandAvatars();
 }
 
-void RoomManager::updateStandAvatars(const char* json) {
+void CCRoomDelegate::updateStandAvatars(const char* json) {
     rapidjson::Document _document;
     _document.Parse<rapidjson::kParseDefaultFlags>(json);
     if (_document.HasParseError()) {
@@ -125,7 +165,7 @@ void RoomManager::updateStandAvatars(const char* json) {
     }
     rapidjson::Value& _data_arr = _document;
 
-    Vector<RoomAvatar*> _new_stand_avatars;
+    Vector<CCGameAvatar*> _new_stand_avatars;
     for (int i = 0; i < _data_arr.Size(); ++i) {
         auto _position = getStandPosition(i);
         if (_position.isZero()) continue;
@@ -161,34 +201,60 @@ void RoomManager::updateStandAvatars(const char* json) {
 }
 
 
-void RoomManager::backOffStageAvatar(const char* uid) {
+void CCRoomDelegate::backOffStageAvatar(const char* uid) {
 
 }
 
-void RoomManager::backOffStandAvatar(const char* uid) {
+void CCRoomDelegate::backOffStandAvatar(const char* uid) {
 
 }
 
-void RoomManager::receiveGiftMessage(const char* uid, const char* imagePath) {
+void CCRoomDelegate::receiveGiftMessage(const char* uid, const char* imagePath) {
     auto _avatar = this->findAvatar(uid);
     if (nullptr == _avatar) return;
-    _avatar->jumpPresent();
+    _avatar->jumpByPresent();
     createAndPresentGift(_avatar->getPosition(), imagePath);
 }
 
-void RoomManager::receiveChatMessage(const char* uid, const char* content) {
+void CCRoomDelegate::receiveChatMessage(const char* uid, const char* content) {
     auto _avatar = this->findAvatar(uid);
     if (nullptr == _avatar) return;
     _avatar->popChatBubble(content);
 }
 
-void RoomManager::releaseResource() {
+void CCRoomDelegate::receiveVoiceWave(const char *uids) {
 
-    
+    log("receiveVoiceWave uids: %s", uids);
+    std::vector<string> _uid_arr;
+    string _raw = uids, _tmp;
+    stringstream input(_raw);
+    while (getline(input, _tmp, ',')) _uid_arr.push_back(_tmp);
+
+    for (int i = 0; i < _stageSteps.size(); ++i) {
+        auto _stage_step = _stageSteps.at(i);
+        const char *_stage_uid = _stage_step->getUid();
+        if(std::find(_uid_arr.begin(), _uid_arr.end(), _stage_uid) != _uid_arr.end()) {
+            _stage_step->runVoiceWave();
+        }
+    }
 }
 
 
-const Vec2 RoomManager::getStagePosition(int index) const {
+void CCRoomDelegate::releaseResource() {
+
+
+    _giftHolder.clear();
+    _standAvatars.clear();
+    _stageAvatars.clear();
+    _stageSteps.clear();
+
+    if (_scene) {
+        _scene->removeAllChildren();
+    }
+}
+
+
+const Vec2 CCRoomDelegate::getStagePosition(int index) const {
     if (index >= _STAGE_BLOCK_COUNT) return Vec2::ZERO;
     float _right_x = _visibleOrigin.x + _visibleSize.width;
     float _target_x = _right_x - (_STAGE_BLOCK_COUNT - index) * _STAGE_BLOCK_WIDTH / _scaleFactor;
@@ -196,7 +262,7 @@ const Vec2 RoomManager::getStagePosition(int index) const {
     return Vec2(_target_x , _target_y);
 }
 
-const Vec2 RoomManager::getStandPosition(int index) const {
+const Vec2 CCRoomDelegate::getStandPosition(int index) const {
 
     int _row = -1;
     for (int i = 0; i < _STAND_MAX_ROW_COUNT; ++i) {
@@ -225,7 +291,7 @@ const Vec2 RoomManager::getStandPosition(int index) const {
     return Vec2(_target_x , _target_y);
 }
 
-RoomAvatar* RoomManager::findStageAvatar(const char *uid) {
+CCGameAvatar* CCRoomDelegate::findStageAvatar(const char *uid) {
     for (int i = 0; i < _stageAvatars.size(); ++i) {
         auto _avatar = _stageAvatars.at(i);
         if (strcmp(uid, _avatar->getUid()) == 0) return _avatar;
@@ -233,7 +299,7 @@ RoomAvatar* RoomManager::findStageAvatar(const char *uid) {
     return nullptr;
 }
 
-RoomAvatar* RoomManager::findStandAvatar(const char *uid) {
+CCGameAvatar* CCRoomDelegate::findStandAvatar(const char *uid) {
     for (int i = 0; i < _standAvatars.size(); ++i) {
         auto _avatar = _standAvatars.at(i);
         if (strcmp(uid, _avatar->getUid()) == 0) return _avatar;
@@ -241,7 +307,7 @@ RoomAvatar* RoomManager::findStandAvatar(const char *uid) {
     return nullptr;
 }
 
-RoomAvatar* RoomManager::findAvatar(const char *uid) {
+CCGameAvatar* CCRoomDelegate::findAvatar(const char *uid) {
 
     auto _avatar = this->findStageAvatar(uid);
     if (nullptr != _avatar) {
@@ -252,9 +318,9 @@ RoomAvatar* RoomManager::findAvatar(const char *uid) {
 }
 
 
-RoomAvatar* RoomManager::createAvatar(int rank, const char* uid, const char* name, const char* path, const Vec2 &pos) {
+CCGameAvatar* CCRoomDelegate::createAvatar(int rank, const char* uid, const char* name, const char* path, const Vec2 &pos) {
 
-    auto _avatar = RoomAvatar::create(rank, rank, uid, path, name);
+    auto _avatar = CCGameAvatar::create(rank, rank, uid, path, name);
     if (pos.x < _centerPosition.x) {
         _avatar->setPosition(Vec2(_visibleOrigin.x - _avatar->getContentSize().width, pos.y));
     } else {
@@ -267,7 +333,7 @@ RoomAvatar* RoomManager::createAvatar(int rank, const char* uid, const char* nam
 }
 
 
-RoomAvatar* RoomManager::removeAvatar(const char *uid) {
+CCGameAvatar* CCRoomDelegate::removeAvatar(const char *uid) {
     auto _avatar = findStageAvatar(uid);
     if (nullptr != _avatar) {
         _stageAvatars.eraseObject(_avatar);
@@ -288,7 +354,7 @@ RoomAvatar* RoomManager::removeAvatar(const char *uid) {
     return _avatar;
 }
 
-void RoomManager::createAndPresentGift(const Vec2& pos, const char* imagePath) {
+void CCRoomDelegate::createAndPresentGift(const Vec2& pos, const char* imagePath) {
 
 //    AudioManager::getInstance()->playBG();
 
@@ -296,7 +362,7 @@ void RoomManager::createAndPresentGift(const Vec2& pos, const char* imagePath) {
     float start_y = pos.y + 60;
 
     int index = _giftHolder.size();
-    auto gift = RoomGift::create(index, index, "gift/heart.png");
+    auto gift = CCGameGift::create(index, index, "gift/heart.png");
     gift->setPosition(Vec2(start_x, start_y));
 
     float _coord_x = _GIFT_TABLE_WIDTH / 2;
@@ -319,11 +385,11 @@ void RoomManager::createAndPresentGift(const Vec2& pos, const char* imagePath) {
 }
 
 
-void RoomManager::limitGiftHolderSize() {
+void CCRoomDelegate::limitGiftHolderSize() {
     int _length = _giftHolder.size();
     int _limit = 200;
     if(_length > _limit * 2) {
-        auto _removeList = Vector<RoomGift*>(_limit);
+        auto _removeList = Vector<CCGameGift*>(_limit);
 
         for (int i = 0; i < _length; ++i) {
             if (i < _limit) {
@@ -334,7 +400,7 @@ void RoomManager::limitGiftHolderSize() {
         }
 
         for (int i = 0; i < _limit; ++i) {
-            auto _gift = dynamic_cast<RoomGift*>(_removeList.at(i));
+            auto _gift = dynamic_cast<CCGameGift*>(_removeList.at(i));
 
             auto _removeFunc = CallFunc::create([_gift](){
                 _gift->removeFromParentAndCleanup(true);
@@ -351,20 +417,20 @@ void RoomManager::limitGiftHolderSize() {
     }
 }
 
-void RoomManager::reorganizeStageAvatars() {
+void CCRoomDelegate::reorganizeStageAvatars() {
     for (int i = 0; i < _stageAvatars.size(); ++i) {
         auto _position = getStagePosition(i);
         if (_position.isZero()) continue;
         auto _avatar = _stageAvatars.at(i);
-        _avatar->jumpTo(_position);
+        _avatar->jumpToPosition(_position);
     }
 }
 
-void RoomManager::reorganizeStandAvatars() {
+void CCRoomDelegate::reorganizeStandAvatars() {
     for (int i = 0; i < _standAvatars.size(); ++i) {
         auto _position = getStandPosition(i);
         if (_position.isZero()) continue;
         auto _avatar = _standAvatars.at(i);
-        _avatar->jumpTo(_position);
+        _avatar->jumpToPosition(_position);
     }
 }

@@ -5,7 +5,7 @@
 
 using namespace std;
 
-class BaseSprite;
+class CCBaseSprite;
 
 class AvatarManager {
 public:
@@ -20,7 +20,7 @@ private:
     int firstAvatar;
     int avatarCount;
 
-    map<int, BaseSprite*> avatars; // (id, avatar sprite)
+    map<int, CCBaseSprite*> avatars; // (id, avatar sprite)
 
     //////////////////////
     // internal methods //

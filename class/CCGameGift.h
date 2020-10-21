@@ -8,25 +8,25 @@
 
 #include <utility>
 #include "cocos2d.h"
-#include "BaseSprite.h"
+#include "CCBaseSprite.h"
 
 using namespace std;
 using namespace cocos2d;
 
-class RoomGift : public BaseSprite {
+class CCGameGift : public CCBaseSprite {
 
 private:
     string _skin;
     void initGift();
 
 protected:
-    RoomGift(int id, int ranking, string skin, int priority)
-            : BaseSprite(id, ranking, priority)
+    CCGameGift(int id, int ranking, string skin, int priority)
+            : CCBaseSprite(id, ranking, priority)
             , _skin(move(skin)) {}
 
 public:
-    virtual ~RoomGift() = default;
-    static RoomGift* create(int id, int ranking, string skin, int priority = 0);
+    virtual ~CCGameGift() = default;
+    static CCGameGift* create(int id, int ranking, string skin, int priority = 0);
     void present(const Vec2& target);
 };
 

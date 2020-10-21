@@ -2,13 +2,11 @@
 // Created by David on 2020/10/3.
 //
 
-#include "RoomGift.h"
+#include "CCGameGift.h"
 
 
-
-
-RoomGift *RoomGift::create(int id, int ranking, string skin, int priority) {
-    auto gift = new (nothrow) RoomGift(id, ranking, move(skin), priority);
+CCGameGift *CCGameGift::create(int id, int ranking, string skin, int priority) {
+    auto gift = new (nothrow) CCGameGift(id, ranking, move(skin), priority);
     if (gift && gift->init()) {
         gift->autorelease();
     } else {
@@ -19,12 +17,12 @@ RoomGift *RoomGift::create(int id, int ranking, string skin, int priority) {
     return gift;
 }
 
-void RoomGift::initGift() {
+void CCGameGift::initGift() {
     setTexture(_skin);
     setAnchorPoint(Point::ANCHOR_MIDDLE_BOTTOM);
 }
 
-void RoomGift::present(const Vec2 &target) {
+void CCGameGift::present(const Vec2 &target) {
     auto position = getPosition();
 
     int angle = 60;

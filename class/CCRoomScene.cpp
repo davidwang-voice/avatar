@@ -1,9 +1,9 @@
-#include <RoomAvatar.h>
-#include <RoomManager.h>
+#include <CCGameAvatar.h>
+#include <CCRoomDelegate.h>
 #include "SimpleAudioEngine.h"
-#include "RoomScene.h"
+#include "CCRoomScene.h"
 #include "AppDelegate.h"
-#include "BaseSprite.h"
+#include "CCBaseSprite.h"
 
 USING_NS_CC;
 
@@ -11,44 +11,44 @@ static const char* g_stagePath = "bg-night.jpg";
 static PanZoomState g_state = PanZoomState::None;
 static PanZoomState g_prevState = PanZoomState::None;
 
-Scene* RoomScene::createScene() {
-    return RoomScene::create();
+Scene* CCRoomScene::createScene() {
+    return CCRoomScene::create();
 }
 
-void RoomScene::setStage(const char* stagePath) {
+void CCRoomScene::setStage(const char* stagePath) {
     g_stagePath = stagePath;
 }
 
-bool RoomScene::init() {
+bool CCRoomScene::init() {
     if (!Scene::init()) {
         return false;
     }
 
     _stage = nullptr;
 
-    auto visibleSize = Director::getInstance()->getVisibleSize();
-    Vec2 origin = Director::getInstance()->getVisibleOrigin();
-
-    // add "LiveViewerLand" splash screen"
-    _stage = BaseSprite::create();
-    _stage->setTexture(g_stagePath);
-    if (_stage == nullptr) {
-        problemLoading(g_stagePath);
-    } else {
-        // position the sprite on the center of the screen
-        float x = visibleSize.width/2 + origin.x;
-        float y = origin.y + visibleSize.height - _stage->getContentSize().height/2;
-        _stage->setPosition(Vec2(x, y));
-
-        // add the sprite as a child to this layer
-        this->addChild(_stage, 0);
-    }
+//    auto visibleSize = Director::getInstance()->getVisibleSize();
+//    Vec2 origin = Director::getInstance()->getVisibleOrigin();
+//
+//    // add "LiveViewerLand" splash screen"
+//    _stage = CCBaseSprite::create();
+//    _stage->setTexture(g_stagePath);
+//    if (_stage == nullptr) {
+//        problemLoading(g_stagePath);
+//    } else {
+//        // position the sprite on the center of the screen
+//        float x = visibleSize.width/2 + origin.x;
+//        float y = origin.y + visibleSize.height - _stage->getContentSize().height/2;
+//        _stage->setPosition(Vec2(x, y));
+//
+//        // add the sprite as a child to this layer
+//        this->addChild(_stage, 0);
+//    }
 
 //    this->scheduleUpdate();
 
     // avatar
-    auto avatarManager = RoomManager::getInstance();
-    avatarManager->init(this);
+    auto _room_delegate = CCRoomDelegate::getInstance();
+    _room_delegate->init(this);
 
     auto size = Director::getInstance()->getOpenGLView()->getFrameSize();
     bool isPortrait = size.width < size.height;
@@ -66,32 +66,32 @@ bool RoomScene::init() {
     return true;
 }
 
-void RoomScene::onEnter() {
+void CCRoomScene::onEnter() {
     Node::onEnter();
 
     auto listener = EventListenerTouchAllAtOnce::create();
 
-    listener->onTouchesBegan = CC_CALLBACK_2(RoomScene::onTouchesBegan, this);
-    listener->onTouchesMoved = CC_CALLBACK_2(RoomScene::onTouchesMoved, this);
-    listener->onTouchesEnded = CC_CALLBACK_2(RoomScene::onTouchesEnded, this);
+    listener->onTouchesBegan = CC_CALLBACK_2(CCRoomScene::onTouchesBegan, this);
+    listener->onTouchesMoved = CC_CALLBACK_2(CCRoomScene::onTouchesMoved, this);
+    listener->onTouchesEnded = CC_CALLBACK_2(CCRoomScene::onTouchesEnded, this);
 
     _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
 
     _listener = listener;
 }
 
-void RoomScene::onExit() {
+void CCRoomScene::onExit() {
     _eventDispatcher->removeEventListener(_listener);
 
     Node::onExit();
 }
 
-void RoomScene::update(float delta) {
+void CCRoomScene::update(float delta) {
     log("RoomScene::update .delta=%f",delta);
     Node::update(delta);
 }
 
-void RoomScene::onTouchesBegan(const std::vector<Touch*>& touches, Event *event) {
+void CCRoomScene::onTouchesBegan(const std::vector<Touch*>& touches, Event *event) {
     if(touches.size() == 1) {
         log("Scene onTouchBegan..x=%f, y=%f", touches[0]->getLocation().x, touches[0]->getLocation().y);
         auto glview = Director::getInstance()->getOpenGLView();
@@ -103,7 +103,7 @@ void RoomScene::onTouchesBegan(const std::vector<Touch*>& touches, Event *event)
     }
 }
 
-void RoomScene::onTouchesMoved(const std::vector<Touch*>& touches, Event *event) {
+void CCRoomScene::onTouchesMoved(const std::vector<Touch*>& touches, Event *event) {
 //    if (g_state == PanZoomState::Rebound)
 //        return;
 //
@@ -159,16 +159,16 @@ void RoomScene::onTouchesMoved(const std::vector<Touch*>& touches, Event *event)
 //    }
 }
 
-void RoomScene::onTouchesEnded(const std::vector<Touch*>& touches, Event *event) {
+void CCRoomScene::onTouchesEnded(const std::vector<Touch*>& touches, Event *event) {
     if (g_state == PanZoomState::Rebound)
         return;
 
-    if (auto scene = dynamic_cast<RoomScene*>(event->getCurrentTarget())) {
-        Rect box = _stage->getBoundingBox();
-        Vec2 minXY = scene->convertToWorldSpace(box.origin);
-        Vec2 maxXY = minXY + Vec2(box.size);
-        Vec2 posDelta = Vec2::ZERO;
-        posDelta = getDeltaPosition(minXY, maxXY);
+    if (auto scene = dynamic_cast<CCRoomScene*>(event->getCurrentTarget())) {
+//        Rect box = _stage->getBoundingBox();
+//        Vec2 minXY = scene->convertToWorldSpace(box.origin);
+//        Vec2 maxXY = minXY + Vec2(box.size);
+//        Vec2 posDelta = Vec2::ZERO;
+//        posDelta = getDeltaPosition(minXY, maxXY);
 
         if(touches.size() == 1) {
             auto glview = Director::getInstance()->getOpenGLView();
@@ -177,25 +177,25 @@ void RoomScene::onTouchesEnded(const std::vector<Touch*>& touches, Event *event)
             onTouchUp();
         }
 
-        if (g_prevState == PanZoomState::Pan) {
-            Vector<FiniteTimeAction *> actions;
-            if (posDelta.x != 0 || posDelta.y != 0) {
-                actions.pushBack(MoveBy::create(_reboundTime, posDelta));
-            }
-            if (actions.size() > 0) {
-                scene->runAction(Sequence::createWithTwoActions(
-                        Spawn::create(actions),
-                        CallFunc::create(RoomScene::onReboundEnd))
-                );
-                g_state = PanZoomState::Rebound;
-            }
-        }
+//        if (g_prevState == PanZoomState::Pan) {
+//            Vector<FiniteTimeAction *> actions;
+//            if (posDelta.x != 0 || posDelta.y != 0) {
+//                actions.pushBack(MoveBy::create(_reboundTime, posDelta));
+//            }
+//            if (actions.size() > 0) {
+//                scene->runAction(Sequence::createWithTwoActions(
+//                        Spawn::create(actions),
+//                        CallFunc::create(CCRoomScene::onReboundEnd))
+//                );
+//                g_state = PanZoomState::Rebound;
+//            }
+//        }
         if (g_state == PanZoomState::None)
             g_prevState = g_state;
     }
 }
 
-void RoomScene::changeDirection(int width, int height) {
+void CCRoomScene::changeDirection(int width, int height) {
     log("changeDirection: w %d, h %d", width, height);
 
     log("scene position: x: %f, y: %f", getPosition().x, getPosition().y);
@@ -219,7 +219,7 @@ void RoomScene::changeDirection(int width, int height) {
         glview->setDesignResolutionSize(designResolutionSize.width, designResolutionSize.height, ResolutionPolicy::FIXED_WIDTH);
 
 
-    director->replaceScene(RoomScene::createScene());
+    director->replaceScene(CCRoomScene::createScene());
 
 
     auto screenSize = glview->getFrameSize();
@@ -234,7 +234,7 @@ void RoomScene::changeDirection(int width, int height) {
 }
 
 
-Vec2 RoomScene::getDeltaPosition(Vec2 minXY, Vec2 maxXY) {
+Vec2 CCRoomScene::getDeltaPosition(Vec2 minXY, Vec2 maxXY) {
     Vec2 posDelta(0, 0);
     Vec2 visibleOrigin = Director::getInstance()->getVisibleOrigin();
     Size visibleSize = Director::getInstance()->getVisibleSize();
@@ -255,6 +255,6 @@ Vec2 RoomScene::getDeltaPosition(Vec2 minXY, Vec2 maxXY) {
 }
 
 
-void RoomScene::onReboundEnd() {
+void CCRoomScene::onReboundEnd() {
     g_state = PanZoomState::None;
 }

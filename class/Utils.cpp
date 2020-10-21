@@ -16,3 +16,14 @@ char* jstringToChar(JNIEnv* env, jstring jstr) {
     env->ReleaseByteArrayElements(barr, ba, 0);
     return rtn;
 }
+
+
+const char* getGameResourceUrl(const char* name) {
+    std::string _file_path = _CC_GAME_FILE_HTTP_PATH + name;
+    return _file_path.c_str();
+}
+
+const char* getGameResourcePath(const char* name) {
+    std::string _file_path = cocos2d::FileUtils::sharedFileUtils()->getWritablePath() + name;
+    return _file_path.c_str();
+}

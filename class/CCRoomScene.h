@@ -8,7 +8,7 @@
 #include "Config.h"
 
 
-class BaseSprite;
+class CCBaseSprite;
 
 using namespace std;
 
@@ -25,7 +25,7 @@ enum PanZoomState {
     Rebound
 };
 
-class RoomScene : public cocos2d::Scene {
+class CCRoomScene : public cocos2d::Scene {
 public:
     static cocos2d::Scene* createScene();
 
@@ -41,12 +41,12 @@ public:
     void onTouchesEnded(const vector<Touch*>& touches, Event  *event);
 
     void changeDirection(int width, int height);
-    BaseSprite* getStage() { return _stage; };
+    CCBaseSprite* getStage() { return _stage; };
 
-    CREATE_FUNC(RoomScene);
+    CREATE_FUNC(CCRoomScene);
 
 private:
-    BaseSprite* _stage;
+    CCBaseSprite* _stage;
     EventListener* _listener;
     Vec2 _startPoint = Vec2::ZERO;
     float _blackBorder = 200.f; // in pixels

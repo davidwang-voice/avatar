@@ -1,6 +1,6 @@
 #include "AvatarManager.h"
-#include "RoomScene.h"
-#include "BaseSprite.h"
+#include "CCRoomScene.h"
+#include "CCBaseSprite.h"
 
 AvatarManager::AvatarManager() {
     firstAvatar = 0;
@@ -8,7 +8,7 @@ AvatarManager::AvatarManager() {
 }
 
 AvatarManager::~AvatarManager() {
-    map<int, BaseSprite*>::iterator iter;
+    map<int, CCBaseSprite*>::iterator iter;
     iter = avatars.begin();
     while (iter != avatars.end()) {
         delete iter->second;
@@ -23,7 +23,7 @@ void AvatarManager::addAvatar(int id, int ranking, char* imagePath) {
     auto scene = Director::getInstance()->getRunningScene();
     if (scene) {
         Vec2 origin = Director::getInstance()->getVisibleOrigin();
-        auto avatar = BaseSprite::create(1, id);
+        auto avatar = CCBaseSprite::create(1, id);
         if (avatar == nullptr) {
             problemLoading("Path not found");
         } else {
@@ -31,14 +31,14 @@ void AvatarManager::addAvatar(int id, int ranking, char* imagePath) {
             avatar->updateRanking(ranking);
             avatar->setAnchorPoint(Vec2(0.5f, 0.0f));
 
-            if (auto viewer = static_cast<RoomScene*>(scene)) {
+            if (auto viewer = static_cast<CCRoomScene*>(scene)) {
                 float posX, posY;
                 // position the sprite on the center of the screen
                 if (avatarCount == 0) {
                     posX = visibleSize.width/2;
                     posY = origin.y + visibleSize.height - viewer->getContentSize().height/2 - 60.0f;
                 } else {
-                    map<int, BaseSprite*>::iterator iter;
+                    map<int, CCBaseSprite*>::iterator iter;
                     iter = avatars.find(firstAvatar);
                     if (iter != avatars.end()) {
                         posX = avatarCount % 2 == 0 ? iter->second->getPosition().x + 20.0f * (avatarCount / 2)
@@ -49,7 +49,7 @@ void AvatarManager::addAvatar(int id, int ranking, char* imagePath) {
                     }
                 }
                 avatar->setPosition(Vec2(posX, posY));
-                avatars.insert(pair<int, BaseSprite*>(id, avatar));
+                avatars.insert(pair<int, CCBaseSprite*>(id, avatar));
 
                 // add the sprite as a child to this layer
                 viewer->addChild(avatar, ++avatarCount);
@@ -59,7 +59,7 @@ void AvatarManager::addAvatar(int id, int ranking, char* imagePath) {
 }
 
 void AvatarManager::removeAvatar(int id) {
-    map<int, BaseSprite*>::iterator iter;
+    map<int, CCBaseSprite*>::iterator iter;
     iter = avatars.find(id);
     if (iter != avatars.end()) {
         if (id != firstAvatar) {
@@ -78,7 +78,7 @@ void AvatarManager::removeAvatar(int id) {
 }
 
 void AvatarManager::updateFirstAvatar(int id) {
-    map<int, BaseSprite*>::iterator iter;
+    map<int, CCBaseSprite*>::iterator iter;
     iter = avatars.find(id);
     if (iter != avatars.end()) {
         firstAvatar = id;
