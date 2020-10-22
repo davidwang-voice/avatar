@@ -35,10 +35,12 @@ public:
     void updateRanking(int ranking);
 
     virtual void onTouchesBegan(const vector<Touch*>& touches, Event  *event);
-
     virtual void onTouchesMoved(const vector<Touch*>& touches, Event  *event);
-
     virtual void onTouchesEnded(const vector<Touch*>& touches, Event  *event);
+
+    virtual bool onTouchBegan(Touch* touch, Event  *event);
+    virtual void onTouchMoved(Touch* touch, Event  *event);
+    virtual void onTouchEnded(Touch* touch, Event  *event);
 
     void loadTexture(const char *name, const char* def = nullptr);
 

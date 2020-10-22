@@ -19,11 +19,15 @@ char* jstringToChar(JNIEnv* env, jstring jstr) {
 
 
 const char* getGameResourceUrl(const char* name) {
-    std::string _file_path = _CC_GAME_FILE_HTTP_PATH + name;
-    return _file_path.c_str();
+    std::string _res_url("");
+    _res_url.append(_CC_GAME_FILE_HTTP_PATH);
+    _res_url.append(name);
+    return _res_url.c_str();
 }
 
 const char* getGameResourcePath(const char* name) {
-    std::string _file_path = cocos2d::FileUtils::sharedFileUtils()->getWritablePath() + name;
-    return _file_path.c_str();
+    std::string _res_path("");
+    _res_path.append(cocos2d::FileUtils::sharedFileUtils()->getWritablePath());
+    _res_path.append(name);
+    return _res_path.c_str();
 }

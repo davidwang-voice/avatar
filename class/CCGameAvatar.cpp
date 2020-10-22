@@ -67,11 +67,21 @@ void CCGameAvatar::initAvatar() {
 
 }
 
+void CCGameAvatar::onEnter() {
+    CCBaseSprite::onEnter();
+    if (auto listener = dynamic_cast<EventListenerTouchOneByOne*>(_listener)) {
+//        listener->setSwallowTouches(true);
+    }
+
+
+}
+
+
 void CCGameAvatar::shakingBody() {
-    auto rotateToR = RotateTo::create(0.9f, 6.0f);
-    auto rotateToL = RotateTo::create(0.9f, -6.0f);
-    auto seq = Sequence::create(rotateToR, rotateToL, nullptr);
-    runAction(RepeatForever::create(seq));
+    auto _rotateRight = RotateTo::create(0.9f, 6.0f);
+    auto _rotateLeft = RotateTo::create(0.9f, -6.0f);
+    auto _action = Sequence::create(_rotateRight, _rotateLeft, nullptr);
+    runAction(RepeatForever::create(_action));
 }
 
 void CCGameAvatar::setPosition(const Vec2 &position) {
@@ -108,12 +118,42 @@ void CCGameAvatar::onTouchesEnded(const vector<Touch *> &touches, Event *event) 
             auto _pos = _avatar->getParent()->convertToNodeSpace(_locationInNode);
             Rect _rect = _avatar->getBoundingBox();
             if (_rect.containsPoint(_pos)) {
-                log("Avatar onTouchesBegan... index = %d, uid = %s", _avatar->_id, _avatar->getUid());
+                log("Avatar onTouchesEnd... index = %d, uid = %s", _avatar->_id, _avatar->getUid());
                 onTouchedAvatar(_avatar->getUid());
             }
         }
     }
 }
+
+bool CCGameAvatar::onTouchBegan(Touch *touch, Event *event) {
+    log("Avatar onTouchesBegan... name = %s", typeid(event->getCurrentTarget()).name());
+    if (auto _avatar = dynamic_cast<CCGameAvatar*>(event->getCurrentTarget())) {
+        Point _locationInNode = touch->getLocation();
+        auto _pos = _avatar->getParent()->convertToNodeSpace(_locationInNode);
+        Rect _rect = _avatar->getBoundingBox();
+        if (_rect.containsPoint(_pos)) {
+            log("Avatar onTouchesBegan... index = %d, uid = %s", _avatar->_id, _avatar->getUid());
+        }
+    }
+    return true;
+}
+
+void CCGameAvatar::onTouchMoved(Touch *touch, Event *event) {
+
+}
+
+void CCGameAvatar::onTouchEnded(Touch *touch, Event *event) {
+    if (auto _avatar = dynamic_cast<CCGameAvatar*>(event->getCurrentTarget())) {
+        Point _locationInNode = touch->getLocation();
+        auto _pos = _avatar->getParent()->convertToNodeSpace(_locationInNode);
+        Rect _rect = _avatar->getBoundingBox();
+        if (_rect.containsPoint(_pos)) {
+            log("Avatar onTouchesEnd... index = %d, uid = %s", _avatar->_id, _avatar->getUid());
+            onTouchedAvatar(_avatar->getUid());
+        }
+    }
+}
+
 
 
 void CCGameAvatar::updateStatus(bool mute, bool ssr) {
@@ -174,7 +214,6 @@ void CCGameAvatar::jumpByPresent() {
     }
 }
 void CCGameAvatar::popChatBubble(const char* content) {
-
 
     TTFConfig _label_config;
     _label_config.fontFilePath = "font/droid.ttf";
@@ -317,3 +356,7 @@ const Vec2 CCGameAvatar::roundPoint(const Vec2 &origin) const {
 
     return Vec2(_ret_x, _ret_y);
 }
+
+
+
+

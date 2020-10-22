@@ -6,7 +6,7 @@
 #include "cocos2d.h"
 
 
-static const std::string _CC_GAME_FILE_HTTP_PATH = "https://avatar.csdn.net/A/6/5/";
+static const std::string _CC_GAME_FILE_HTTP_PATH = "https://img.icons8.com/emoji/2x/";
 
 char* jstringToChar(JNIEnv* env, jstring jstr);
 

@@ -171,6 +171,7 @@ void CCRoomScene::onTouchesEnded(const std::vector<Touch*>& touches, Event *even
 //        posDelta = getDeltaPosition(minXY, maxXY);
 
         if(touches.size() == 1) {
+            log("Scene onTouchesEnded..x=%f, y=%f", touches[0]->getLocation().x, touches[0]->getLocation().y);
             auto glview = Director::getInstance()->getOpenGLView();
             if (glview->getAllTouches().size() == 0)
                 g_state = PanZoomState::None;

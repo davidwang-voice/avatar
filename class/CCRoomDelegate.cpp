@@ -219,12 +219,13 @@ void CCRoomDelegate::receiveGiftMessage(const char* uid, const char* imagePath) 
 void CCRoomDelegate::receiveChatMessage(const char* uid, const char* content) {
     auto _avatar = this->findAvatar(uid);
     if (nullptr == _avatar) return;
+
     _avatar->popChatBubble(content);
 }
 
 void CCRoomDelegate::receiveVoiceWave(const char *uids) {
 
-    log("receiveVoiceWave uids: %s", uids);
+    log("receive voice wave uids: %s", uids);
     std::vector<string> _uid_arr;
     string _raw = uids, _tmp;
     stringstream input(_raw);

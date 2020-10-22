@@ -19,25 +19,32 @@ CCGameStep *CCGameStep::create(int id, int ranking, std::string skin, int priori
 
 
 void CCGameStep::initStep() {
-//    setTexture(_skin);
+    setTexture("anim/audio_ani_21.png");
     setAnchorPoint(Point::ANCHOR_MIDDLE_BOTTOM);
 }
 
 
 void CCGameStep::runVoiceWave() {
 
-    log("runVoiceWave uid: %s", _uid.c_str());
-    Animation *_anim = Animation::create();
-    for(int i=1; i<=21;i++) {
+    auto _wave_action = getActionByTag(_TAG_WAVE_ANIM_ACTION);
+    if (nullptr != _wave_action && !_wave_action->isDone()) {
+        this->stopAction(_wave_action);
+    }
+
+    Animation *_animation = Animation::create();
+    for (int i = 1; i <= 21; i++) {
         auto imagePath = "anim/audio_ani_" + std::to_string(i) + ".png";
-        _anim->addSpriteFrameWithFileName(imagePath.c_str());
+        _animation->addSpriteFrameWithFileName(imagePath.c_str());
     }
     // should last 2.8 seconds. And there are 14 frames.
-    _anim->setDelayPerUnit(1.0f / 24.0f);
-    _anim->setRestoreOriginalFrame(true);
-    Animate* _action = Animate::create(_anim);
+    _animation->setDelayPerUnit(1.0f / 24.0f);
+    _animation->setRestoreOriginalFrame(true);
+    Animate *_animate = Animate::create(_animation);
+//    auto _action = Sequence::create(_animate, _animate->reverse(), _animate, _animate->reverse(), NULL);
 
-    runAction(Sequence::create(_action, _action->reverse(), _action, _action->reverse(), NULL));
+    Repeat *_action = Repeat::create(_animate, 3);
+    _action->setTag(_TAG_WAVE_ANIM_ACTION);
+    runAction(_action);
 }
 
 void CCGameStep::setUid(const char *uid) {

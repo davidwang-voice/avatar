@@ -17,17 +17,19 @@ CCBaseSprite *CCBaseSprite::create(int priority, int id, int ranking) {
 void CCBaseSprite::onEnter() {
     Sprite::onEnter();
 
-    auto listener = EventListenerTouchAllAtOnce::create();
+    auto listener = EventListenerTouchOneByOne::create();
 
-    listener->onTouchesBegan = CC_CALLBACK_2(CCBaseSprite::onTouchesBegan, this);
-    listener->onTouchesMoved = CC_CALLBACK_2(CCBaseSprite::onTouchesMoved, this);
-    listener->onTouchesEnded = CC_CALLBACK_2(CCBaseSprite::onTouchesEnded, this);
+//    listener->setSwallowTouches(true);
 
-    if (_fixedPriority != 0) {
-        _eventDispatcher->addEventListenerWithFixedPriority(listener->clone(), _fixedPriority);
-    } else {
+    listener->onTouchBegan = CC_CALLBACK_2(CCBaseSprite::onTouchBegan, this);
+    listener->onTouchMoved = CC_CALLBACK_2(CCBaseSprite::onTouchMoved, this);
+    listener->onTouchEnded = CC_CALLBACK_2(CCBaseSprite::onTouchEnded, this);
+
+//    if (_fixedPriority != 0) {
+//        _eventDispatcher->addEventListenerWithFixedPriority(listener->clone(), _fixedPriority);
+//    } else {
         _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
-    }
+//    }
 
     _listener = listener;
 }
@@ -48,6 +50,10 @@ int CCBaseSprite::getRanking() {
 
 void CCBaseSprite::updateRanking(int ranking) {
     _ranking = ranking;
+//    if (_listener != nullptr) {
+//        _eventDispatcher->removeEventListener(_listener);
+//        _eventDispatcher->addEventListenerWithFixedPriority(listener->clone(), 1000 - _ranking);
+//    }
 }
 
 void CCBaseSprite::onTouchesBegan(const std::vector<Touch*>& touches, Event *event) {
@@ -60,28 +66,35 @@ void CCBaseSprite::onTouchesMoved(const std::vector<Touch*>& touches, Event *eve
 void CCBaseSprite::onTouchesEnded(const std::vector<Touch*>& touches, Event *event) {
 }
 
+bool CCBaseSprite::onTouchBegan(Touch* touch, Event  *event) {
+    return true;
+}
+void CCBaseSprite::onTouchMoved(Touch* touch, Event  *event) {
+
+}
+void CCBaseSprite::onTouchEnded(Touch* touch, Event  *event) {
+
+}
+
+
 
 void CCBaseSprite::loadTexture(const char *name, const char *def) {
 
     const char* _file_path = getGameResourcePath(name);
-    const char* _file_url = getGameResourceUrl(name);
-
-    log("loadTexture request start , _file_url: %s", _file_url);
-
     if (FileUtils::sharedFileUtils()->isFileExist(_file_path)) {
         setTexture(_file_path);
     } else {
-
-        log("loadTexture- send request start , _file_url: %s", _file_url);
-        sendResourceRequest(_file_url, name);
         if (nullptr != def) {
             setTexture(def);
         }
+
+        const char* _file_url = getGameResourceUrl(name);
+        sendResourceRequest(_file_url, name);
     }
 }
 
 void CCBaseSprite::sendResourceRequest(const char *url, const char *tag) {
-    log("request start, image url: %s , tag: %s", url, tag);
+    log("request start - resource url: %s , tag: %s", url, tag);
     HttpRequest* _request = new (std::nothrow) HttpRequest();
     _request->setUrl(url);
     _request->setRequestType(HttpRequest::Type::GET);

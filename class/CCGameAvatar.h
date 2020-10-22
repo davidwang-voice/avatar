@@ -46,10 +46,17 @@ public:
     void setPosition(const Vec2& pos) override;
 
     void onTouchesBegan(const vector<Touch *> &touches, Event *event) override;
-
     void onTouchesMoved(const vector<Touch *> &touches, Event *event) override;
-
     void onTouchesEnded(const vector<Touch *> &touches, Event *event) override;
+
+
+    void onEnter() override;
+
+    bool onTouchBegan(Touch *touch, Event *event) override;
+
+    void onTouchMoved(Touch *touch, Event *event) override;
+
+    void onTouchEnded(Touch *touch, Event *event) override;
 
     void updateStatus(bool mute, bool ssr);
     void jumpToPosition(const Vec2& target);
