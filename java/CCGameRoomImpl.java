@@ -24,14 +24,9 @@ import org.cocos2dx.lib.Cocos2dxRenderer;
  */
 public class CCGameRoomImpl implements CCGameRoomView {
 
-    public interface Callback {
-        void onTouchAvatar(int id);
-
-        void onTouchScene();
-    }
 
     private Context context;
-    private CCGameRoomImpl.Callback callback;
+    private Callback callback;
     private CCGameRoomJNI gameRoomJNI = CCGameRoomJNI.getInstance();
 
     private Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -59,6 +54,7 @@ public class CCGameRoomImpl implements CCGameRoomView {
         CCEGLConfigChooser chooser = new CCEGLConfigChooser(this.gLContextAttrs);
         glSurfaceView.setEGLConfigChooser(chooser);
         glSurfaceView.setCocos2dxRenderer(new Cocos2dxRenderer());
+        glSurfaceView.setMultipleTouchEnabled(false);
 //        glSurfaceView.setOnTouchDetector(event -> {});
         parent.addView(glSurfaceView, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
@@ -67,25 +63,25 @@ public class CCGameRoomImpl implements CCGameRoomView {
 
         gameRoomJNI.setCCListener(new CCGameRoomJNI.CCListener() {
             @Override
-            public void onTouchedAvatar(int id) {
+            public void onTouchedAvatar(String uid) {
                 runOnUiThread(() -> {
-                    if (callback != null) callback.onTouchAvatar(id);
+                    if (callback != null) callback.onTouchGameAvatar(uid);
                 });
             }
 
             @Override
             public void onTouchedScene() {
                 runOnUiThread(() -> {
-                    if (callback != null) callback.onTouchScene();
+                    if (callback != null) callback.onTouchGameScene();
                 });
             }
         });
     }
 
-    public void setCallback(CCGameRoomImpl.Callback callback) {
+    @Override
+    public void setCallback(Callback callback) {
         this.callback = callback;
     }
-
 
     @Override
     public void focusChanged(boolean focus) {
@@ -119,12 +115,27 @@ public class CCGameRoomImpl implements CCGameRoomView {
     }
 
     @Override
-    public void presentGift(int userId, String url) {
+    public void setBackground(String url) {
+        runOnGLThread(() -> gameRoomJNI.setStageBackground(url));
+    }
+
+    @Override
+    public void setupGiftHeap(String json) {
+        runOnGLThread(() -> gameRoomJNI.setupStageGiftHeap(json));
+    }
+
+    @Override
+    public void setSelfAvatar(String json) {
+        runOnGLThread(() -> gameRoomJNI.updateSelfAvatar(json));
+    }
+
+    @Override
+    public void presentGift(String userId, String url) {
         runOnGLThread(() -> gameRoomJNI.receiveGiftMessage(userId, url));
     }
 
     @Override
-    public void presentChat(int userId, String content) {
+    public void presentChat(String userId, String content) {
         runOnGLThread(() -> gameRoomJNI.receiveChatMessage(userId, content));
     }
 
@@ -139,12 +150,17 @@ public class CCGameRoomImpl implements CCGameRoomView {
     }
 
     @Override
-    public void leaveStage(int userId) {
+    public void onVoiceWave(String userIds) {
+        runOnGLThread(() -> gameRoomJNI.receiveVoiceWave(userIds));
+    }
+
+    @Override
+    public void leaveStage(String userId) {
         runOnGLThread(() -> gameRoomJNI.backOffStageAvatar(userId));
     }
 
     @Override
-    public void leaveStand(int userId) {
+    public void leaveStand(String userId) {
         runOnGLThread(() -> gameRoomJNI.backOffStandAvatar(userId));
     }
 

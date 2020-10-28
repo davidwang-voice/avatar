@@ -8,7 +8,7 @@
 
 // Obj-C headers
 #import <MediaPlayer/MediaPlayer.h>
-#import "EAGLView.h"
+//#import "EAGLView.h"
 #import "iOSWrapper.h"
 #import "iOSPlayer.h"
 

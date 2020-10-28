@@ -7,7 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
-#import <EAGLView.h>
+//#import <EAGLView.h>
 #include "AudioManager.h"
 
 @interface DPiOSPlayer : NSObject  {

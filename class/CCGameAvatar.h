@@ -25,6 +25,8 @@ private:
     string _name;
     string _uid;
     bool _loaded;
+    float _target_x;
+    float _target_y;
 
     void initAvatar();
     void shakingBody();
@@ -44,13 +46,7 @@ public:
     static CCGameAvatar* create(int id, int ranking, string uid, string skin, string name, int priority = 0);
 
     void setPosition(const Vec2& pos) override;
-
-    void onTouchesBegan(const vector<Touch *> &touches, Event *event) override;
-    void onTouchesMoved(const vector<Touch *> &touches, Event *event) override;
-    void onTouchesEnded(const vector<Touch *> &touches, Event *event) override;
-
-
-    void onEnter() override;
+    const Vec2 getCenterPosition() const;
 
     bool onTouchBegan(Touch *touch, Event *event) override;
 
@@ -58,11 +54,13 @@ public:
 
     void onTouchEnded(Touch *touch, Event *event) override;
 
-    void updateStatus(bool mute, bool ssr);
+    void updateElement(int rank, const char* name, const char* path, bool ssr, bool mute = false);
     void jumpToPosition(const Vec2& target);
     void jumpByPresent();
     void popChatBubble(const char* content);
 
+
+    void setUid(const char* uid);
     const char* getUid();
 };
 

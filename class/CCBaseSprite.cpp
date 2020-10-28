@@ -19,14 +19,14 @@ void CCBaseSprite::onEnter() {
 
     auto listener = EventListenerTouchOneByOne::create();
 
-//    listener->setSwallowTouches(true);
+    listener->setSwallowTouches(true);
 
     listener->onTouchBegan = CC_CALLBACK_2(CCBaseSprite::onTouchBegan, this);
     listener->onTouchMoved = CC_CALLBACK_2(CCBaseSprite::onTouchMoved, this);
     listener->onTouchEnded = CC_CALLBACK_2(CCBaseSprite::onTouchEnded, this);
 
 //    if (_fixedPriority != 0) {
-//        _eventDispatcher->addEventListenerWithFixedPriority(listener->clone(), _fixedPriority);
+//        _eventDispatcher->addEventListenerWithFixedPriority(listener, _ranking + 1);
 //    } else {
         _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
 //    }
@@ -50,24 +50,10 @@ int CCBaseSprite::getRanking() {
 
 void CCBaseSprite::updateRanking(int ranking) {
     _ranking = ranking;
-//    if (_listener != nullptr) {
-//        _eventDispatcher->removeEventListener(_listener);
-//        _eventDispatcher->addEventListenerWithFixedPriority(listener->clone(), 1000 - _ranking);
-//    }
-}
-
-void CCBaseSprite::onTouchesBegan(const std::vector<Touch*>& touches, Event *event) {
-}
-
-void CCBaseSprite::onTouchesMoved(const std::vector<Touch*>& touches, Event *event) {
-    // do nothing at present
-}
-
-void CCBaseSprite::onTouchesEnded(const std::vector<Touch*>& touches, Event *event) {
 }
 
 bool CCBaseSprite::onTouchBegan(Touch* touch, Event  *event) {
-    return true;
+    return false;
 }
 void CCBaseSprite::onTouchMoved(Touch* touch, Event  *event) {
 
@@ -80,7 +66,10 @@ void CCBaseSprite::onTouchEnded(Touch* touch, Event  *event) {
 
 void CCBaseSprite::loadTexture(const char *name, const char *def) {
 
-    const char* _file_path = getGameResourcePath(name);
+    std::string _file_path("");
+    getGameResourcePath(_file_path, name);
+
+    log("request start - resource _file_path: %s", _file_path.c_str());
     if (FileUtils::sharedFileUtils()->isFileExist(_file_path)) {
         setTexture(_file_path);
     } else {
@@ -88,8 +77,10 @@ void CCBaseSprite::loadTexture(const char *name, const char *def) {
             setTexture(def);
         }
 
-        const char* _file_url = getGameResourceUrl(name);
-        sendResourceRequest(_file_url, name);
+        std::string _file_url("");
+        getGameResourceUrl(_file_url, name);
+
+        sendResourceRequest(_file_url.c_str(), name);
     }
 }
 
@@ -130,16 +121,23 @@ void CCBaseSprite::onRequestCompleted(HttpClient *sender, HttpResponse *response
 //    image->release();
 //    setTexture(texture);
 
-    vector<char> *_buffer = response->getResponseData();
-    string _file_path = getGameResourcePath(_tag);
-    string _buff(_buffer->begin(),_buffer->end());
+    std::string _file_path("");
+    getGameResourcePath(_file_path, _tag);
 
-    FILE *fp = fopen(_file_path.c_str(), "wb+");
-    fwrite(_buff.c_str(), 1,_buffer->size(),  fp);
-    fclose(fp);
+    try {
+        vector<char> *_buffer = response->getResponseData();
 
-    log("request completed - resource file path: %s",_file_path.c_str());
+        std::string _buff(_buffer->begin(),_buffer->end());
 
-    setTexture(_file_path);
+        FILE *fp = fopen(_file_path.c_str(), "wb+");
+        fwrite(_buff.c_str(), 1,_buffer->size(),  fp);
+        fclose(fp);
 
+        log("request completed - resource file path: %s", _file_path.c_str());
+
+        setTexture(_file_path);
+    }
+    catch(...) {
+        log("request completed - save to local error: %s", _file_path.c_str());
+    }
 }

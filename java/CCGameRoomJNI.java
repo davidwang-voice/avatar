@@ -28,7 +28,7 @@ public class CCGameRoomJNI {
 
 
     public interface CCListener {
-        void onTouchedAvatar(int id);
+        void onTouchedAvatar(String uid);
 
         void onTouchedScene();
     }
@@ -47,10 +47,10 @@ public class CCGameRoomJNI {
     }
 
     //native call.
-    public static void onTouchedAvatar(int id) {
-        Log.i(TAG, "onTouchedAvatar id: " + id);
+    public static void onTouchedAvatar(String uid) {
+        Log.i(TAG, "onTouchedAvatar id: " + uid);
         if (getInstance().getCCListener() != null)
-            getInstance().getCCListener().onTouchedAvatar(id);
+            getInstance().getCCListener().onTouchedAvatar(uid);
     }
 
     public static void onTouchedScene() {
@@ -59,24 +59,30 @@ public class CCGameRoomJNI {
             getInstance().getCCListener().onTouchedScene();
     }
 
-
-
     public native int[] getGLContextAttrs();
 
     public native void setDesignResolution(float width, float height);
 
-    public native void receiveGiftMessage(int id, String path);
+    public native void setStageBackground(String path);
 
-    public native void receiveChatMessage(int id, String content);
+    public native void setupStageGiftHeap(String json);
+
+    public native void updateSelfAvatar(String json);
 
     public native void updateStageAvatars(String json);
 
     public native void updateStandAvatars(String json);
 
-//    public native void onVoiceWaveHappened(String json);
+    public native void backOffStageAvatar(String uid);
 
-    public native void backOffStageAvatar(int id);
-    public native void backOffStandAvatar(int id);
+    public native void backOffStandAvatar(String uid);
+
+    public native void receiveGiftMessage(String uid, String path);
+
+    public native void receiveChatMessage(String uid, String content);
+
+    public native void receiveVoiceWave(String uids);
+
 
     public native void releaseResource();
 

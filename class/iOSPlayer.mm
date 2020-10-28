@@ -15,23 +15,23 @@ DPiOSPlayer *playerInstance = nil;
 @implementation DPiOSPlayer
 
 - (void)playVideo:(NSURL *)url withView:(UIView *) view{
-	dpPlayer = [[MPMoviePlayerController alloc] initWithContentURL:url];
-	[[dpPlayer view] setFrame: [view bounds]];
-	[dpPlayer setFullscreen:YES];
-	[dpPlayer setScalingMode:MPMovieScalingModeNone];
-	[dpPlayer setControlStyle:MPMovieControlStyleFullscreen];
-	[view addSubview:[dpPlayer view]];
-	[dpPlayer play];
-
-	[[NSNotificationCenter defaultCenter] addObserver:self
-																					 selector:@selector(exitFullscreen)
-																							 name:MPMoviePlayerDidExitFullscreenNotification
-																						 object:nil];
-
-	[[NSNotificationCenter defaultCenter] addObserver:self
-																					 selector:@selector(videoEnded)
-																							 name:MPMoviePlayerPlaybackDidFinishNotification
-																						 object:nil];
+//	dpPlayer = [[MPMoviePlayerController all oc] initWithContentURL:url];
+//	[[dpPlayer view] setFrame: [view bounds]];
+//	[dpPlayer setFullscreen:YES];
+//	[dpPlayer setScalingMode:MPMovieScalingModeNone];
+//	[dpPlayer setControlStyle:MPMovieControlStyleFullscreen];
+//	[view addSubview:[dpPlayer view]];
+//	[dpPlayer play];
+//
+//	[[NSNotificationCenter defaultCenter] addObserver:self
+//																					 selector:@selector(exitFullscreen)
+//																							 name:MPMoviePlayerDidExitFullscreenNotification
+//																						 object:nil];
+//
+//	[[NSNotificationCenter defaultCenter] addObserver:self
+//																					 selector:@selector(videoEnded)
+//																							 name:MPMoviePlayerPlaybackDidFinishNotification
+//																						 object:nil];
 }
 
 - (void)exitFullscreen {
@@ -43,14 +43,14 @@ DPiOSPlayer *playerInstance = nil;
 }
 
 - (void)removeVideo {
-	if ([dpPlayer playbackState] == MPMoviePlaybackStatePaused) {
-		[[dpPlayer view] removeFromSuperview];
-		dpPlayer = nil;
-
-		[[NSNotificationCenter defaultCenter] removeObserver:self name:MPMoviePlayerDidExitFullscreenNotification object:nil];
-		[[NSNotificationCenter defaultCenter] removeObserver:self name:MPMoviePlayerPlaybackDidFinishNotification object:nil];
-		AudioManager::getInstance()->playBG();
-	}
+//	if ([dpPlayer playbackState] == MPMoviePlaybackStatePaused) {
+//		[[dpPlayer view] removeFromSuperview];
+//		dpPlayer = nil;
+//
+//		[[NSNotificationCenter defaultCenter] removeObserver:self name:MPMoviePlayerDidExitFullscreenNotification object:nil];
+//		[[NSNotificationCenter defaultCenter] removeObserver:self name:MPMoviePlayerPlaybackDidFinishNotification object:nil];
+//		AudioManager::getInstance()->playBG();
+//	}
 }
 
 + (DPiOSPlayer *)getInstance {

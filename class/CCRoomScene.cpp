@@ -1,5 +1,5 @@
-#include <CCGameAvatar.h>
-#include <CCRoomDelegate.h>
+#include "CCGameAvatar.h"
+#include "CCRoomDelegate.h"
 #include "SimpleAudioEngine.h"
 #include "CCRoomScene.h"
 #include "AppDelegate.h"
@@ -62,19 +62,21 @@ bool CCRoomScene::init() {
 //    }
 
     AppDelegate::g_lastOrientation = isPortrait ? 1 : 2;
-
+    
     return true;
 }
 
 void CCRoomScene::onEnter() {
     Node::onEnter();
 
-    auto listener = EventListenerTouchAllAtOnce::create();
+//    auto listener = EventListenerTouchAllAtOnce::create();
+    auto listener = EventListenerTouchOneByOne::create();
 
-    listener->onTouchesBegan = CC_CALLBACK_2(CCRoomScene::onTouchesBegan, this);
-    listener->onTouchesMoved = CC_CALLBACK_2(CCRoomScene::onTouchesMoved, this);
-    listener->onTouchesEnded = CC_CALLBACK_2(CCRoomScene::onTouchesEnded, this);
+    listener->onTouchBegan = CC_CALLBACK_2(CCRoomScene::onTouchBegan, this);
+    listener->onTouchMoved = CC_CALLBACK_2(CCRoomScene::onTouchMoved, this);
+    listener->onTouchEnded = CC_CALLBACK_2(CCRoomScene::onTouchEnded, this);
 
+    listener->setSwallowTouches(true);
     _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
 
     _listener = listener;
@@ -99,7 +101,7 @@ void CCRoomScene::onTouchesBegan(const std::vector<Touch*>& touches, Event *even
             g_prevState = g_state = PanZoomState::Zoom;
         if (_startPoint == Vec2::ZERO)
             _startPoint = touches[0]->getStartLocationInView();
-        onTouchDown();
+//        onTouchDown();
     }
 }
 
@@ -175,7 +177,7 @@ void CCRoomScene::onTouchesEnded(const std::vector<Touch*>& touches, Event *even
             auto glview = Director::getInstance()->getOpenGLView();
             if (glview->getAllTouches().size() == 0)
                 g_state = PanZoomState::None;
-            onTouchUp();
+//            onTouchUp();
         }
 
 //        if (g_prevState == PanZoomState::Pan) {
@@ -195,6 +197,26 @@ void CCRoomScene::onTouchesEnded(const std::vector<Touch*>& touches, Event *even
             g_prevState = g_state;
     }
 }
+
+
+bool CCRoomScene::onTouchBegan(Touch* touches, Event  *event) {
+
+    if (auto _scene = dynamic_cast<CCRoomScene*>(event->getCurrentTarget())) {
+        log("Scene onTouchBegan..x=%f, y=%f", touches->getLocation().x, touches->getLocation().y);
+        return true;
+    }
+    return false;
+}
+void CCRoomScene::onTouchMoved(Touch* touches, Event  *event) {
+
+}
+void CCRoomScene::onTouchEnded(Touch* touches, Event  *event) {
+
+    if (auto _scene = dynamic_cast<CCRoomScene*>(event->getCurrentTarget())) {
+        log("Scene onTouchesEnded..x=%f, y=%f", touches->getLocation().x, touches->getLocation().y);
+    }
+}
+
 
 void CCRoomScene::changeDirection(int width, int height) {
     log("changeDirection: w %d, h %d", width, height);

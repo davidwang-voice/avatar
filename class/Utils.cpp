@@ -1,5 +1,6 @@
 #include "Utils.h"
 
+#if CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID
 char* jstringToChar(JNIEnv* env, jstring jstr) {
     char* rtn = NULL;
     jclass clsstring = env->FindClass("java/lang/String");
@@ -16,18 +17,14 @@ char* jstringToChar(JNIEnv* env, jstring jstr) {
     env->ReleaseByteArrayElements(barr, ba, 0);
     return rtn;
 }
+#endif
 
-
-const char* getGameResourceUrl(const char* name) {
-    std::string _res_url("");
-    _res_url.append(_CC_GAME_FILE_HTTP_PATH);
-    _res_url.append(name);
-    return _res_url.c_str();
+void getGameResourceUrl(std::string &res_url, const char* name) {
+    res_url.append(_CC_GAME_FILE_HTTP_PATH);
+    res_url.append(name);
 }
 
-const char* getGameResourcePath(const char* name) {
-    std::string _res_path("");
-    _res_path.append(cocos2d::FileUtils::sharedFileUtils()->getWritablePath());
-    _res_path.append(name);
-    return _res_path.c_str();
+void getGameResourcePath(std::string &res_path, const char* name) {
+    res_path.append(cocos2d::FileUtils::sharedFileUtils()->getWritablePath());
+    res_path.append(name);
 }

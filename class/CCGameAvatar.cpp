@@ -6,6 +6,7 @@
 
 #include <utility>
 #include "CCGameAvatar.h"
+#include "CCRoomScene.h"
 #include <iomanip>
 
 USING_NS_CC;
@@ -64,18 +65,10 @@ void CCGameAvatar::initAvatar() {
 
 
     _loaded = false;
+    _target_x = 0.0;
+    _target_y = 0.0;
 
 }
-
-void CCGameAvatar::onEnter() {
-    CCBaseSprite::onEnter();
-    if (auto listener = dynamic_cast<EventListenerTouchOneByOne*>(_listener)) {
-//        listener->setSwallowTouches(true);
-    }
-
-
-}
-
 
 void CCGameAvatar::shakingBody() {
     auto _rotateRight = RotateTo::create(0.9f, 6.0f);
@@ -87,55 +80,28 @@ void CCGameAvatar::shakingBody() {
 void CCGameAvatar::setPosition(const Vec2 &position) {
 
     Sprite::setPosition(position);
+    _target_x = position.x;
+    _target_y = position.x;
 //    log("sprite x: %f, y: %f", getPosition().x, getPosition().y);
 }
 
-
-void CCGameAvatar::onTouchesBegan(const vector<Touch *> &touches, Event *event) {
-    CCBaseSprite::onTouchesBegan(touches, event);
-    if(touches.size() == 1) {
-        if (auto _avatar = dynamic_cast<CCGameAvatar*>(event->getCurrentTarget())) {
-            Point _locationInNode = touches[0]->getLocation();
-            auto _pos = _avatar->getParent()->convertToNodeSpace(_locationInNode);
-            Rect _rect = _avatar->getBoundingBox();
-            if (_rect.containsPoint(_pos)) {
-                log("Avatar onTouchesBegan... index = %d, uid = %s", _avatar->_id, _avatar->getUid());
-            }
-        }
-    }
-}
-
-void CCGameAvatar::onTouchesMoved(const vector<Touch *> &touches, Event *event) {
-    CCBaseSprite::onTouchesMoved(touches, event);
-}
-
-void CCGameAvatar::onTouchesEnded(const vector<Touch *> &touches, Event *event) {
-    CCBaseSprite::onTouchesEnded(touches, event);
-
-    if(touches.size() == 1) {
-        if (auto _avatar = dynamic_cast<CCGameAvatar*>(event->getCurrentTarget())) {
-            Point _locationInNode = touches[0]->getLocation();
-            auto _pos = _avatar->getParent()->convertToNodeSpace(_locationInNode);
-            Rect _rect = _avatar->getBoundingBox();
-            if (_rect.containsPoint(_pos)) {
-                log("Avatar onTouchesEnd... index = %d, uid = %s", _avatar->_id, _avatar->getUid());
-                onTouchedAvatar(_avatar->getUid());
-            }
-        }
-    }
+const Vec2 CCGameAvatar::getCenterPosition() const {
+    return Vec2(_target_x, _target_y + getContentSize().height / 2);
 }
 
 bool CCGameAvatar::onTouchBegan(Touch *touch, Event *event) {
-    log("Avatar onTouchesBegan... name = %s", typeid(event->getCurrentTarget()).name());
     if (auto _avatar = dynamic_cast<CCGameAvatar*>(event->getCurrentTarget())) {
         Point _locationInNode = touch->getLocation();
         auto _pos = _avatar->getParent()->convertToNodeSpace(_locationInNode);
         Rect _rect = _avatar->getBoundingBox();
         if (_rect.containsPoint(_pos)) {
             log("Avatar onTouchesBegan... index = %d, uid = %s", _avatar->_id, _avatar->getUid());
+
+            return true;
         }
     }
-    return true;
+
+    return false;
 }
 
 void CCGameAvatar::onTouchMoved(Touch *touch, Event *event) {
@@ -149,24 +115,32 @@ void CCGameAvatar::onTouchEnded(Touch *touch, Event *event) {
         Rect _rect = _avatar->getBoundingBox();
         if (_rect.containsPoint(_pos)) {
             log("Avatar onTouchesEnd... index = %d, uid = %s", _avatar->_id, _avatar->getUid());
-            onTouchedAvatar(_avatar->getUid());
+//            onTouchedAvatar(_avatar->getUid());
         }
     }
 }
 
 
+void CCGameAvatar::updateElement(int rank, const char *name, const char *path, bool ssr, bool mute) {
+    log("updateElement localzorder=%d", (rank + 1));
+    this->setLocalZOrder(rank + 1);
 
-void CCGameAvatar::updateStatus(bool mute, bool ssr) {
-
+    this->_skin = path;
+    this->_name = name;
 
 }
 
+void CCGameAvatar::setUid(const char *uid) {
+    this->_uid = uid;
+}
 
 const char* CCGameAvatar::getUid() {
     return _uid.c_str();
 }
 
 void CCGameAvatar::jumpToPosition(const Vec2 &target) {
+    this->_target_x = target.x;
+    this->_target_y = target.y;
 
     auto _cur_pos = this->getPosition();
     if (_cur_pos.equals(target)) {

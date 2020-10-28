@@ -2,7 +2,7 @@
 // Created by David on 2020/10/14.
 //
 #include <jni.h>
-#include <RoomManager.h>
+#include <CCRoomDelegate.h>
 #include "platform/android/CCApplication-android.h"
 #include "platform/android/CCGLViewImpl-android.h"
 #include "platform/android/jni/JniHelper.h"
@@ -37,38 +37,60 @@ extern "C" {
                                                                              jfloat height) {
         AppDelegate::setDesignResolutionSize(width, height);
     }
-    JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_receiveGiftMessage(JNIEnv *env, jobject thiz,
-                                                                            jint id, jstring path) {
-        RoomManager::getInstance()->receiveGiftMessage(id, jstringToChar(env, path));
+    JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_setStageBackground(JNIEnv *env, jobject thiz, jstring path) {
+        CCRoomDelegate::getInstance()->setStageBackground(jstringToChar(env, path));
     }
-    JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_receiveChatMessage(JNIEnv *env, jobject thiz,
-                                                                            jint id, jstring content) {
-        RoomManager::getInstance()->receiveChatMessage(id, jstringToChar(env, content));
+
+    JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_setupStageGiftHeap(JNIEnv *env, jobject thiz,
+                                                                          jstring json) {
+        CCRoomDelegate::getInstance()->setupStageGiftHeap(jstringToChar(env, json));
     }
+
+    JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_updateSelfAvatar(JNIEnv *env, jobject thiz,
+                                                                          jstring json) {
+        CCRoomDelegate::getInstance()->updateSelfAvatar(jstringToChar(env, json));
+    }
+
     JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_updateStageAvatars(JNIEnv *env, jobject thiz,
-                                                                            jstring json) {
-        RoomManager::getInstance()->updateStageAvatars(jstringToChar(env, json));
+                                                                                                   jstring json) {
+        CCRoomDelegate::getInstance()->updateStageAvatars(jstringToChar(env, json));
     }
+
     JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_updateStandAvatars(JNIEnv *env, jobject thiz,
-                                                                            jstring json) {
-        RoomManager::getInstance()->updateStandAvatars(jstringToChar(env, json));
+                                                                                                   jstring json) {
+        CCRoomDelegate::getInstance()->updateStandAvatars(jstringToChar(env, json));
     }
     JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_backOffStageAvatar(JNIEnv *env, jobject thiz,
-                                                                            jint id) {
-        RoomManager::getInstance()->backOffStageAvatar(id);
+                                                                                                   jstring uid) {
+        CCRoomDelegate::getInstance()->backOffStageAvatar(jstringToChar(env, uid));
     }
     JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_backOffStandAvatar(JNIEnv *env, jobject thiz,
-                                                                            jint id) {
-        RoomManager::getInstance()->backOffStandAvatar(id);
+                                                                                                   jstring uid) {
+        CCRoomDelegate::getInstance()->backOffStandAvatar(jstringToChar(env, uid));
     }
+
+    JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_receiveGiftMessage(JNIEnv *env, jobject thiz,
+                                                                                                   jstring uid, jstring path) {
+        CCRoomDelegate::getInstance()->receiveGiftMessage(jstringToChar(env, uid), jstringToChar(env, path));
+    }
+    JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_receiveChatMessage(JNIEnv *env, jobject thiz,
+                                                                                                   jstring uid, jstring content) {
+        CCRoomDelegate::getInstance()->receiveChatMessage(jstringToChar(env, uid), jstringToChar(env, content));
+    }
+
+    JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_receiveVoiceWave(JNIEnv *env, jobject thiz,
+                                                                      jstring uids) {
+        CCRoomDelegate::getInstance()->receiveVoiceWave(jstringToChar(env, uids));
+    }
+
     JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_releaseResource(JNIEnv *env, jobject thiz) {
-        RoomManager::getInstance()->releaseResource();
+        CCRoomDelegate::getInstance()->releaseResource();
     }
 
 }
 
-void onTouchedAvatar(int id) {
-    JniHelper::callStaticVoidMethod(className, "onTouchedAvatar", id);
+void onTouchedAvatar(const char* uid) {
+    JniHelper::callStaticVoidMethod(className, "onTouchedAvatar", uid);
 }
 
 void onTouchDown() {

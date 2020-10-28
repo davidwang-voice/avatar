@@ -30,6 +30,8 @@ class CCRoomDelegate {
 
 private:
     static const int _TAG_STAGE_BACKGROUND = 101;
+    static const int _TAG_SELF_AVATAR = 102;
+    static const int _TAG_SELF_APERTURE = 103;
 
     static const int _STAND_ARC_HEIGHT = 60;
     static const int _STAND_MAX_ROW_COUNT = 7;
@@ -48,7 +50,7 @@ private:
 
     Scene* _scene;
     Vec2 _visibleOrigin = Vec2::ZERO;
-    Size _visibleSize = Size::ZERO;
+    CCSize _visibleSize = CCSize::ZERO;
     Vec2 _centerPosition;
     float _scaleFactor;
     int _standRowCount[_STAND_MAX_ROW_COUNT];
@@ -57,16 +59,28 @@ private:
     Vector<CCGameStep*> _stageSteps;
     Vector<CCGameGift*> _giftHolder;
 
+
+
+
     const Vec2 getStagePosition(int index) const;
     const Vec2 getStandPosition(int index) const;
+    const Vec2 getSelfPosition() const;
+    const Vec2 getGiftPosition() const;
+
+
     CCGameAvatar* findStageAvatar(const char* uid);
     CCGameAvatar* findStandAvatar(const char* uid);
+    CCGameAvatar* findSelfAvatar(const char* uid);
     CCGameAvatar* findAvatar(const char* uid);
     CCGameAvatar* createAvatar(int rank, const char* uid, const char* name, const char* path, const Vec2 &pos);
     CCGameAvatar* removeAvatar(const char* uid);
 
+
+    CCGameAvatar* getSelfAvatar(const char* uid);
+
     void reorganizeStageAvatars();
     void reorganizeStandAvatars();
+    void reorganizeSelfAvatar();
 
     void createAndPresentGift(const Vec2& pos, const char* imagePath);
     void limitGiftHolderSize();
@@ -76,7 +90,8 @@ public:
     void init(Scene* scene);
 
     void setStageBackground(const char* path);
-
+    void setupStageGiftHeap(const char* json);
+    void updateSelfAvatar(const char* json);
     void updateStageAvatars(const char* json);
     void updateStandAvatars(const char* json);
     void backOffStageAvatar(const char* uid);

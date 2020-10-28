@@ -40,6 +40,10 @@ public:
     void onTouchesMoved(const vector<Touch*>& touches, Event  *event);
     void onTouchesEnded(const vector<Touch*>& touches, Event  *event);
 
+    bool onTouchBegan(Touch* touches, Event  *event);
+    void onTouchMoved(Touch* touches, Event  *event);
+    void onTouchEnded(Touch* touches, Event  *event);
+
     void changeDirection(int width, int height);
     CCBaseSprite* getStage() { return _stage; };
 

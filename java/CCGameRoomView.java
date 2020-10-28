@@ -8,6 +8,8 @@ import android.widget.FrameLayout;
  */
 public interface CCGameRoomView {
 
+    void setCallback(Callback callback);
+
     void focusChanged(boolean focus);
 
     void resume();
@@ -16,18 +18,31 @@ public interface CCGameRoomView {
 
     void release();
 
-    void presentGift(int userId, String url);
+    void setBackground(String url);
 
-    void presentChat(int userId, String content);
+    void setupGiftHeap(String json);
+
+    void setSelfAvatar(String json);
+
+    void presentGift(String userId, String url);
+
+    void presentChat(String userId, String content);
 
     void syncStageUsers(String json);
 
     void syncStandUsers(String json);
 
-//  void onVoiceWave(String json);
+    void onVoiceWave(String userIds);
 
-    void leaveStage(int userId);
-    void leaveStand(int userId);
+    void leaveStage(String userId);
+    void leaveStand(String userId);
+
+    interface Callback {
+        void onTouchGameAvatar(String uid);
+
+        void onTouchGameScene();
+    }
+
 
     class Creator {
         public static CCGameRoomView create(Context context, FrameLayout parent) {
