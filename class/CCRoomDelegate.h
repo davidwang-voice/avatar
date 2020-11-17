@@ -9,7 +9,16 @@
 #include "CCGameAvatar.h"
 #include "CCGameStep.h"
 #include "CCGameGift.h"
-#include <map>
+
+
+
+#if CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID
+#include "../proj.android/libccgameroom/jni/cpp/com_iandroid_allclass_ccgame_room_CCGameRoomJNI.h"
+#elif CC_TARGET_PLATFORM == CC_PLATFORM_IOS
+#include "OCCallback.h"
+#endif
+
+
 
 using namespace std;
 using namespace cocos2d;
@@ -33,20 +42,33 @@ private:
     static const int _TAG_SELF_AVATAR = 102;
     static const int _TAG_SELF_APERTURE = 103;
 
+    static const int _RANK_STAND_DEFAULT = 1;
+    static const int _RANK_STAGE_DEFAULT = 101;
+    static const int _RANK_SELF_DEFAULT = 100;
+
+    static const int _SELF_GROUND_BOTTOM = 120;
+
     static const int _STAND_ARC_HEIGHT = 60;
     static const int _STAND_MAX_ROW_COUNT = 7;
     static const int _STAND_ROW_HEIGHT = 140;
     static const int _STAND_FRONT_ROW_HEIGHT = 150;
-    static const int _STAND_FRONT_ROW_TOP = 1100;
+    static const int _STAND_FRONT_ROW_TOP = 1052;
 
     static const int _STAGE_BLOCK_COUNT = 3;
-    static const int _STAGE_BLOCK_WIDTH = 120;
-    static const int _STAGE_BLOCK_TOP = 600;
+    static const int _STAGE_BLOCK_WIDTH = 135;
+    static const int _STAGE_BLOCK_TOP = 530;
+    static const int _STAGE_BLOCK_LEFT = 764;
+    static const int _STAGE_STEP_TOP = 567;
 
 
+    static const int _GIFT_HOLDER_SIZE = 200;
     static const int _GIFT_TABLE_WIDTH = 960;
-    static const int _GIFT_TABLE_HEIGHT = 90;
-    static const int _GIFT_TABLE_TOP = 915;
+    static const int _GIFT_TABLE_HEIGHT_MIN = 100;
+    static const int _GIFT_TABLE_HEIGHT_MAX = 120;
+    static const int _GIFT_TABLE_TOP = 870;
+
+    static const int _NONE_SPACE_X = 100;
+    static const int _NONE_SPACE_Y = 1000;
 
     Scene* _scene;
     Vec2 _visibleOrigin = Vec2::ZERO;
@@ -61,18 +83,19 @@ private:
 
 
 
-
+    const Vec2 getStepPosition(int index) const;
     const Vec2 getStagePosition(int index) const;
     const Vec2 getStandPosition(int index) const;
     const Vec2 getSelfPosition() const;
     const Vec2 getGiftPosition() const;
+    const Vec2 getNonePosition() const;
 
 
     CCGameAvatar* findStageAvatar(const char* uid);
     CCGameAvatar* findStandAvatar(const char* uid);
     CCGameAvatar* findSelfAvatar(const char* uid);
     CCGameAvatar* findAvatar(const char* uid);
-    CCGameAvatar* createAvatar(int rank, const char* uid, const char* name, const char* path, const Vec2 &pos);
+    CCGameAvatar* createAvatar(int rank, const char* uid, const char* name, const char* url, const Vec2 &pos);
     CCGameAvatar* removeAvatar(const char* uid);
 
 
@@ -82,14 +105,14 @@ private:
     void reorganizeStandAvatars();
     void reorganizeSelfAvatar();
 
-    void createAndPresentGift(const Vec2& pos, const char* imagePath);
+    void createAndPresentGift(const Vec2& pos, const char* url);
     void limitGiftHolderSize();
 
 public:
     virtual ~CCRoomDelegate();
     void init(Scene* scene);
 
-    void setStageBackground(const char* path);
+    void setStageBackground(const char* url);
     void setupStageGiftHeap(const char* json);
     void updateSelfAvatar(const char* json);
     void updateStageAvatars(const char* json);
@@ -97,7 +120,7 @@ public:
     void backOffStageAvatar(const char* uid);
     void backOffStandAvatar(const char* uid);
 
-    void receiveGiftMessage(const char* uid, const char* imagePath);
+    void receiveGiftMessage(const char* uid, const char* url);
     void receiveChatMessage(const char* uid, const char* content);
     void receiveVoiceWave(const char* uids);
     void releaseResource();
@@ -109,5 +132,10 @@ protected:
 
 
 };
+
+
+void onTouchAvatar(const char* uid);
+
+void onTouchScene();
 
 #endif //__VOICE_ROOM_MANAGER_H_

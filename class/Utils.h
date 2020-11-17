@@ -19,4 +19,7 @@ char* jstringToChar(JNIEnv* env, jstring jstr);
 void getGameResourceUrl(std::string &res_url, const char* name);
 void getGameResourcePath(std::string &res_path, const char* name);
 
+std::string getStringMD5Hash(const std::string &string);
+
 #endif
+

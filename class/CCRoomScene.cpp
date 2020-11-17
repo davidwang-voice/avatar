@@ -214,6 +214,7 @@ void CCRoomScene::onTouchEnded(Touch* touches, Event  *event) {
 
     if (auto _scene = dynamic_cast<CCRoomScene*>(event->getCurrentTarget())) {
         log("Scene onTouchesEnded..x=%f, y=%f", touches->getLocation().x, touches->getLocation().y);
+        onTouchScene();
     }
 }
 

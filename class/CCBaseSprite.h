@@ -9,10 +9,6 @@
 #include "Utils.h"
 #include "network/HttpClient.h"
 
-#if CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID
-#include "../proj.android/libccgameroom/jni/cpp/com_iandroid_allclass_ccgame_room_CCGameRoomJNI.h"
-#endif
-
 using namespace std;
 using namespace cocos2d;
 using namespace cocos2d::network;

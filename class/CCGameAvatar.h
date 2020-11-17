@@ -5,7 +5,6 @@
 #ifndef __VOICE_ROOM_AVATAR_H_
 #define __VOICE_ROOM_AVATAR_H_
 
-
 #include <utility>
 #include "cocos2d.h"
 #include "CCBaseSprite.h"
@@ -20,6 +19,11 @@ private:
     static const int _TAG_JUMP_TO_ACTION = 10001;
     static const int _TAG_MOVE_TO_ACTION = 10002;
     static const int _TAG_JUMP_BY_ACTION = 10003;
+
+    static const int _TAG_RANK_LABEL = 101;
+    static const int _TAG_RANK_LAYER = 102;
+    static const int _TAG_NAME_LABEL = 103;
+    static const int _TAG_NAME_LAYER = 104;
 
     string _skin;
     string _name;
@@ -42,6 +46,7 @@ protected:
 
 public:
     virtual ~CCGameAvatar() = default;
+    bool isOnStage = false;
 
     static CCGameAvatar* create(int id, int ranking, string uid, string skin, string name, int priority = 0);
 
@@ -54,7 +59,9 @@ public:
 
     void onTouchEnded(Touch *touch, Event *event) override;
 
-    void updateElement(int rank, const char* name, const char* path, bool ssr, bool mute = false);
+    void updateRank(int rank);
+    void updateElement(const char* name, const char* path, int level);
+
     void jumpToPosition(const Vec2& target);
     void jumpByPresent();
     void popChatBubble(const char* content);

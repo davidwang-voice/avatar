@@ -1,5 +1,7 @@
 #include "Utils.h"
 
+#include "base/ccUtils.h"
+
 #if CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID
 char* jstringToChar(JNIEnv* env, jstring jstr) {
     char* rtn = NULL;
@@ -20,11 +22,25 @@ char* jstringToChar(JNIEnv* env, jstring jstr) {
 #endif
 
 void getGameResourceUrl(std::string &res_url, const char* name) {
-    res_url.append(_CC_GAME_FILE_HTTP_PATH);
+//    res_url.append(_CC_GAME_FILE_HTTP_PATH);
+
     res_url.append(name);
+
 }
 
 void getGameResourcePath(std::string &res_path, const char* name) {
     res_path.append(cocos2d::FileUtils::sharedFileUtils()->getWritablePath());
-    res_path.append(name);
+
+    res_path.append(getStringMD5Hash(name));
 }
+
+std::string getStringMD5Hash(const std::string &string) {
+    cocos2d::Data data;
+    data.fastSet((unsigned char *) string.c_str(), string.size());
+    std::string md5Str = cocos2d::utils::getDataMD5Hash(data);
+    data.fastSet(nullptr, NULL);
+    return md5Str;
+}
+
+
+

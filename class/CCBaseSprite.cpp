@@ -91,6 +91,7 @@ void CCBaseSprite::sendResourceRequest(const char *url, const char *tag) {
     _request->setRequestType(HttpRequest::Type::GET);
     _request->setResponseCallback(CC_CALLBACK_2(CCBaseSprite::onRequestCompleted, this));
     _request->setTag(tag);
+    HttpClient::getInstance()->setTimeoutForConnect(30);
     HttpClient::getInstance()->sendImmediate(_request);
     _request->release();
 }

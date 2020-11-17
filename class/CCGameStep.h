@@ -18,6 +18,7 @@ private:
     static const int _TAG_WAVE_ANIM_ACTION = 1001;
     string _skin;
     string _uid;
+    bool _mute;
     void initStep();
 
 protected:
@@ -29,6 +30,7 @@ public:
     virtual ~CCGameStep() = default;
     static CCGameStep* create(int id, int ranking, string skin, int priority = 0);
     void runVoiceWave();
+    void setMute(bool mute);
     void setUid(const char *uid);
     const char* getUid();
 };

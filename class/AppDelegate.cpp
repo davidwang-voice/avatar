@@ -50,7 +50,7 @@ typedef struct tagResource {
 
 int AppDelegate::g_lastOrientation = 0;
 
-static cocos2d::Size designResolutionSize = cocos2d::Size(960, 1);
+static cocos2d::Size designResolutionSize = cocos2d::Size(1125, 1);
 
 void AppDelegate::setDesignResolutionSize(float width, float height) {
     designResolutionSize.width = width;
@@ -124,6 +124,8 @@ bool AppDelegate::applicationDidFinishLaunching() {
     auto visibleSize = Director::getInstance()->getVisibleSize();
 
 
+    director->setContentScaleFactor(designResolutionSize.width / screenSize.width);
+
     log("designResolutionSize width: %f, designResolutionSize height: %f", designResolutionSize.width, designResolutionSize.height);
 
     log("Screen width: %f, screen height: %f", screenSize.width, screenSize.height);
@@ -152,7 +154,8 @@ bool AppDelegate::applicationDidFinishLaunching() {
 
     // create a scene. it's an autorelease object
     auto scene = CCRoomScene::createScene();
-
+    scene->setAnchorPoint(Point::ANCHOR_MIDDLE_TOP);
+//    scene->setScale(screenSize.width / designResolutionSize.width);
     // run
     director->runWithScene(scene);
 

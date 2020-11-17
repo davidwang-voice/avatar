@@ -4,7 +4,13 @@
 
 #include <cmath>
 #include <utility>
+
+#if CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID
 #include <cocos/editor-support/cocostudio/DictionaryHelper.h>
+#elif CC_TARGET_PLATFORM == CC_PLATFORM_IOS
+#include "DictionaryHelper.h"
+#endif
+
 #include "AppDelegate.h"
 #include "CCRoomDelegate.h"
 #include "AudioManager.h"
@@ -50,8 +56,7 @@ void CCRoomDelegate::init(Scene* scene) {
     }
 }
 
-void CCRoomDelegate::setStageBackground(const char *path) {
-
+void CCRoomDelegate::setStageBackground(const char *url) {
     if (_scene) {
         auto _child = _scene->getChildByTag(_TAG_STAGE_BACKGROUND);
         if (_child) {
@@ -60,7 +65,7 @@ void CCRoomDelegate::setStageBackground(const char *path) {
     }
 
     auto _stage_background = CCBaseSprite::create();
-    _stage_background->loadTexture(path, "bg-night.jpg");
+    _stage_background->loadTexture(url, "bg_game_room.png");
     float _target_x = _centerPosition.x;
     float _target_y = _centerPosition.y - _stage_background->getContentSize().height / 2;
     _stage_background->setPosition(Vec2(_target_x, _target_y));
@@ -95,7 +100,7 @@ void CCRoomDelegate::setupStageGiftHeap(const char *json) {
     for (int i = 0; i < _data_arr.Size(); ++i) {
         rapidjson::Value &_value = _data_arr[i];
 
-        const char *_path = cocostudio::DICTOOL->getStringValue_json(_value, "path");
+        const char *_url = cocostudio::DICTOOL->getStringValue_json(_value, "url");
 
         auto gift = CCGameGift::create(i, i, "gift/heart.png");
         gift->setPosition(getGiftPosition());
@@ -126,22 +131,26 @@ void CCRoomDelegate::updateSelfAvatar(const char *json) {
         return;
     }
     rapidjson::Value& _value = _document;
-    const char *_path = cocostudio::DICTOOL->getStringValue_json(_value, "path");
+    const char *_url = cocostudio::DICTOOL->getStringValue_json(_value, "url");
     const char *_uid = cocostudio::DICTOOL->getStringValue_json(_value, "uid");
     const char *_name = cocostudio::DICTOOL->getStringValue_json(_value, "name");
 
-    bool _ssr = cocostudio::DICTOOL->getBooleanValue_json(_value, "ssr");
+    int _level = cocostudio::DICTOOL->getIntValue_json(_value, "level");
 
 
-    auto _self_avatar = CCGameAvatar::create(101, 101, _uid, _path, _name);
+    auto _self_avatar = CCGameAvatar::create(_RANK_SELF_DEFAULT, _RANK_SELF_DEFAULT, _uid, _url, _name);
 
     _self_avatar->setUid(_uid);
-    _self_avatar->updateElement(101, _name, _path, _ssr);
-    _self_avatar->setPosition(this->getSelfPosition());
+    _self_avatar->updateElement(_name, _url, _level);
+    _self_avatar->updateRank(_RANK_SELF_DEFAULT);
+
+    auto _self_position = this->getSelfPosition();
+    _self_avatar->setPosition(Vec2(_visibleOrigin.x - _self_avatar->getContentSize().width, _self_position.y));
 
     if (_scene) {
-        _scene->addChild(_self_avatar, 101, _TAG_SELF_AVATAR);
+        _scene->addChild(_self_avatar, _RANK_SELF_DEFAULT, _TAG_SELF_AVATAR);
     }
+    _self_avatar->jumpToPosition(_self_position);
 
     if (_scene) {
         auto _child = _scene->getChildByTag(_TAG_SELF_APERTURE);
@@ -166,9 +175,9 @@ void CCRoomDelegate::updateStageAvatars(const char* json) {
 
 
         for (int i = 0; i < _STAGE_BLOCK_COUNT; ++i) {
-            auto _stage_step = CCGameStep::create(i, i, "gift/heart.png");
-            auto _stage_pos = this->getStagePosition(i);
-            _stage_step->setPosition(Vec2(_stage_pos.x, _stage_pos.y - 40));
+            auto _stage_step = CCGameStep::create(i, i, "");
+            auto _stage_pos = this->getStepPosition(i);
+            _stage_step->setPosition(Vec2(_stage_pos.x, _stage_pos.y));
             if (_scene) {
                 _scene->addChild(_stage_step);
             }
@@ -195,11 +204,11 @@ void CCRoomDelegate::updateStageAvatars(const char* json) {
         if (_position.isZero()) continue;
 
         rapidjson::Value& _value = _data_arr[i];
-        const char *_path = cocostudio::DICTOOL->getStringValue_json(_value, "path");
+        const char *_url = cocostudio::DICTOOL->getStringValue_json(_value, "url");
         const char *_uid = cocostudio::DICTOOL->getStringValue_json(_value, "uid");
         const char *_name = cocostudio::DICTOOL->getStringValue_json(_value, "name");
 
-        bool _ssr = cocostudio::DICTOOL->getBooleanValue_json(_value, "ssr");
+        int _level = cocostudio::DICTOOL->getIntValue_json(_value, "level");
 
         bool _mute = cocostudio::DICTOOL->getBooleanValue_json(_value, "mute");
 
@@ -213,16 +222,19 @@ void CCRoomDelegate::updateStageAvatars(const char* json) {
                 _new_stage_avatars.pushBack(_old_stand_avatar);
             } else {
 
-                auto _new_stage_avatar = createAvatar(i + 1, _uid, _name, _path, _position);
+                auto _new_stage_avatar = createAvatar(i + 1, _uid, _name, _url, _position);
                 _new_stage_avatars.pushBack(_new_stage_avatar);
             }
         }
 
         auto _new_stage_avatar = _new_stage_avatars.back();
         _standAvatars.eraseObject(_new_stage_avatar);
-        _new_stage_avatars.back()->updateElement(i, _name, _path, _ssr, _mute);
+        _new_stage_avatar->updateElement(_name, _url, _level);
 
-        _stageSteps.at(i)->setUid(_uid);
+
+        auto _stageStep = _stageSteps.at(i);
+        _stageStep->setUid(_uid);
+        _stageStep->setMute(_mute);
     }
 
     for (int i = 0; i < _stageAvatars.size(); ++i) {
@@ -260,21 +272,23 @@ void CCRoomDelegate::updateStandAvatars(const char* json) {
 
         rapidjson::Value& _value = _data_arr[i];
 
-        const char *_path = cocostudio::DICTOOL->getStringValue_json(_value, "path");
+        const char *_url = cocostudio::DICTOOL->getStringValue_json(_value, "url");
         const char *_uid = cocostudio::DICTOOL->getStringValue_json(_value, "uid");
         const char *_name = cocostudio::DICTOOL->getStringValue_json(_value, "name");
-        bool _ssr = cocostudio::DICTOOL->getBooleanValue_json(_value, "ssr");
+        int _level = cocostudio::DICTOOL->getIntValue_json(_value, "level");
 
-        if (auto _cur_self_avatar = this->findSelfAvatar(_uid)) {
+        auto _cur_self_avatar = this->findSelfAvatar(_uid);
+
+        if (nullptr != _cur_self_avatar && !_cur_self_avatar->isOnStage) {
             _new_stand_avatars.pushBack(_cur_self_avatar);
         } else if ( auto _old_stand_avatar = this->findStandAvatar(_uid)) {
             _new_stand_avatars.pushBack(_old_stand_avatar);
         } else {
-            auto _new_stand_avatar = createAvatar(i + 1, _uid, _name, _path, _position);
+            auto _new_stand_avatar = createAvatar(i + 1, _uid, _name, _url, _position);
             _new_stand_avatars.pushBack(_new_stand_avatar);
         }
 
-        _new_stand_avatars.back()->updateElement(i, _name, _path, _ssr);
+        _new_stand_avatars.back()->updateElement(_name, _url, _level);
     }
 
 
@@ -302,11 +316,16 @@ void CCRoomDelegate::backOffStandAvatar(const char* uid) {
 
 }
 
-void CCRoomDelegate::receiveGiftMessage(const char* uid, const char* imagePath) {
+void CCRoomDelegate::receiveGiftMessage(const char* uid, const char* url) {
+
     auto _avatar = this->findAvatar(uid);
-    if (nullptr == _avatar) return;
-    _avatar->jumpByPresent();
-    createAndPresentGift(_avatar->getPosition(), imagePath);
+
+    if (nullptr != _avatar) {
+        _avatar->jumpByPresent();
+        createAndPresentGift(_avatar->getPosition(), url);
+    } else {
+        createAndPresentGift(this->getNonePosition(), url);
+    }
 }
 
 void CCRoomDelegate::receiveChatMessage(const char* uid, const char* content) {
@@ -346,10 +365,19 @@ void CCRoomDelegate::releaseResource() {
     }
 }
 
+
+const Vec2 CCRoomDelegate::getStepPosition(int index) const {
+    log("_scaleFactor:%f", _scaleFactor);
+    if (index >= _STAGE_BLOCK_COUNT) return Vec2::ZERO;
+    float _target_x = _STAGE_BLOCK_LEFT / _scaleFactor + index * _STAGE_BLOCK_WIDTH / _scaleFactor;
+    float _target_y = _centerPosition.y - _STAGE_STEP_TOP / _scaleFactor;
+    return Vec2(_target_x , _target_y);
+}
+
+
 const Vec2 CCRoomDelegate::getStagePosition(int index) const {
     if (index >= _STAGE_BLOCK_COUNT) return Vec2::ZERO;
-    float _right_x = _visibleOrigin.x + _visibleSize.width;
-    float _target_x = _right_x - (_STAGE_BLOCK_COUNT - index) * _STAGE_BLOCK_WIDTH / _scaleFactor;
+    float _target_x = _STAGE_BLOCK_LEFT / _scaleFactor + index * _STAGE_BLOCK_WIDTH / _scaleFactor;
     float _target_y = _centerPosition.y - _STAGE_BLOCK_TOP / _scaleFactor;
     return Vec2(_target_x , _target_y);
 }
@@ -384,23 +412,39 @@ const Vec2 CCRoomDelegate::getStandPosition(int index) const {
 }
 
 const Vec2 CCRoomDelegate::getSelfPosition() const {
-    return Vec2(_centerPosition.x ,  100);
+    return Vec2(_centerPosition.x ,  _SELF_GROUND_BOTTOM / _scaleFactor);
 }
 
 const Vec2 CCRoomDelegate::getGiftPosition() const {
-    float _coord_x = _GIFT_TABLE_WIDTH / 2;
-    float _coord_y = _GIFT_TABLE_HEIGHT / 2;
-    float _space_x = 40;
-    float _space_y = 0;
+    float _coord_x = _GIFT_TABLE_WIDTH / _scaleFactor / 2;
+    float _coord_y = _GIFT_TABLE_HEIGHT_MAX / _scaleFactor / 2;
+    float _space_x = 40 / _scaleFactor;
+    float _space_y = 5 / _scaleFactor;
 
     float _rand_x = rand() % (int)((_coord_x - _space_x) * 2) - (_coord_x - _space_x);
-    float _rand_y = std::sqrt((1 - _rand_x * _rand_x / _coord_x / _coord_x) * _coord_y * _coord_y);
+    float _result_y = std::sqrt((1 - _rand_x * _rand_x / _coord_x / _coord_x) * _coord_y * _coord_y);
+
+    float _rand_y = rand() % (int)((_result_y - _space_y) * 2) - (_result_y);
+
+//    float _coord_y_l = _GIFT_TABLE_HEIGHT_MIN / _scaleFactor / 2;
+//    float _result_y_l = std::sqrt((1 - _rand_x * _rand_x / _coord_x / _coord_x) * _coord_y_l * _coord_y_l);
 
     float _target_x = _rand_x + _centerPosition.x;
-    float _target_y = _centerPosition.y - (_GIFT_TABLE_TOP + rand() % (int)((_rand_y - _space_y) * 2) - (_rand_y - _space_y));
+    float _target_y = _centerPosition.y - (_GIFT_TABLE_TOP / _scaleFactor + _rand_y);
 
     return Vec2(_target_x , _target_y);
 }
+
+const Vec2 CCRoomDelegate::getNonePosition() const {
+    int _where = cocos2d::RandomHelper::random_int(1, 2);
+    float _target_x = - _NONE_SPACE_X / _scaleFactor;
+    if (_where == 2) {
+        _target_x =  _visibleSize.width +  _NONE_SPACE_X / _scaleFactor;
+    }
+    float _target_y = _centerPosition.y - _NONE_SPACE_Y / _scaleFactor;
+    return Vec2(_target_x , _target_y);
+}
+
 
 CCGameAvatar* CCRoomDelegate::findStageAvatar(const char *uid) {
     for (int i = 0; i < _stageAvatars.size(); ++i) {
@@ -444,9 +488,9 @@ CCGameAvatar* CCRoomDelegate::findAvatar(const char *uid) {
 }
 
 
-CCGameAvatar* CCRoomDelegate::createAvatar(int rank, const char* uid, const char* name, const char* path, const Vec2 &pos) {
+CCGameAvatar* CCRoomDelegate::createAvatar(int rank, const char* uid, const char* name, const char* url, const Vec2 &pos) {
 
-    auto _avatar = CCGameAvatar::create(rank, rank, uid, path, name);
+    auto _avatar = CCGameAvatar::create(rank, rank, uid, url, name);
     if (pos.x < _centerPosition.x) {
         _avatar->setPosition(Vec2(_visibleOrigin.x - _avatar->getContentSize().width, pos.y));
     } else {
@@ -481,15 +525,19 @@ CCGameAvatar* CCRoomDelegate::removeAvatar(const char *uid) {
     return _avatar;
 }
 
-void CCRoomDelegate::createAndPresentGift(const Vec2& pos, const char* imagePath) {
+void CCRoomDelegate::createAndPresentGift(const Vec2& pos, const char* url) {
 
 //    AudioManager::getInstance()->playBG();
 
     float start_x = pos.x;
     float start_y = pos.y + 60;
 
-    int index = _giftHolder.size();
-    auto gift = CCGameGift::create(index, index, "gift/heart.png");
+    int _gift_index = _giftHolder.size();
+
+    int _star_index = cocos2d::RandomHelper::random_int(1, 5);
+    std::string _star_path = "gift/star_" + std::to_string(_star_index) + ".png";
+
+    auto gift = CCGameGift::create(_gift_index, _gift_index, _star_path);
     gift->setPosition(Vec2(start_x, start_y));
 
     auto _position = getGiftPosition();
@@ -506,7 +554,7 @@ void CCRoomDelegate::createAndPresentGift(const Vec2& pos, const char* imagePath
 
 void CCRoomDelegate::limitGiftHolderSize() {
     int _length = _giftHolder.size();
-    int _limit = 200;
+    int _limit = _GIFT_HOLDER_SIZE;
     if(_length > _limit * 2) {
         auto _removeList = Vector<CCGameGift*>(_limit);
 
@@ -541,7 +589,9 @@ void CCRoomDelegate::reorganizeStageAvatars() {
         auto _position = this->getStagePosition(i);
         if (_position.isZero()) continue;
         auto _stage_avatar = _stageAvatars.at(i);
+        _stage_avatar->updateRank(_RANK_STAGE_DEFAULT + i);
         _stage_avatar->jumpToPosition(_position);
+        _stage_avatar->isOnStage = true;
     }
 }
 
@@ -550,7 +600,9 @@ void CCRoomDelegate::reorganizeStandAvatars() {
         auto _position = this->getStandPosition(i);
         if (_position.isZero()) continue;
         auto _stand_avatar = _standAvatars.at(i);
+        _stand_avatar->updateRank(_RANK_STAND_DEFAULT + i);
         _stand_avatar->jumpToPosition(_position);
+        _stand_avatar->isOnStage = false;
     }
 }
 
@@ -562,14 +614,39 @@ void CCRoomDelegate::reorganizeSelfAvatar() {
         if (auto _self_avatar = dynamic_cast<CCGameAvatar *>(_child)) {
             if (!_standAvatars.contains(_self_avatar) && !_stageAvatars.contains(_self_avatar)) {
                 auto _position = this->getSelfPosition();
+                _self_avatar->updateRank(_RANK_SELF_DEFAULT);
                 _self_avatar->jumpToPosition(_position);
+                _self_avatar->isOnStage = false;
             }
 
 
             auto _aperture = _scene->getChildByTag(_TAG_SELF_APERTURE);
             if (_aperture) {
                 _aperture->setPosition(_self_avatar->getCenterPosition());
+                _aperture->setVisible(!_self_avatar->isOnStage);
             }
+
+
         }
     }
+}
+
+
+
+
+
+void onTouchAvatar(const char* uid) {
+#if CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID
+    Java_onTouchAvatar(uid);
+#elif CC_TARGET_PLATFORM == CC_PLATFORM_IOS
+    OCCallback::getInstance()->onTouchAvatar(_avatar->getUid());
+#endif
+}
+
+void onTouchScene() {
+#if CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID
+    Java_onTouchScene();
+#elif CC_TARGET_PLATFORM == CC_PLATFORM_IOS
+
+#endif
 }
