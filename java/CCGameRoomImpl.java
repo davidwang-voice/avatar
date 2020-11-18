@@ -26,7 +26,6 @@ public class CCGameRoomImpl implements CCGameRoomView {
 
 
     private Context context;
-    private Callback callback;
     private CCGameRoomJNI gameRoomJNI = CCGameRoomJNI.getInstance();
 
     private Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -39,13 +38,13 @@ public class CCGameRoomImpl implements CCGameRoomView {
 
 
     public CCGameRoomImpl(Context context, FrameLayout parent) {
-        this.context = context;
+        this.context = context.getApplicationContext();
 
         Cocos2dxHelper.init((Activity) context);
-        gameRoomJNI.setDesignResolution(1080, 1920);
+        gameRoomJNI.setDesignResolution(1125, 0);
         gLContextAttrs = gameRoomJNI.getGLContextAttrs();
 
-        glSurfaceView = new Cocos2dxGLSurfaceView(context);
+        glSurfaceView = new Cocos2dxGLSurfaceView(parent.getContext());
         glSurfaceView.setZOrderMediaOverlay(true);
 
         // this line is need on some device if we specify an alpha bits
@@ -61,6 +60,11 @@ public class CCGameRoomImpl implements CCGameRoomView {
 
         Cocos2dxEngineDataManager.init(context.getApplicationContext(), glSurfaceView);
 
+
+    }
+
+    @Override
+    public void setCallback(Callback callback) {
         gameRoomJNI.setCCListener(new CCGameRoomJNI.CCListener() {
             @Override
             public void onTouchedAvatar(String uid) {
@@ -76,11 +80,6 @@ public class CCGameRoomImpl implements CCGameRoomView {
                 });
             }
         });
-    }
-
-    @Override
-    public void setCallback(Callback callback) {
-        this.callback = callback;
     }
 
     @Override
@@ -163,7 +162,6 @@ public class CCGameRoomImpl implements CCGameRoomView {
     public void leaveStand(String userId) {
         runOnGLThread(() -> gameRoomJNI.backOffStandAvatar(userId));
     }
-
 
     private void resumeIfHasFocus() {
         //It is possible for the app to receive the onWindowsFocusChanged(true) event

@@ -173,7 +173,7 @@ void CCGameAvatar::updateRank(int rank) {
     }
 }
 
-void CCGameAvatar::updateElement(const char *name, const char *path, int level) {
+void CCGameAvatar::updateElement(const char *name, const char *path, int rare) {
 
 
     this->_skin = path;

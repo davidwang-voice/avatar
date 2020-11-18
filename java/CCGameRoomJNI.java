@@ -2,8 +2,6 @@ package com.iandroid.allclass.ccgame.room;
 
 import android.util.Log;
 
-import java.lang.ref.WeakReference;
-
 /**
  * Created by david on 2020/10/14.
  */
@@ -34,16 +32,15 @@ public class CCGameRoomJNI {
     }
 
 
-    private WeakReference<CCListener> reference;
+    private volatile CCListener ccListener;
 
     public void setCCListener(CCListener listener) {
-        this.reference = new WeakReference<>(listener);
+        this.ccListener = null;
+        this.ccListener = listener;
     }
 
     public CCListener getCCListener() {
-        if (reference != null && reference.get() != null)
-            return reference.get();
-        return null;
+        return this.ccListener;
     }
 
     //native call.
@@ -61,29 +58,69 @@ public class CCGameRoomJNI {
 
     public native int[] getGLContextAttrs();
 
+    /**
+     * 设置场景分辨率 默认1080 内部自适应屏幕宽度
+     */
     public native void setDesignResolution(float width, float height);
 
-    public native void setStageBackground(String path);
+    /**
+     * 设置房间背景
+     */
+    public native void setStageBackground(String url);
 
+    /**
+     * 初始化房间礼物堆
+     * @param json = "[{"id": 100, "url": "xxx.png", "count": 5}, ...]"
+     */
     public native void setupStageGiftHeap(String json);
 
+    /**
+     * 当前用户更新avatar形象
+     * @param json = "{"uid": "100001", "name": "david", "url": "xxx.png", "rare": 1}"
+     */
     public native void updateSelfAvatar(String json);
 
+    /**
+     * 更新连麦舞台所有avatar形象
+     * @param json = "[{"uid":"100001", "name": "david", "url": "xxx.png", "rare": 1, "mute": true}, ...]"
+     */
     public native void updateStageAvatars(String json);
 
+    /**
+     * 更新普通站台所有avatar形象
+     * @param json = "[{"uid":"100001", "name": "david", "url": "xxx.png", "rare": 1}, ...]"
+     */
     public native void updateStandAvatars(String json);
 
+    /**
+     * 退出连麦舞台
+     */
     public native void backOffStageAvatar(String uid);
 
+    /**
+     * 退出普通站台
+     */
     public native void backOffStandAvatar(String uid);
 
-    public native void receiveGiftMessage(String uid, String path);
+    /**
+     * 收到用户送礼消息
+     */
+    public native void receiveGiftMessage(String uid, String url);
 
+    /**
+     * 收到用户聊天消息
+     */
     public native void receiveChatMessage(String uid, String content);
 
+    /**
+     * 收到麦位主播声纹
+     * @param uids = "100001,100002,..."
+     */
     public native void receiveVoiceWave(String uids);
 
-
+    /**
+     * 释放房间资源
+     */
     public native void releaseResource();
 
 }

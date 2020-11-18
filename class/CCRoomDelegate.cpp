@@ -135,13 +135,13 @@ void CCRoomDelegate::updateSelfAvatar(const char *json) {
     const char *_uid = cocostudio::DICTOOL->getStringValue_json(_value, "uid");
     const char *_name = cocostudio::DICTOOL->getStringValue_json(_value, "name");
 
-    int _level = cocostudio::DICTOOL->getIntValue_json(_value, "level");
+    int _rare = cocostudio::DICTOOL->getIntValue_json(_value, "rare");
 
 
     auto _self_avatar = CCGameAvatar::create(_RANK_SELF_DEFAULT, _RANK_SELF_DEFAULT, _uid, _url, _name);
 
     _self_avatar->setUid(_uid);
-    _self_avatar->updateElement(_name, _url, _level);
+    _self_avatar->updateElement(_name, _url, _rare);
     _self_avatar->updateRank(_RANK_SELF_DEFAULT);
 
     auto _self_position = this->getSelfPosition();
@@ -208,7 +208,7 @@ void CCRoomDelegate::updateStageAvatars(const char* json) {
         const char *_uid = cocostudio::DICTOOL->getStringValue_json(_value, "uid");
         const char *_name = cocostudio::DICTOOL->getStringValue_json(_value, "name");
 
-        int _level = cocostudio::DICTOOL->getIntValue_json(_value, "level");
+        int _rare = cocostudio::DICTOOL->getIntValue_json(_value, "rare");
 
         bool _mute = cocostudio::DICTOOL->getBooleanValue_json(_value, "mute");
 
@@ -229,7 +229,7 @@ void CCRoomDelegate::updateStageAvatars(const char* json) {
 
         auto _new_stage_avatar = _new_stage_avatars.back();
         _standAvatars.eraseObject(_new_stage_avatar);
-        _new_stage_avatar->updateElement(_name, _url, _level);
+        _new_stage_avatar->updateElement(_name, _url, _rare);
 
 
         auto _stageStep = _stageSteps.at(i);
@@ -275,7 +275,7 @@ void CCRoomDelegate::updateStandAvatars(const char* json) {
         const char *_url = cocostudio::DICTOOL->getStringValue_json(_value, "url");
         const char *_uid = cocostudio::DICTOOL->getStringValue_json(_value, "uid");
         const char *_name = cocostudio::DICTOOL->getStringValue_json(_value, "name");
-        int _level = cocostudio::DICTOOL->getIntValue_json(_value, "level");
+        int _rare = cocostudio::DICTOOL->getIntValue_json(_value, "rare");
 
         auto _cur_self_avatar = this->findSelfAvatar(_uid);
 
@@ -288,7 +288,7 @@ void CCRoomDelegate::updateStandAvatars(const char* json) {
             _new_stand_avatars.pushBack(_new_stand_avatar);
         }
 
-        _new_stand_avatars.back()->updateElement(_name, _url, _level);
+        _new_stand_avatars.back()->updateElement(_name, _url, _rare);
     }
 
 

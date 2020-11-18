@@ -60,7 +60,7 @@ public:
     void onTouchEnded(Touch *touch, Event *event) override;
 
     void updateRank(int rank);
-    void updateElement(const char* name, const char* path, int level);
+    void updateElement(const char* name, const char* path, int rare);
 
     void jumpToPosition(const Vec2& target);
     void jumpByPresent();
