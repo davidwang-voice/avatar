@@ -25,12 +25,17 @@ private:
     static const int _TAG_NAME_LABEL = 103;
     static const int _TAG_NAME_LAYER = 104;
 
+    static const int _CHAT_LOCAL_Z_ORDER_BASE = 200;
+
     string _skin;
     string _name;
     string _uid;
     bool _loaded;
     float _target_x;
     float _target_y;
+    int _local_z_order;
+    int _chat_local_z_order;
+    float _scale_factor;
 
     void initAvatar();
     void shakingBody();
