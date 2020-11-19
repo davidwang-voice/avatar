@@ -59,7 +59,7 @@ void CCGameAvatar::initAvatar() {
     _name_label->setTag(_TAG_NAME_LABEL);
     _name_label->setLocalZOrder(2);
     _name_label->setAnchorPoint(Point::ANCHOR_MIDDLE_BOTTOM);
-    _name_label->setPosition(getContentSize().width / 2, 100 / _scale_factor);
+    _name_label->setPosition(getContentSize().width / 2, _LABEL_HEIGHT_DEFAULT / _scale_factor);
     _name_label->setTextColor(Color4B(255,255,255,255));
     addChild(_name_label);
 
@@ -69,7 +69,7 @@ void CCGameAvatar::initAvatar() {
     _name_layer->setTag(_TAG_NAME_LAYER);
     _name_layer->setLocalZOrder(1);
     _name_layer->setAnchorPoint(Point::ANCHOR_BOTTOM_LEFT);
-    _name_layer->setPosition((getContentSize().width - _name_layer->getContentSize().width) / 2, getContentSize().height);
+    _name_layer->setPosition((getContentSize().width - _name_layer->getContentSize().width) / 2, _LABEL_HEIGHT_DEFAULT / _scale_factor);
     addChild(_name_layer);
 
 
@@ -78,7 +78,7 @@ void CCGameAvatar::initAvatar() {
     _rank_label->setTag(_TAG_RANK_LABEL);
     _rank_label->setLocalZOrder(2);
     _rank_label->setAnchorPoint(Point::ANCHOR_BOTTOM_LEFT);
-    _rank_label->setPosition((getContentSize().width - _name_label->getContentSize().width) / 2, _name_label->getContentSize().height + getContentSize().height);
+    _rank_label->setPosition((getContentSize().width - _name_label->getContentSize().width) / 2, _name_label->getContentSize().height + _LABEL_HEIGHT_DEFAULT / _scale_factor);
 
     addChild(_rank_label);
 
@@ -86,7 +86,7 @@ void CCGameAvatar::initAvatar() {
     _rank_layer->setTag(_TAG_RANK_LAYER);
     _rank_layer->setLocalZOrder(1);
     _rank_layer->setAnchorPoint(Point::ANCHOR_BOTTOM_LEFT);
-    _rank_layer->setPosition((getContentSize().width - _name_layer->getContentSize().width) / 2, _name_label->getContentSize().height + getContentSize().height);
+    _rank_layer->setPosition((getContentSize().width - _name_layer->getContentSize().width) / 2, _name_label->getContentSize().height + _LABEL_HEIGHT_DEFAULT / _scale_factor);
     addChild(_rank_layer);
 
 
@@ -196,13 +196,13 @@ void CCGameAvatar::updateElement(const char *name, const char *path, int rare) {
     }
     if (_name_layer) {
         _name_layer->setContentSize(Size(_labelWidth + 10 / _scale_factor, _labelHeight));
-        _name_layer->setPosition((getContentSize().width - _name_layer->getContentSize().width) / 2, getContentSize().height);
+        _name_layer->setPosition((getContentSize().width - _name_layer->getContentSize().width) / 2, _LABEL_HEIGHT_DEFAULT / _scale_factor);
     }
     if (_rank_label) {
-        _rank_label->setPosition((getContentSize().width - _labelWidth) / 2, _labelHeight + getContentSize().height);
+        _rank_label->setPosition((getContentSize().width - _labelWidth) / 2, _labelHeight + _LABEL_HEIGHT_DEFAULT / _scale_factor);
     }
     if (_rank_layer) {
-        _rank_layer->setPosition((getContentSize().width - _name_layer->getContentSize().width) / 2, _labelHeight + getContentSize().height);
+        _rank_layer->setPosition((getContentSize().width - _name_layer->getContentSize().width) / 2, _labelHeight + _LABEL_HEIGHT_DEFAULT / _scale_factor);
     }
 
 }

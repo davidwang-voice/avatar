@@ -25,6 +25,8 @@ private:
     static const int _TAG_NAME_LABEL = 103;
     static const int _TAG_NAME_LAYER = 104;
 
+    static const int _LABEL_HEIGHT_DEFAULT = 100;
+
     static const int _CHAT_LOCAL_Z_ORDER_BASE = 200;
 
     string _skin;
