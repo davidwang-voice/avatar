@@ -35,8 +35,7 @@ private:
     bool _loaded;
     float _target_x;
     float _target_y;
-    int _local_z_order;
-    int _chat_local_z_order;
+    int _real_local_z_order;
     float _scale_factor;
 
     void initAvatar();

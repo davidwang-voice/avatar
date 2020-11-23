@@ -4,7 +4,6 @@
 #include "cocos2d.h"
 
 // Custom
-#include "Wrapper.h"
 #include "Config.h"
 
 

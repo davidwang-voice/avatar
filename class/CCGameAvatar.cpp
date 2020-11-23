@@ -16,6 +16,7 @@ USING_NS_CC;
 
 using namespace cocos2d::network;
 
+static int _chat_local_z_order = 0;
 
 CCGameAvatar *CCGameAvatar::create(int id, int ranking, string uid, string skin, string name, int priority) {
     auto avatar = new (nothrow) CCGameAvatar(id, ranking, uid, move(skin), move(name), priority);
@@ -90,6 +91,7 @@ void CCGameAvatar::initAvatar() {
     addChild(_rank_layer);
 
 
+    this->setLocalZOrder(1);
 
     _loaded = false;
     _target_x = 0.0;
@@ -147,9 +149,9 @@ void CCGameAvatar::onTouchEnded(Touch *touch, Event *event) {
 }
 
 void CCGameAvatar::updateRank(int rank) {
-    _local_z_order = rank;//(rank < 100) ? (100 - rank) : rank;
+    _real_local_z_order = rank;//(rank < 100) ? (100 - rank) : rank;
     if (this->getLocalZOrder() < _CHAT_LOCAL_Z_ORDER_BASE)
-        this->setLocalZOrder(_local_z_order);
+        this->setLocalZOrder(_real_local_z_order);
     auto _rank_label = dynamic_cast<Label*>(this->getChildByTag(_TAG_RANK_LABEL));
     auto _rank_layer = dynamic_cast<LayerColor*>(this->getChildByTag(_TAG_RANK_LAYER));
     if (rank <= 13) {
@@ -321,8 +323,8 @@ void CCGameAvatar::popChatBubble(const char* content) {
     _self->setLocalZOrder(_CHAT_LOCAL_Z_ORDER_BASE + _chat_local_z_order);
     auto _removeFunc = CallFunc::create([_self, _chat_bubble](){
         _chat_bubble->removeFromParentAndCleanup(true);
-        _self->setLocalZOrder(_self->_local_z_order);
-        _self->_chat_local_z_order--;
+        _self->setLocalZOrder(_self->_real_local_z_order);
+        _chat_local_z_order--;
     });
 
     auto _action = Sequence::create(_moveBy, _fadeFunc, DelayTime::create(2), _removeFunc, nullptr);

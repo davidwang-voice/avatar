@@ -101,14 +101,17 @@ void CCRoomDelegate::setupStageGiftHeap(const char *json) {
         rapidjson::Value &_value = _data_arr[i];
 
         const char *_url = cocostudio::DICTOOL->getStringValue_json(_value, "url");
+        int count = cocostudio::DICTOOL->getIntValue_json(_value, "count");
 
-        auto gift = CCGameGift::create(i, i, "gift/heart.png");
-        gift->setPosition(getGiftPosition());
+        for (int i = 0; i < count; ++i) {
+            auto gift = CCGameGift::create(i, i, _url);
+            gift->setPosition(getGiftPosition());
 
-        if (_scene) {
-            _scene->addChild(gift, 10000);
+            if (_scene) {
+                _scene->addChild(gift, 10000);
+            }
+            _giftHolder.pushBack(gift);
         }
-        _giftHolder.pushBack(gift);
     }
 }
 
@@ -212,25 +215,31 @@ void CCRoomDelegate::updateStageAvatars(const char* json) {
 
         bool _mute = cocostudio::DICTOOL->getBooleanValue_json(_value, "mute");
 
-        if (auto _cur_self_avatar = this->findSelfAvatar(_uid)) {
-            _new_stage_avatars.pushBack(_cur_self_avatar);
-        } else if (auto _old_stage_avatar = this->findStageAvatar(_uid)) {
-            _new_stage_avatars.pushBack(_old_stage_avatar);
-        } else {
-            auto _old_stand_avatar = this->findStandAvatar(_uid);
-            if (nullptr != _old_stand_avatar) {
-                _new_stage_avatars.pushBack(_old_stand_avatar);
+
+        std::string _uid_str(_uid);
+
+        if (!_uid_str.empty()) {
+
+            if (auto _cur_self_avatar = this->findSelfAvatar(_uid)) {
+                _new_stage_avatars.pushBack(_cur_self_avatar);
+            } else if (auto _old_stage_avatar = this->findStageAvatar(_uid)) {
+                _new_stage_avatars.pushBack(_old_stage_avatar);
             } else {
+                auto _old_stand_avatar = this->findStandAvatar(_uid);
+                if (nullptr != _old_stand_avatar) {
+                    _new_stage_avatars.pushBack(_old_stand_avatar);
+                } else {
 
-                auto _new_stage_avatar = createAvatar(i + 1, _uid, _name, _url, _position);
-                _new_stage_avatars.pushBack(_new_stage_avatar);
+                    auto _new_stage_avatar = createAvatar(i + 1, _uid, _name, _url, _position);
+                    _new_stage_avatars.pushBack(_new_stage_avatar);
+                }
             }
+
+            auto _new_stage_avatar = _new_stage_avatars.back();
+            _standAvatars.eraseObject(_new_stage_avatar);
+            _new_stage_avatar->updateElement(_name, _url, _rare);
+
         }
-
-        auto _new_stage_avatar = _new_stage_avatars.back();
-        _standAvatars.eraseObject(_new_stage_avatar);
-        _new_stage_avatar->updateElement(_name, _url, _rare);
-
 
         auto _stageStep = _stageSteps.at(i);
         _stageStep->setUid(_uid);
@@ -239,6 +248,7 @@ void CCRoomDelegate::updateStageAvatars(const char* json) {
 
     for (int i = 0; i < _stageAvatars.size(); ++i) {
         auto _avatar = _stageAvatars.at(i);
+        if (_avatar->getTag() == _TAG_SELF_AVATAR) continue;
         if (!_new_stage_avatars.contains(_avatar)) {
             if (_scene) {
                 _scene->removeChild(_avatar);
@@ -294,6 +304,7 @@ void CCRoomDelegate::updateStandAvatars(const char* json) {
 
     for (int i = 0; i < _standAvatars.size(); ++i) {
         auto _avatar = _standAvatars.at(i);
+        if (_avatar->getTag() == _TAG_SELF_AVATAR) continue;
         if (!_new_stand_avatars.contains(_avatar)) {
             if (_scene) {
                 _scene->removeChild(_avatar);
@@ -447,6 +458,10 @@ const Vec2 CCRoomDelegate::getNonePosition() const {
 
 
 CCGameAvatar* CCRoomDelegate::findStageAvatar(const char *uid) {
+
+    std::string _uid_str(uid);
+    if (_uid_str.empty()) return nullptr;
+
     for (int i = 0; i < _stageAvatars.size(); ++i) {
         auto _avatar = _stageAvatars.at(i);
         if (strcmp(uid, _avatar->getUid()) == 0) return _avatar;
@@ -455,6 +470,9 @@ CCGameAvatar* CCRoomDelegate::findStageAvatar(const char *uid) {
 }
 
 CCGameAvatar* CCRoomDelegate::findStandAvatar(const char *uid) {
+    std::string _uid_str(uid);
+    if (_uid_str.empty()) return nullptr;
+
     for (int i = 0; i < _standAvatars.size(); ++i) {
         auto _avatar = _standAvatars.at(i);
         if (strcmp(uid, _avatar->getUid()) == 0) return _avatar;
@@ -463,6 +481,9 @@ CCGameAvatar* CCRoomDelegate::findStandAvatar(const char *uid) {
 }
 
 CCGameAvatar* CCRoomDelegate::findSelfAvatar(const char *uid) {
+
+    std::string _uid_str(uid);
+    if (_uid_str.empty()) return nullptr;
 
     if (_scene) {
         auto _child = _scene->getChildByTag(_TAG_SELF_AVATAR);
@@ -477,6 +498,9 @@ CCGameAvatar* CCRoomDelegate::findSelfAvatar(const char *uid) {
 }
 
 CCGameAvatar* CCRoomDelegate::findAvatar(const char *uid) {
+
+    std::string _uid_str(uid);
+    if (_uid_str.empty()) return nullptr;
 
     if (auto _avatar = this->findSelfAvatar(uid)) {
         return _avatar;
@@ -534,10 +558,10 @@ void CCRoomDelegate::createAndPresentGift(const Vec2& pos, const char* url) {
 
     int _gift_index = _giftHolder.size();
 
-    int _star_index = cocos2d::RandomHelper::random_int(1, 5);
-    std::string _star_path = "gift/star_" + std::to_string(_star_index) + ".png";
+//    int _star_index = cocos2d::RandomHelper::random_int(1, 5);
+//    std::string _star_path = "gift/star_" + std::to_string(_star_index) + ".png";
 
-    auto gift = CCGameGift::create(_gift_index, _gift_index, _star_path);
+    auto gift = CCGameGift::create(_gift_index, _gift_index, url);
     gift->setPosition(Vec2(start_x, start_y));
 
     auto _position = getGiftPosition();
@@ -573,7 +597,7 @@ void CCRoomDelegate::limitGiftHolderSize() {
                 _gift->removeFromParentAndCleanup(true);
             });
             auto _action = Spawn::createWithTwoActions(
-                    MoveBy::create(0.5, Vec2(0, 40)),
+                    MoveBy::create(0.5, Vec2(0, 50 / _scaleFactor)),
                     FadeOut::create(0.5)
                     );
             auto _sequence = Sequence::create(_action, _removeFunc, nullptr);
@@ -600,6 +624,7 @@ void CCRoomDelegate::reorganizeStandAvatars() {
         auto _position = this->getStandPosition(i);
         if (_position.isZero()) continue;
         auto _stand_avatar = _standAvatars.at(i);
+        log("stand user tag:%d", _stand_avatar->getTag());
         _stand_avatar->updateRank(_RANK_STAND_DEFAULT + i);
         _stand_avatar->jumpToPosition(_position);
         _stand_avatar->isOnStage = false;
@@ -639,7 +664,7 @@ void onTouchAvatar(const char* uid) {
 #if CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID
     Java_onTouchAvatar(uid);
 #elif CC_TARGET_PLATFORM == CC_PLATFORM_IOS
-    OCCallback::getInstance()->onTouchAvatar(_avatar->getUid());
+    OCCallback::getInstance()->onTouchAvatar(uid);
 #endif
 }
 

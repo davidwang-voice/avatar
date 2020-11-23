@@ -17,6 +17,7 @@ class CCGameGift : public CCBaseSprite {
 
 private:
     string _skin;
+    float _scale_factor;
     void initGift();
 
 protected:

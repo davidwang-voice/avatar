@@ -18,7 +18,12 @@ CCGameGift *CCGameGift::create(int id, int ranking, string skin, int priority) {
 }
 
 void CCGameGift::initGift() {
-    setTexture(_skin);
+    this->_scale_factor = Director::getInstance()->getContentScaleFactor();
+//    setTexture(_skin);
+    int _star_index = cocos2d::RandomHelper::random_int(1, 5);
+    std::string _star_path = "gift/star_" + std::to_string(_star_index) + ".png";
+
+    loadTexture(_skin.c_str(), _star_path.c_str());
     setAnchorPoint(Point::ANCHOR_MIDDLE_BOTTOM);
 }
 

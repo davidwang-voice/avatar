@@ -66,6 +66,14 @@ void CCBaseSprite::onTouchEnded(Touch* touch, Event  *event) {
 
 void CCBaseSprite::loadTexture(const char *name, const char *def) {
 
+    std::string _name_str(name);
+    if (_name_str.empty()) {
+        if (nullptr != def) {
+            setTexture(def);
+        }
+        return;
+    }
+
     std::string _file_path("");
     getGameResourcePath(_file_path, name);
 
