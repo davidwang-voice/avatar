@@ -58,7 +58,7 @@ private:
     static const int _STAGE_BLOCK_WIDTH = 135;
     static const int _STAGE_BLOCK_TOP = 530;
     static const int _STAGE_BLOCK_LEFT = 764;
-    static const int _STAGE_STEP_TOP = 567;
+    static const int _STAGE_STEP_TOP = 586;
 
 
     static const int _GIFT_HOLDER_SIZE = 200;
@@ -82,6 +82,7 @@ private:
     Vector<CCGameGift*> _giftHolder;
 
 
+    void ensureStageSteps();
 
     const Vec2 getStepPosition(int index) const;
     const Vec2 getStagePosition(int index) const;
@@ -133,8 +134,9 @@ protected:
 
 };
 
+void onTouchStageAvatar(const char* uid);
 
-void onTouchAvatar(const char* uid);
+void onTouchStandAvatar(const char* uid);
 
 void onTouchScene();
 

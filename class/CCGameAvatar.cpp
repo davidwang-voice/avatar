@@ -122,7 +122,7 @@ bool CCGameAvatar::onTouchBegan(Touch *touch, Event *event) {
         Point _locationInNode = touch->getLocation();
         auto _pos = _avatar->getParent()->convertToNodeSpace(_locationInNode);
         Rect _rect = _avatar->getBoundingBox();
-        if (_rect.containsPoint(_pos)) {
+        if (_rect.containsPoint(_pos) && !this->isOnStage) {
             log("Avatar onTouchesBegan... index = %d, uid = %s", _avatar->_id, _avatar->getUid());
 
             return true;
@@ -143,7 +143,7 @@ void CCGameAvatar::onTouchEnded(Touch *touch, Event *event) {
         Rect _rect = _avatar->getBoundingBox();
         if (_rect.containsPoint(_pos)) {
             log("Avatar onTouchesEnd... index = %d, uid = %s", _avatar->_id, _avatar->getUid());
-            onTouchAvatar(_avatar->getUid());
+            onTouchStandAvatar(_avatar->getUid());
         }
     }
 }

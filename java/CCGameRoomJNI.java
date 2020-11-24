@@ -26,9 +26,11 @@ public class CCGameRoomJNI {
 
 
     public interface CCListener {
-        void onTouchedAvatar(String uid);
+        void onTouchStageAvatar(String uid);
 
-        void onTouchedScene();
+        void onTouchStandAvatar(String uid);
+
+        void onTouchScene();
     }
 
 
@@ -44,16 +46,23 @@ public class CCGameRoomJNI {
     }
 
     //native call.
-    public static void onTouchedAvatar(String uid) {
+    public static void onTouchStageAvatar(String uid) {
         Log.i(TAG, "onTouchedAvatar id: " + uid);
         if (getInstance().getCCListener() != null)
-            getInstance().getCCListener().onTouchedAvatar(uid);
+            getInstance().getCCListener().onTouchStageAvatar(uid);
     }
 
-    public static void onTouchedScene() {
+    public static void onTouchStandAvatar(String uid) {
+        Log.i(TAG, "onTouchedAvatar id: " + uid);
+        if (getInstance().getCCListener() != null)
+            getInstance().getCCListener().onTouchStandAvatar(uid);
+    }
+
+
+    public static void onTouchScene() {
         Log.i(TAG, "onTouchedScene");
         if (getInstance().getCCListener() != null)
-            getInstance().getCCListener().onTouchedScene();
+            getInstance().getCCListener().onTouchScene();
     }
 
     public native int[] getGLContextAttrs();

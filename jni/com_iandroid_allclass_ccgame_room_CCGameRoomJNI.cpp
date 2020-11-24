@@ -37,8 +37,8 @@ extern "C" {
                                                                              jfloat height) {
         AppDelegate::setDesignResolutionSize(width, height);
     }
-    JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_setStageBackground(JNIEnv *env, jobject thiz, jstring path) {
-        CCRoomDelegate::getInstance()->setStageBackground(jstringToChar(env, path));
+    JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_setStageBackground(JNIEnv *env, jobject thiz, jstring url) {
+        CCRoomDelegate::getInstance()->setStageBackground(jstringToChar(env, url));
     }
 
     JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_setupStageGiftHeap(JNIEnv *env, jobject thiz,
@@ -70,8 +70,8 @@ extern "C" {
     }
 
     JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_receiveGiftMessage(JNIEnv *env, jobject thiz,
-                                                                                                   jstring uid, jstring path) {
-        CCRoomDelegate::getInstance()->receiveGiftMessage(jstringToChar(env, uid), jstringToChar(env, path));
+                                                                                                   jstring uid, jstring url) {
+        CCRoomDelegate::getInstance()->receiveGiftMessage(jstringToChar(env, uid), jstringToChar(env, url));
     }
     JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_receiveChatMessage(JNIEnv *env, jobject thiz,
                                                                                                    jstring uid, jstring content) {
@@ -89,14 +89,18 @@ extern "C" {
 
 }
 
-void onTouchedAvatar(const char* uid) {
-    JniHelper::callStaticVoidMethod(className, "onTouchedAvatar", uid);
+void Java_onTouchStageAvatar(const char* uid) {
+    JniHelper::callStaticVoidMethod(className, "onTouchStageAvatar", uid);
 }
 
-void onTouchDown() {
+void Java_onTouchStandAvatar(const char* uid) {
+    JniHelper::callStaticVoidMethod(className, "onTouchStandAvatar", uid);
+}
+
+void Java_onTouchDown() {
     
 }
 
-void onTouchUp() {
-    JniHelper::callStaticVoidMethod(className, "onTouchedScene");
+void Java_onTouchScene() {
+    JniHelper::callStaticVoidMethod(className, "onTouchScene");
 }

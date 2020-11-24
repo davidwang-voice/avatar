@@ -16,6 +16,7 @@ using namespace cocos2d;
 class CCGameStep : public CCBaseSprite {
 private:
     static const int _TAG_WAVE_ANIM_ACTION = 1001;
+    static const int _TAG_STEP_PLACE = 100;
     string _skin;
     string _uid;
     bool _mute;
@@ -33,6 +34,12 @@ public:
     void setMute(bool mute);
     void setUid(const char *uid);
     const char* getUid();
+
+    bool onTouchBegan(Touch *touch, Event *event) override;
+
+    void onTouchMoved(Touch *touch, Event *event) override;
+
+    void onTouchEnded(Touch *touch, Event *event) override;
 };
 
 

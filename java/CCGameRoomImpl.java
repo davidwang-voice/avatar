@@ -67,16 +67,23 @@ public class CCGameRoomImpl implements CCGameRoomView {
     public void setCallback(Callback callback) {
         gameRoomJNI.setCCListener(new CCGameRoomJNI.CCListener() {
             @Override
-            public void onTouchedAvatar(String uid) {
+            public void onTouchStageAvatar(String uid) {
                 runOnUiThread(() -> {
-                    if (callback != null) callback.onTouchGameAvatar(uid);
+                    if (callback != null) callback.onTouchStageAvatar(uid);
                 });
             }
 
             @Override
-            public void onTouchedScene() {
+            public void onTouchStandAvatar(String uid) {
                 runOnUiThread(() -> {
-                    if (callback != null) callback.onTouchGameScene();
+                    if (callback != null) callback.onTouchStandAvatar(uid);
+                });
+            }
+
+            @Override
+            public void onTouchScene() {
+                runOnUiThread(() -> {
+                    if (callback != null) callback.onTouchRoomScene();
                 });
             }
         });

@@ -38,9 +38,10 @@ public interface CCGameRoomView {
     void leaveStand(String userId);
 
     interface Callback {
-        void onTouchGameAvatar(String uid);
+        void onTouchStageAvatar(String uid);
+        void onTouchStandAvatar(String uid);
 
-        void onTouchGameScene();
+        void onTouchRoomScene();
     }
 
 

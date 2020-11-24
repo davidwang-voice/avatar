@@ -9,7 +9,8 @@
 
 using namespace cocos2d;
 
-typedef void (*OnTouchAvatarOCFunc)(void *object, const char* uid);
+typedef void (*OnTouchStageAvatarOCFunc)(void *object, const char* uid);
+typedef void (*OnTouchStandAvatarOCFunc)(void *object, const char* uid);
 typedef void (*OnTouchSceneOCFunc)(void *object);
 
 class OCCallback {
@@ -18,11 +19,13 @@ public:
 //    OCCallback();
 //    ~OCCallback();
 
-    void onTouchAvatar(const char* uid);
+    void onTouchStageAvatar(const char* uid);
+    void onTouchStandAvatar(const char* uid);
     void onTouchScene();
 
 
-    void registerOnTouchAvatarOCFunc(void *object, OnTouchAvatarOCFunc);
+    void registerOnTouchStageAvatarOCFunc(void *object, OnTouchStageAvatarOCFunc);
+    void registerOnTouchStandAvatarOCFunc(void *object, OnTouchStandAvatarOCFunc);
     void registerOnTouchSceneOCFunc(void *object, OnTouchSceneOCFunc);
 
     // Static Methods
@@ -30,11 +33,13 @@ public:
 
 private:
     // 要实现这个回调的对象
-    void *onTouchAvatarOCObj;
+    void *onTouchStageAvatarOCObj;
+    void *onTouchStandAvatarOCObj;
     void *onTouchSceneOCObj;
 
     // 函数声明
-    OnTouchAvatarOCFunc onTouchAvatarOCFunc;
+    OnTouchStageAvatarOCFunc onTouchStageAvatarOCFunc;
+    OnTouchStandAvatarOCFunc onTouchStandAvatarOCFunc;
 
     OnTouchSceneOCFunc onTouchSceneOCFunc;
 };

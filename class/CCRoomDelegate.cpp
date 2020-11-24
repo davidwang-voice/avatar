@@ -56,6 +56,20 @@ void CCRoomDelegate::init(Scene* scene) {
     }
 }
 
+void CCRoomDelegate::ensureStageSteps() {
+    if (_stageSteps.empty()) {
+        for (int i = 0; i < _STAGE_BLOCK_COUNT; ++i) {
+            auto _stage_step = CCGameStep::create(i, i, "");
+            auto _stage_pos = this->getStepPosition(i);
+            _stage_step->setPosition(Vec2(_stage_pos.x, _stage_pos.y));
+            if (_scene) {
+                _scene->addChild(_stage_step);
+            }
+            _stageSteps.pushBack(_stage_step);
+        }
+    }
+}
+
 void CCRoomDelegate::setStageBackground(const char *url) {
     if (_scene) {
         auto _child = _scene->getChildByTag(_TAG_STAGE_BACKGROUND);
@@ -73,6 +87,8 @@ void CCRoomDelegate::setStageBackground(const char *url) {
     if (_scene) {
         _scene->addChild(_stage_background, 0, _TAG_STAGE_BACKGROUND);
     }
+
+    ensureStageSteps();
 }
 
 void CCRoomDelegate::setupStageGiftHeap(const char *json) {
@@ -174,19 +190,7 @@ void CCRoomDelegate::updateSelfAvatar(const char *json) {
 
 void CCRoomDelegate::updateStageAvatars(const char* json) {
 
-    if (_stageSteps.empty()) {
-
-
-        for (int i = 0; i < _STAGE_BLOCK_COUNT; ++i) {
-            auto _stage_step = CCGameStep::create(i, i, "");
-            auto _stage_pos = this->getStepPosition(i);
-            _stage_step->setPosition(Vec2(_stage_pos.x, _stage_pos.y));
-            if (_scene) {
-                _scene->addChild(_stage_step);
-            }
-            _stageSteps.pushBack(_stage_step);
-        }
-    }
+    ensureStageSteps();
 
     rapidjson::Document _document;
     _document.Parse<rapidjson::kParseDefaultFlags>(json);
@@ -657,14 +661,20 @@ void CCRoomDelegate::reorganizeSelfAvatar() {
 }
 
 
-
-
-
-void onTouchAvatar(const char* uid) {
+void onTouchStageAvatar(const char* uid) {
 #if CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID
-    Java_onTouchAvatar(uid);
+    Java_onTouchStageAvatar(uid);
 #elif CC_TARGET_PLATFORM == CC_PLATFORM_IOS
-    OCCallback::getInstance()->onTouchAvatar(uid);
+    OCCallback::getInstance()->onTouchStageAvatar(uid);
+#endif
+}
+
+
+void onTouchStandAvatar(const char* uid) {
+#if CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID
+    Java_onTouchStandAvatar(uid);
+#elif CC_TARGET_PLATFORM == CC_PLATFORM_IOS
+    OCCallback::getInstance()->onTouchStandAvatar(uid);
 #endif
 }
 
@@ -672,6 +682,7 @@ void onTouchScene() {
 #if CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID
     Java_onTouchScene();
 #elif CC_TARGET_PLATFORM == CC_PLATFORM_IOS
-
+    OCCallback::getInstance()->onTouchScene();
 #endif
 }
+
