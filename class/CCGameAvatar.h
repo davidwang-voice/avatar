@@ -16,18 +16,22 @@ using namespace cocos2d::network;
 
 class CCGameAvatar : public CCBaseSprite {
 private:
-    static const int _TAG_JUMP_TO_ACTION = 10001;
-    static const int _TAG_MOVE_TO_ACTION = 10002;
-    static const int _TAG_JUMP_BY_ACTION = 10003;
+    static const unsigned int _TAG_JUMP_TO_ACTION = 1001;
+    static const unsigned int _TAG_MOVE_TO_ACTION = 1002;
+    static const unsigned int _TAG_JUMP_BY_ACTION = 1003;
 
-    static const int _TAG_RANK_LABEL = 101;
-    static const int _TAG_RANK_LAYER = 102;
-    static const int _TAG_NAME_LABEL = 103;
-    static const int _TAG_NAME_LAYER = 104;
+    static const unsigned int _TAG_RANK_LABEL = 101;
+    static const unsigned int _TAG_RANK_LAYER = 102;
+    static const unsigned int _TAG_NAME_LABEL = 103;
+    static const unsigned int _TAG_NAME_LAYER = 104;
+    static const unsigned int _TAG_SSR_MARKER = 105;
 
-    static const int _LABEL_HEIGHT_DEFAULT = 100;
+    static const unsigned int _LABEL_HEIGHT_DEFAULT = 120;
+    static const unsigned int _CONTENT_SIZE_WIDTH = 90;
+    static const unsigned int _CONTENT_SIZE_HEIGHT = 150;
 
-    static const int _CHAT_LOCAL_Z_ORDER_BASE = 200;
+    static const unsigned int _CHAT_POP_BUBBLE_WIDTH = 180;
+    static const unsigned int _CHAT_LOCAL_Z_ORDER_BASE = 200;
 
     string _skin;
     string _name;
@@ -37,11 +41,12 @@ private:
     float _target_y;
     int _real_local_z_order;
     float _scale_factor;
+    Sprite *_inner_sprite;
 
     void initAvatar();
     void shakingBody();
     void drawRoundRect(DrawNode *drawNode, const Vec2 &origin, const Vec2 &destination, float radius, unsigned int segments, const Color4F &color);
-    const Vec2 roundPoint(const const Vec2 &origin) const ;
+    const Vec2 roundPoint(const Vec2 &origin) const ;
 
 protected:
     CCGameAvatar(int id, int ranking, string uid, string skin, string name, int priority)
@@ -59,6 +64,7 @@ public:
     void setPosition(const Vec2& pos) override;
     const Vec2 getCenterPosition() const;
 
+    void setTexture(const std::string &filename) override ;
     bool onTouchBegan(Touch *touch, Event *event) override;
 
     void onTouchMoved(Touch *touch, Event *event) override;
@@ -66,7 +72,7 @@ public:
     void onTouchEnded(Touch *touch, Event *event) override;
 
     void updateRank(int rank);
-    void updateElement(const char* name, const char* path, int rare);
+    void updateElement(const char* name, const char* path, int rare, int guard);
 
     void jumpToPosition(const Vec2& target);
     void jumpByPresent();

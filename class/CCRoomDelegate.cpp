@@ -103,7 +103,7 @@ void CCRoomDelegate::setupStageGiftHeap(const char *json) {
     rapidjson::Document _document;
     _document.Parse<rapidjson::kParseDefaultFlags>(json);
     if (_document.HasParseError()) {
-        log("parse stage gift json error %s\n", _document.GetParseError());
+        log("parse stage gift json error %d\n", _document.GetParseError());
         return;
     }
     if (!_document.IsArray()) {
@@ -124,7 +124,7 @@ void CCRoomDelegate::setupStageGiftHeap(const char *json) {
             gift->setPosition(getGiftPosition());
 
             if (_scene) {
-                _scene->addChild(gift, 10000);
+                _scene->addChild(gift, 0);
             }
             _giftHolder.pushBack(gift);
         }
@@ -142,7 +142,7 @@ void CCRoomDelegate::updateSelfAvatar(const char *json) {
     rapidjson::Document _document;
     _document.Parse<rapidjson::kParseDefaultFlags>(json);
     if (_document.HasParseError()) {
-        log("parse self avatar json error %s\n", _document.GetParseError());
+        log("parse self avatar json error %d\n", _document.GetParseError());
         return;
     }
     if (!_document.IsObject()) {
@@ -155,12 +155,13 @@ void CCRoomDelegate::updateSelfAvatar(const char *json) {
     const char *_name = cocostudio::DICTOOL->getStringValue_json(_value, "name");
 
     int _rare = cocostudio::DICTOOL->getIntValue_json(_value, "rare");
+    int _guard = cocostudio::DICTOOL->getIntValue_json(_value, "guard");
 
 
     auto _self_avatar = CCGameAvatar::create(_RANK_SELF_DEFAULT, _RANK_SELF_DEFAULT, _uid, _url, _name);
 
     _self_avatar->setUid(_uid);
-    _self_avatar->updateElement(_name, _url, _rare);
+    _self_avatar->updateElement(_name, _url, _rare, _guard);
     _self_avatar->updateRank(_RANK_SELF_DEFAULT);
 
     auto _self_position = this->getSelfPosition();
@@ -195,7 +196,7 @@ void CCRoomDelegate::updateStageAvatars(const char* json) {
     rapidjson::Document _document;
     _document.Parse<rapidjson::kParseDefaultFlags>(json);
     if (_document.HasParseError()) {
-        log("parse stage avatar json error %s\n", _document.GetParseError());
+        log("parse stage avatar json error %d\n", _document.GetParseError());
         return;
     }
     if (!_document.IsArray()) {
@@ -216,6 +217,7 @@ void CCRoomDelegate::updateStageAvatars(const char* json) {
         const char *_name = cocostudio::DICTOOL->getStringValue_json(_value, "name");
 
         int _rare = cocostudio::DICTOOL->getIntValue_json(_value, "rare");
+        int _guard = cocostudio::DICTOOL->getIntValue_json(_value, "guard");
 
         bool _mute = cocostudio::DICTOOL->getBooleanValue_json(_value, "mute");
 
@@ -241,7 +243,7 @@ void CCRoomDelegate::updateStageAvatars(const char* json) {
 
             auto _new_stage_avatar = _new_stage_avatars.back();
             _standAvatars.eraseObject(_new_stage_avatar);
-            _new_stage_avatar->updateElement(_name, _url, _rare);
+            _new_stage_avatar->updateElement(_name, _url, _rare, _guard);
 
         }
 
@@ -270,7 +272,7 @@ void CCRoomDelegate::updateStandAvatars(const char* json) {
     rapidjson::Document _document;
     _document.Parse<rapidjson::kParseDefaultFlags>(json);
     if (_document.HasParseError()) {
-        log("parse stand avatar json error %s\n", _document.GetParseError());
+        log("parse stand avatar json error %d\n", _document.GetParseError());
         return;
     }
     if (!_document.IsArray()) {
@@ -290,6 +292,7 @@ void CCRoomDelegate::updateStandAvatars(const char* json) {
         const char *_uid = cocostudio::DICTOOL->getStringValue_json(_value, "uid");
         const char *_name = cocostudio::DICTOOL->getStringValue_json(_value, "name");
         int _rare = cocostudio::DICTOOL->getIntValue_json(_value, "rare");
+        int _guard = cocostudio::DICTOOL->getIntValue_json(_value, "guard");
 
         auto _cur_self_avatar = this->findSelfAvatar(_uid);
 
@@ -302,7 +305,7 @@ void CCRoomDelegate::updateStandAvatars(const char* json) {
             _new_stand_avatars.pushBack(_new_stand_avatar);
         }
 
-        _new_stand_avatars.back()->updateElement(_name, _url, _rare);
+        _new_stand_avatars.back()->updateElement(_name, _url, _rare, _guard);
     }
 
 

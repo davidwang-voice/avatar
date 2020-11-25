@@ -30,15 +30,29 @@ CCGameAvatar *CCGameAvatar::create(int id, int ranking, string uid, string skin,
     return avatar;
 }
 
+void CCGameAvatar::setTexture(const std::string &filename) {
+
+    if (this->_inner_sprite) {
+        this->_inner_sprite->setTexture(filename);
+        float _width_ratio = this->_inner_sprite->getContentSize().width / getContentSize().width;
+        float _height_ratio = this->_inner_sprite->getContentSize().height / getContentSize().height;
+        this->_inner_sprite->setScale(1 / MAX(_width_ratio, _height_ratio));
+    }
+}
+
 void CCGameAvatar::initAvatar() {
+    this->setAnchorPoint(Point::ANCHOR_MIDDLE_BOTTOM);
 
     this->_scale_factor = Director::getInstance()->getContentScaleFactor();
-    // set the avatar skin and other params
+    this->setContentSize(Size(_CONTENT_SIZE_WIDTH / _scale_factor, _CONTENT_SIZE_HEIGHT / _scale_factor));
 
     //assets/avatar/default_avatar.png
-    loadTexture(_skin.c_str(), "avatar/default_avatar.png");
+    this->_inner_sprite = Sprite::create();
+    this->_inner_sprite->setAnchorPoint(Point::ANCHOR_MIDDLE);
+    this->_inner_sprite->setPosition(getContentSize().width / 2, getContentSize().height / 2);
+    this->addChild(this->_inner_sprite, 0);
 
-    setAnchorPoint(Point::ANCHOR_MIDDLE_BOTTOM);
+    loadTexture(_skin.c_str(), "avatar/default_avatar.png");
 
     float random = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * 1.5;
     auto delay = DelayTime::create(random);
@@ -48,20 +62,27 @@ void CCGameAvatar::initAvatar() {
 
     TTFConfig labelConfig;
     labelConfig.fontFilePath = "font/droid.ttf";
-    labelConfig.fontSize = 16;
+    labelConfig.fontSize = 24 / _scale_factor;
     labelConfig.glyphs = GlyphCollection::DYNAMIC;
     labelConfig.outlineSize = 0;
     labelConfig.customGlyphs = nullptr;
     labelConfig.distanceFieldEnabled = false;
 
     int dpi = Device::getDPI();
-
+//    auto _name_label = Label::createWithTTF(labelConfig, _name);
     auto _name_label = Label::createWithSystemFont(_name, "font/droid.ttf", 24 / _scale_factor);
+//    _name_label->setMaxLineWidth(100 / _scale_factor);
+
+//    _name_label->setLineBreakWithoutSpace(true);
+//    _name_label->setOverflow(Label::Overflow::CLAMP);
+    log("setMaxLineWidth: %f", _name_label->getMaxLineWidth());
     _name_label->setTag(_TAG_NAME_LABEL);
     _name_label->setLocalZOrder(2);
     _name_label->setAnchorPoint(Point::ANCHOR_MIDDLE_BOTTOM);
     _name_label->setPosition(getContentSize().width / 2, _LABEL_HEIGHT_DEFAULT / _scale_factor);
     _name_label->setTextColor(Color4B(255,255,255,255));
+//    _name_label->setMaxLineWidth(100 / _scale_factor);
+
     addChild(_name_label);
 
     auto _name_layer = LayerColor::create(Color4B(0, 0, 0, 100),
@@ -91,7 +112,19 @@ void CCGameAvatar::initAvatar() {
     addChild(_rank_layer);
 
 
+    auto _ssr_marker = Sprite::create("avatar/avatar_rare_ssr.png");
+    _ssr_marker->setTag(_TAG_SSR_MARKER);
+    _ssr_marker->setLocalZOrder(3);
+    _ssr_marker->setAnchorPoint(Point::ANCHOR_BOTTOM_RIGHT);
+    _ssr_marker->setPosition(getContentSize().width, 20 / _scale_factor);
+    addChild(_ssr_marker);
+    _ssr_marker->setVisible(false);
+
+
     this->setLocalZOrder(1);
+
+
+
 
     _loaded = false;
     _target_x = 0.0;
@@ -122,9 +155,10 @@ bool CCGameAvatar::onTouchBegan(Touch *touch, Event *event) {
         Point _locationInNode = touch->getLocation();
         auto _pos = _avatar->getParent()->convertToNodeSpace(_locationInNode);
         Rect _rect = _avatar->getBoundingBox();
-        if (_rect.containsPoint(_pos) && !this->isOnStage) {
-            log("Avatar onTouchesBegan... index = %d, uid = %s", _avatar->_id, _avatar->getUid());
+        if (_rect.containsPoint(_pos)) {
+            if (!__touchBegin()) return false;
 
+            log("Avatar onTouchesBegan... index = %d, uid = %s", _avatar->_id, _avatar->getUid());
             return true;
         }
     }
@@ -137,13 +171,18 @@ void CCGameAvatar::onTouchMoved(Touch *touch, Event *event) {
 }
 
 void CCGameAvatar::onTouchEnded(Touch *touch, Event *event) {
+    if (!__isTapEvent()) return;
     if (auto _avatar = dynamic_cast<CCGameAvatar*>(event->getCurrentTarget())) {
         Point _locationInNode = touch->getLocation();
         auto _pos = _avatar->getParent()->convertToNodeSpace(_locationInNode);
         Rect _rect = _avatar->getBoundingBox();
         if (_rect.containsPoint(_pos)) {
             log("Avatar onTouchesEnd... index = %d, uid = %s", _avatar->_id, _avatar->getUid());
-            onTouchStandAvatar(_avatar->getUid());
+            if (this->isOnStage) {
+                onTouchStageAvatar(_avatar->getUid());
+            } else {
+                onTouchStandAvatar(_avatar->getUid());
+            }
         }
     }
 }
@@ -154,6 +193,7 @@ void CCGameAvatar::updateRank(int rank) {
         this->setLocalZOrder(_real_local_z_order);
     auto _rank_label = dynamic_cast<Label*>(this->getChildByTag(_TAG_RANK_LABEL));
     auto _rank_layer = dynamic_cast<LayerColor*>(this->getChildByTag(_TAG_RANK_LAYER));
+    auto _name_layer = dynamic_cast<LayerColor*>(this->getChildByTag(_TAG_NAME_LAYER));
     if (rank <= 13) {
         float _labelWidth = 0;
         float _labelHeight = 0;
@@ -176,25 +216,45 @@ void CCGameAvatar::updateRank(int rank) {
             _rank_layer->setVisible(false);
         }
     }
+
+
 }
 
-void CCGameAvatar::updateElement(const char *name, const char *path, int rare) {
+void CCGameAvatar::updateElement(const char *name, const char *path, int rare, int guard) {
 
+    if ((strcmp(path, this->_skin.c_str()) != 0)) {
+        this->_skin = path;
+        loadTexture(_skin.c_str(), "avatar/default_avatar.png");
+    }
 
-    this->_skin = path;
+    bool _is_ssr = rare == 4;
+    bool _is_guard = guard == 1;
+
     this->_name = name;
 
     auto _rank_label = dynamic_cast<Label*>(this->getChildByTag(_TAG_RANK_LABEL));
     auto _rank_layer = dynamic_cast<LayerColor*>(this->getChildByTag(_TAG_RANK_LAYER));
     auto _name_label = dynamic_cast<Label*>(this->getChildByTag(_TAG_NAME_LABEL));
     auto _name_layer = dynamic_cast<LayerColor*>(this->getChildByTag(_TAG_NAME_LAYER));
+    auto _ssr_marker = dynamic_cast<Sprite*>(this->getChildByTag(_TAG_SSR_MARKER));
 
     float _labelWidth = 0;
     float _labelHeight = 0;
     if (_name_label) {
         _name_label->setString(_name);
+        _name_label->updateContent();
         _labelWidth = _name_label->getContentSize().width;
         _labelHeight = _name_label->getContentSize().height;
+
+        log("_labelWidth:%f", _labelWidth);
+        if (_labelWidth > 100 / _scale_factor) {
+            _labelWidth = 100 / _scale_factor;
+
+//            _name_label->setContentSize(Size(_labelWidth, _labelHeight));
+            _name_label->setDimensions(_labelWidth, _labelHeight);
+        } else {
+            _name_label->setDimensions(_labelWidth, _labelHeight);
+        }
     }
     if (_name_layer) {
         _name_layer->setContentSize(Size(_labelWidth + 10 / _scale_factor, _labelHeight));
@@ -207,6 +267,39 @@ void CCGameAvatar::updateElement(const char *name, const char *path, int rare) {
         _rank_layer->setPosition((getContentSize().width - _name_layer->getContentSize().width) / 2, _labelHeight + _LABEL_HEIGHT_DEFAULT / _scale_factor);
     }
 
+
+    if (_is_guard) {
+        if (_name_label)
+            _name_label->setColor(Color3B(255, 230, 138));
+        if (_rank_label)
+            _rank_label->setColor(Color3B(255, 230, 138));
+    } else {
+        if (_name_label)
+            _name_label->setColor(Color3B(255, 255, 255));
+        if (_rank_label)
+            _rank_label->setColor(Color3B(255, 255, 255));
+    }
+
+    if (_is_ssr) {
+        if (_name_layer) {
+            _name_layer->setColor(Color3B(235, 94, 137));
+            _name_layer->setOpacity(250);
+        }
+        if (_rank_layer) {
+            _rank_layer->setColor(Color3B(235, 94, 137));
+            _rank_layer->setOpacity(250);
+        }
+    } else {
+        if (_name_layer) {
+            _name_layer->setColor(Color3B(0, 0, 0));
+            _name_layer->setOpacity(100);
+        }
+        if (_rank_layer) {
+            _rank_layer->setColor(Color3B(0, 0, 0));
+            _rank_layer->setOpacity(100);
+        }
+    }
+    _ssr_marker->setVisible(_is_ssr);
 }
 
 void CCGameAvatar::setUid(const char *uid) {
@@ -279,8 +372,8 @@ void CCGameAvatar::popChatBubble(const char* content) {
     _label_config.distanceFieldEnabled = false;
 
 //    auto _chat_label = Label::createWithTTF(_label_config, content);
-    auto _chat_label = Label::createWithSystemFont(StringUtils::toString(content) + "\n", "font/droid.ttf", 24  / _scale_factor, Size(180 / _scale_factor, 0));
-//    label->setAnchorPoint(Point::ANCHOR_MIDDLE_BOTTOM);
+    auto _chat_label = Label::createWithSystemFont(StringUtils::toString(content) + "\n", "font/droid.ttf", 24  / _scale_factor, Size(_CHAT_POP_BUBBLE_WIDTH / _scale_factor, 0));
+    _chat_label->setAnchorPoint(Point::ANCHOR_MIDDLE);
     _chat_label->setPosition(10 / _scale_factor + _chat_label->getContentSize().width / 2 , 10 / _scale_factor + _chat_label->getContentSize().height / 2 );
     Color4B  textColor(0,0,0,255);
     _chat_label->setTextColor(textColor);
@@ -295,7 +388,7 @@ void CCGameAvatar::popChatBubble(const char* content) {
 
     auto _chat_bubble = CCBaseSprite::create();
     _chat_bubble->setAnchorPoint(Point::ANCHOR_MIDDLE_BOTTOM);
-    _chat_bubble->setPosition(getContentSize().width/ 2, 100/ _scale_factor);;
+    _chat_bubble->setPosition(getContentSize().width/ 2, _LABEL_HEIGHT_DEFAULT / _scale_factor);;
     _chat_bubble->setContentSize(Size(_chat_label->getContentSize().width + 20  / _scale_factor, _chat_label->getContentSize().height + 20  / _scale_factor));
 
 

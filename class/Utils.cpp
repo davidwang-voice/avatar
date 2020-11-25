@@ -3,32 +3,34 @@
 #include "base/ccUtils.h"
 
 #if CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID
-char* jstringToChar(JNIEnv* env, jstring jstr) {
-    char* rtn = NULL;
+
+char *jstringToChar(JNIEnv *env, jstring jstr) {
+    char *rtn = NULL;
     jclass clsstring = env->FindClass("java/lang/String");
     jstring strencode = env->NewStringUTF("utf-8");
     jmethodID mid = env->GetMethodID(clsstring, "getBytes", "(Ljava/lang/String;)[B");
     jbyteArray barr = (jbyteArray) env->CallObjectMethod(jstr, mid, strencode);
     jsize alen = env->GetArrayLength(barr);
-    jbyte* ba = env->GetByteArrayElements(barr, JNI_FALSE);
+    jbyte *ba = env->GetByteArrayElements(barr, JNI_FALSE);
     if (alen > 0) {
-        rtn = (char*) malloc(alen + 1);
+        rtn = (char *) malloc(alen + 1);
         memcpy(rtn, ba, alen);
         rtn[alen] = 0;
     }
     env->ReleaseByteArrayElements(barr, ba, 0);
     return rtn;
 }
+
 #endif
 
-void getGameResourceUrl(std::string &res_url, const char* name) {
+void getGameResourceUrl(std::string &res_url, const char *name) {
 //    res_url.append(_CC_GAME_FILE_HTTP_PATH);
 
     res_url.append(name);
 
 }
 
-void getGameResourcePath(std::string &res_path, const char* name) {
+void getGameResourcePath(std::string &res_path, const char *name) {
     res_path.append(cocos2d::FileUtils::sharedFileUtils()->getWritablePath());
 
     res_path.append(getStringMD5Hash(name));
@@ -43,4 +45,23 @@ std::string getStringMD5Hash(const std::string &string) {
 }
 
 
+bool __touchBegin() {
+    long long _current_ms = cocos2d::utils::getTimeInMilliseconds();
+    if (_current_ms - _touch_tap_timestamp < _TOUCH_EVENT_TAP_GAP_MS) {
+        return false;
+    }
+
+    _touch_down_timestamp = _current_ms;
+
+    return true;
+}
+
+bool __isTapEvent() {
+    long long _current_ms = cocos2d::utils::getTimeInMilliseconds();
+    if (_current_ms - _touch_down_timestamp < _TOUCH_EVENT_TAP_VALID_MS) {
+        _touch_tap_timestamp = _current_ms;
+        return true;
+    }
+    return false;
+}
 

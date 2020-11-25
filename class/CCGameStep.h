@@ -17,6 +17,10 @@ class CCGameStep : public CCBaseSprite {
 private:
     static const int _TAG_WAVE_ANIM_ACTION = 1001;
     static const int _TAG_STEP_PLACE = 100;
+
+    static const int _CONTENT_SIZE_WIDTH = 120;
+    static const int _CONTENT_SIZE_HEIGHT = 195;
+
     string _skin;
     string _uid;
     bool _mute;

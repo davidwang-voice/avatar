@@ -20,11 +20,12 @@ CCGameStep *CCGameStep::create(int id, int ranking, std::string skin, int priori
 
 
 void CCGameStep::initStep() {
-    this->_mute = false;
-    setTexture("bg_stage_step.png");
-    setAnchorPoint(Point::ANCHOR_MIDDLE_BOTTOM);
-
     float _scale_factor = Director::getInstance()->getContentScaleFactor();
+
+    this->setContentSize(Size(_CONTENT_SIZE_WIDTH / _scale_factor, _CONTENT_SIZE_HEIGHT / _scale_factor));
+
+//    setTexture("bg_stage_step.png");
+    setAnchorPoint(Point::ANCHOR_MIDDLE_BOTTOM);
 
     auto _step_place = CCBaseSprite::create();
     _step_place->setTexture("anim/wave_ani_1.png");
@@ -103,9 +104,14 @@ bool CCGameStep::onTouchBegan(Touch *touch, Event *event) {
         auto _pos = _step->getParent()->convertToNodeSpace(_locationInNode);
         Rect _rect = _step->getBoundingBox();
         if (_rect.containsPoint(_pos)) {
-            log("Step onTouchesBegan... index = %d, uid = %s", _step->_id, _step->getUid());
 
-            return true;
+            if (!__touchBegin()) return false;
+
+            if (this->_uid.empty()) {
+
+                log("Step onTouchesBegan... index = %d, uid = %s", _step->_id, _step->getUid());
+                return true;
+            }
         }
     }
 
@@ -117,6 +123,7 @@ void CCGameStep::onTouchMoved(Touch *touch, Event *event) {
 }
 
 void CCGameStep::onTouchEnded(Touch *touch, Event *event) {
+    if (!__isTapEvent()) return;
     if (auto _step = dynamic_cast<CCGameStep*>(event->getCurrentTarget())) {
         Point _locationInNode = touch->getLocation();
         auto _pos = _step->getParent()->convertToNodeSpace(_locationInNode);

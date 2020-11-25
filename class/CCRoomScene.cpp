@@ -200,8 +200,8 @@ void CCRoomScene::onTouchesEnded(const std::vector<Touch*>& touches, Event *even
 
 
 bool CCRoomScene::onTouchBegan(Touch* touches, Event  *event) {
-
     if (auto _scene = dynamic_cast<CCRoomScene*>(event->getCurrentTarget())) {
+        if (!__touchBegin()) return false;
         log("Scene onTouchBegan..x=%f, y=%f", touches->getLocation().x, touches->getLocation().y);
         return true;
     }
@@ -211,7 +211,7 @@ void CCRoomScene::onTouchMoved(Touch* touches, Event  *event) {
 
 }
 void CCRoomScene::onTouchEnded(Touch* touches, Event  *event) {
-
+    if (!__isTapEvent()) return;
     if (auto _scene = dynamic_cast<CCRoomScene*>(event->getCurrentTarget())) {
         log("Scene onTouchesEnded..x=%f, y=%f", touches->getLocation().x, touches->getLocation().y);
         onTouchScene();

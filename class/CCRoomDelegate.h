@@ -72,7 +72,7 @@ private:
 
     Scene* _scene;
     Vec2 _visibleOrigin = Vec2::ZERO;
-    CCSize _visibleSize = CCSize::ZERO;
+    Size _visibleSize = Size::ZERO;
     Vec2 _centerPosition;
     float _scaleFactor;
     int _standRowCount[_STAND_MAX_ROW_COUNT];

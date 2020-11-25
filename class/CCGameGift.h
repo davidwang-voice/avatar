@@ -16,9 +16,13 @@ using namespace cocos2d;
 class CCGameGift : public CCBaseSprite {
 
 private:
+    static const int _CONTENT_SIZE_WIDTH_MAX = 100;
+    static const int _CONTENT_SIZE_HEIGHT_MAX = 100;
+
     string _skin;
     float _scale_factor;
     void initGift();
+
 
 protected:
     CCGameGift(int id, int ranking, string skin, int priority)
@@ -28,6 +32,7 @@ protected:
 public:
     virtual ~CCGameGift() = default;
     static CCGameGift* create(int id, int ranking, string skin, int priority = 0);
+    void setTexture(const std::string &filename) override ;
     void present(const Vec2& target);
 };
 

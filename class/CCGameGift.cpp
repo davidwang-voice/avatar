@@ -17,9 +17,19 @@ CCGameGift *CCGameGift::create(int id, int ranking, string skin, int priority) {
     return gift;
 }
 
+void CCGameGift::setTexture(const std::string &filename) {
+    Sprite::setTexture(filename);
+    float _max_width = _CONTENT_SIZE_WIDTH_MAX / _scale_factor;
+    float _max_height = _CONTENT_SIZE_HEIGHT_MAX / _scale_factor;
+    if (getContentSize().width > _max_width  || getContentSize().height > _max_height) {
+        float _width_ratio = getContentSize().width / _max_width;
+        float _height_ratio = getContentSize().height / _max_height;
+        this->setScale(1 / MAX(_width_ratio, _height_ratio));
+    }
+}
+
 void CCGameGift::initGift() {
     this->_scale_factor = Director::getInstance()->getContentScaleFactor();
-//    setTexture(_skin);
     int _star_index = cocos2d::RandomHelper::random_int(1, 5);
     std::string _star_path = "gift/star_" + std::to_string(_star_index) + ".png";
 

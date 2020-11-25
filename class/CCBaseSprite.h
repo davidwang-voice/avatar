@@ -15,6 +15,7 @@ using namespace cocos2d::network;
 
 class CCBaseSprite : public Sprite {
 private:
+
     void sendResourceRequest(const char* url, const char* tag);
     void onRequestCompleted(HttpClient *sender, HttpResponse *response);
 
@@ -48,8 +49,6 @@ protected:
     int _ranking;
     int _fixedPriority;
     EventListener* _listener;
-
-
 };
 
 
