@@ -5,7 +5,7 @@
 #if CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID
 
 char *jstringToChar(JNIEnv *env, jstring jstr) {
-    char *rtn = NULL;
+    char *rtn = "";
     jclass clsstring = env->FindClass("java/lang/String");
     jstring strencode = env->NewStringUTF("utf-8");
     jmethodID mid = env->GetMethodID(clsstring, "getBytes", "(Ljava/lang/String;)[B");

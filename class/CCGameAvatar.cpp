@@ -9,6 +9,7 @@
 #include "CCRoomScene.h"
 #include "CCRoomDelegate.h"
 #include <iomanip>
+#include <cocos/editor-support/spine/extension.h>
 #include "platform/CCDevice.h"
 
 
@@ -16,7 +17,7 @@ USING_NS_CC;
 
 using namespace cocos2d::network;
 
-static int _chat_local_z_order = 0;
+static unsigned int _chat_local_z_order = 0;
 
 CCGameAvatar *CCGameAvatar::create(int id, int ranking, string uid, string skin, string name, int priority) {
     auto avatar = new (nothrow) CCGameAvatar(id, ranking, uid, move(skin), move(name), priority);
@@ -34,9 +35,11 @@ void CCGameAvatar::setTexture(const std::string &filename) {
 
     if (this->_inner_sprite) {
         this->_inner_sprite->setTexture(filename);
-        float _width_ratio = this->_inner_sprite->getContentSize().width / getContentSize().width;
-        float _height_ratio = this->_inner_sprite->getContentSize().height / getContentSize().height;
-        this->_inner_sprite->setScale(1 / MAX(_width_ratio, _height_ratio));
+        if (strcmp(filename.c_str(), "avatar/default_avatar.png") != 0) {
+            float _width_ratio = this->_inner_sprite->getContentSize().width / getContentSize().width;
+            float _height_ratio = this->_inner_sprite->getContentSize().height / getContentSize().height;
+            this->_inner_sprite->setScale(1 / MAX(_width_ratio, _height_ratio));
+        }
     }
 }
 
@@ -48,8 +51,8 @@ void CCGameAvatar::initAvatar() {
 
     //assets/avatar/default_avatar.png
     this->_inner_sprite = Sprite::create();
-    this->_inner_sprite->setAnchorPoint(Point::ANCHOR_MIDDLE);
-    this->_inner_sprite->setPosition(getContentSize().width / 2, getContentSize().height / 2);
+    this->_inner_sprite->setAnchorPoint(Point::ANCHOR_MIDDLE_BOTTOM);
+    this->_inner_sprite->setPosition(getContentSize().width / 2, 0);
     this->addChild(this->_inner_sprite, 0);
 
     loadTexture(_skin.c_str(), "avatar/default_avatar.png");
@@ -70,24 +73,28 @@ void CCGameAvatar::initAvatar() {
 
     int dpi = Device::getDPI();
 //    auto _name_label = Label::createWithTTF(labelConfig, _name);
-    auto _name_label = Label::createWithSystemFont(_name, "font/droid.ttf", 24 / _scale_factor);
-//    _name_label->setMaxLineWidth(100 / _scale_factor);
 
-//    _name_label->setLineBreakWithoutSpace(true);
-//    _name_label->setOverflow(Label::Overflow::CLAMP);
-    log("setMaxLineWidth: %f", _name_label->getMaxLineWidth());
-    _name_label->setTag(_TAG_NAME_LABEL);
-    _name_label->setLocalZOrder(2);
+    auto _name_label = Label::createWithSystemFont(_name, "Arial", 24 / _scale_factor);
+    _name_label->setOverflow(Label::Overflow::CLAMP);
     _name_label->setAnchorPoint(Point::ANCHOR_MIDDLE_BOTTOM);
     _name_label->setPosition(getContentSize().width / 2, _LABEL_HEIGHT_DEFAULT / _scale_factor);
     _name_label->setTextColor(Color4B(255,255,255,255));
-//    _name_label->setMaxLineWidth(100 / _scale_factor);
+    _name_label->setTag(_TAG_NAME_LABEL);
+    _name_label->setLocalZOrder(2);
 
     addChild(_name_label);
+    float _name_label_width = _name_label->getContentSize().width;
+    float _name_label_height = _name_label->getContentSize().height;
+
+    if (_name_label_width > _NAME_LABEL_MAX_WIDTH / _scale_factor) {
+        _name_label_width = _NAME_LABEL_MAX_WIDTH / _scale_factor;
+    }
+    _name_label->setDimensions(_name_label_width, _name_label_height);
+
 
     auto _name_layer = LayerColor::create(Color4B(0, 0, 0, 100),
-                                         _name_label->getContentSize().width + 10 / _scale_factor,
-                                         _name_label->getContentSize().height);
+                                          _name_label_width + 10 / _scale_factor,
+                                          _name_label_height);
     _name_layer->setTag(_TAG_NAME_LAYER);
     _name_layer->setLocalZOrder(1);
     _name_layer->setAnchorPoint(Point::ANCHOR_BOTTOM_LEFT);
@@ -95,12 +102,12 @@ void CCGameAvatar::initAvatar() {
     addChild(_name_layer);
 
 
-    auto _rank_label = Label::createWithSystemFont("", "font/droid.ttf", 24 / _scale_factor);
+    auto _rank_label = Label::createWithSystemFont("", "Arial", 24 / _scale_factor);
 
     _rank_label->setTag(_TAG_RANK_LABEL);
     _rank_label->setLocalZOrder(2);
     _rank_label->setAnchorPoint(Point::ANCHOR_BOTTOM_LEFT);
-    _rank_label->setPosition((getContentSize().width - _name_label->getContentSize().width) / 2, _name_label->getContentSize().height + _LABEL_HEIGHT_DEFAULT / _scale_factor);
+    _rank_label->setPosition((getContentSize().width - _name_label_width) / 2, _name_label_height + _LABEL_HEIGHT_DEFAULT / _scale_factor);
 
     addChild(_rank_label);
 
@@ -108,7 +115,7 @@ void CCGameAvatar::initAvatar() {
     _rank_layer->setTag(_TAG_RANK_LAYER);
     _rank_layer->setLocalZOrder(1);
     _rank_layer->setAnchorPoint(Point::ANCHOR_BOTTOM_LEFT);
-    _rank_layer->setPosition((getContentSize().width - _name_layer->getContentSize().width) / 2, _name_label->getContentSize().height + _LABEL_HEIGHT_DEFAULT / _scale_factor);
+    _rank_layer->setPosition((getContentSize().width - _name_layer->getContentSize().width) / 2, _name_label_height + _LABEL_HEIGHT_DEFAULT / _scale_factor);
     addChild(_rank_layer);
 
 
@@ -116,19 +123,17 @@ void CCGameAvatar::initAvatar() {
     _ssr_marker->setTag(_TAG_SSR_MARKER);
     _ssr_marker->setLocalZOrder(3);
     _ssr_marker->setAnchorPoint(Point::ANCHOR_BOTTOM_RIGHT);
-    _ssr_marker->setPosition(getContentSize().width, 20 / _scale_factor);
+    _ssr_marker->setPosition(getContentSize().width, 0);
     addChild(_ssr_marker);
     _ssr_marker->setVisible(false);
 
 
     this->setLocalZOrder(1);
 
-
-
-
     _loaded = false;
     _target_x = 0.0;
     _target_y = 0.0;
+    _self_chat_bubble_count = 0;
 }
 
 void CCGameAvatar::shakingBody() {
@@ -188,7 +193,7 @@ void CCGameAvatar::onTouchEnded(Touch *touch, Event *event) {
 }
 
 void CCGameAvatar::updateRank(int rank) {
-    _real_local_z_order = rank;//(rank < 100) ? (100 - rank) : rank;
+    _real_local_z_order = (rank < 100) ? (100 - rank) : rank;
     if (this->getLocalZOrder() < _CHAT_LOCAL_Z_ORDER_BASE)
         this->setLocalZOrder(_real_local_z_order);
     auto _rank_label = dynamic_cast<Label*>(this->getChildByTag(_TAG_RANK_LABEL));
@@ -229,43 +234,52 @@ void CCGameAvatar::updateElement(const char *name, const char *path, int rare, i
 
     bool _is_ssr = rare == 4;
     bool _is_guard = guard == 1;
-
-    this->_name = name;
-
     auto _rank_label = dynamic_cast<Label*>(this->getChildByTag(_TAG_RANK_LABEL));
     auto _rank_layer = dynamic_cast<LayerColor*>(this->getChildByTag(_TAG_RANK_LAYER));
     auto _name_label = dynamic_cast<Label*>(this->getChildByTag(_TAG_NAME_LABEL));
     auto _name_layer = dynamic_cast<LayerColor*>(this->getChildByTag(_TAG_NAME_LAYER));
     auto _ssr_marker = dynamic_cast<Sprite*>(this->getChildByTag(_TAG_SSR_MARKER));
 
-    float _labelWidth = 0;
-    float _labelHeight = 0;
-    if (_name_label) {
-        _name_label->setString(_name);
-        _name_label->updateContent();
-        _labelWidth = _name_label->getContentSize().width;
-        _labelHeight = _name_label->getContentSize().height;
 
-        log("_labelWidth:%f", _labelWidth);
-        if (_labelWidth > 100 / _scale_factor) {
-            _labelWidth = 100 / _scale_factor;
+    if ((strcmp(name, this->_name.c_str()) != 0)) {
+        log("avatar old name: %s, new name: %s", this->_name.c_str(), name);
+        this->_name = name;
 
-//            _name_label->setContentSize(Size(_labelWidth, _labelHeight));
-            _name_label->setDimensions(_labelWidth, _labelHeight);
-        } else {
+        float _labelWidth = 0;
+        float _labelHeight = 0;
+        if (_name_label) {
+            _name_label->removeFromParent();
+
+
+            _name_label = Label::createWithSystemFont(_name, "Arial", 24 / _scale_factor);
+            _name_label->setTag(_TAG_NAME_LABEL);
+            _name_label->setLocalZOrder(2);
+            _name_label->setAnchorPoint(Point::ANCHOR_MIDDLE_BOTTOM);
+            _name_label->setOverflow(Label::Overflow::CLAMP);
+            _name_label->setPosition(getContentSize().width / 2, _LABEL_HEIGHT_DEFAULT / _scale_factor);
+            _name_label->setTextColor(Color4B(255,255,255,255));
+            this->addChild(_name_label);
+
+            _labelWidth = _name_label->getContentSize().width;
+            _labelHeight = _name_label->getContentSize().height;
+
+            if (_labelWidth > _NAME_LABEL_MAX_WIDTH / _scale_factor) {
+                _labelWidth = _NAME_LABEL_MAX_WIDTH / _scale_factor;
+            }
             _name_label->setDimensions(_labelWidth, _labelHeight);
         }
+        if (_name_layer) {
+            _name_layer->setContentSize(Size(_labelWidth + 10 / _scale_factor, _labelHeight));
+            _name_layer->setPosition((getContentSize().width - _name_layer->getContentSize().width) / 2, _LABEL_HEIGHT_DEFAULT / _scale_factor);
+        }
+        if (_rank_label) {
+            _rank_label->setPosition((getContentSize().width - _labelWidth) / 2, _labelHeight + _LABEL_HEIGHT_DEFAULT / _scale_factor);
+        }
+        if (_rank_layer) {
+            _rank_layer->setPosition((getContentSize().width - _name_layer->getContentSize().width) / 2, _labelHeight + _LABEL_HEIGHT_DEFAULT / _scale_factor);
+        }
     }
-    if (_name_layer) {
-        _name_layer->setContentSize(Size(_labelWidth + 10 / _scale_factor, _labelHeight));
-        _name_layer->setPosition((getContentSize().width - _name_layer->getContentSize().width) / 2, _LABEL_HEIGHT_DEFAULT / _scale_factor);
-    }
-    if (_rank_label) {
-        _rank_label->setPosition((getContentSize().width - _labelWidth) / 2, _labelHeight + _LABEL_HEIGHT_DEFAULT / _scale_factor);
-    }
-    if (_rank_layer) {
-        _rank_layer->setPosition((getContentSize().width - _name_layer->getContentSize().width) / 2, _labelHeight + _LABEL_HEIGHT_DEFAULT / _scale_factor);
-    }
+
 
 
     if (_is_guard) {
@@ -372,17 +386,18 @@ void CCGameAvatar::popChatBubble(const char* content) {
     _label_config.distanceFieldEnabled = false;
 
 //    auto _chat_label = Label::createWithTTF(_label_config, content);
-    auto _chat_label = Label::createWithSystemFont(StringUtils::toString(content) + "\n", "font/droid.ttf", 24  / _scale_factor, Size(_CHAT_POP_BUBBLE_WIDTH / _scale_factor, 0));
+    auto _chat_label = Label::createWithSystemFont(StringUtils::toString(content) + "\n", "Arial", 24  / _scale_factor, Size(_CHAT_POP_BUBBLE_WIDTH / _scale_factor, 0));
     _chat_label->setAnchorPoint(Point::ANCHOR_MIDDLE);
     _chat_label->setPosition(10 / _scale_factor + _chat_label->getContentSize().width / 2 , 10 / _scale_factor + _chat_label->getContentSize().height / 2 );
     Color4B  textColor(0,0,0,255);
     _chat_label->setTextColor(textColor);
 
 
-    auto _name_label = Label::createWithSystemFont(_name, "font/droid.ttf", 20 / _scale_factor);
+    auto _name_label = Label::createWithSystemFont(_name, "Arial", 20 / _scale_factor, Size::ZERO, TextHAlignment::RIGHT);
+    _name_label->setOverflow(Label::Overflow::CLAMP);
     _name_label->setAnchorPoint(Point::ANCHOR_BOTTOM_RIGHT);
     _name_label->setPosition(_chat_label->getContentSize().width + 10 / _scale_factor ,  10 / _scale_factor);
-//    Color4B  textColor(116,116,124,255);
+    _name_label->setDimensions(_CHAT_POP_BUBBLE_WIDTH / _scale_factor, _name_label->getContentSize().height);
     _name_label->setTextColor(Color4B(0,0,0,127));
 
 
@@ -397,7 +412,7 @@ void CCGameAvatar::popChatBubble(const char* content) {
     const Vec2 &destination = Vec2(_chat_bubble->getContentSize().width, _chat_bubble->getContentSize().height);
     Color4F color4F(1, 1, 1, 0.95);
 
-    drawRoundRect(_drawNode, origin, destination,12  / _scale_factor, 88, color4F);
+    drawRoundRect(_drawNode, origin, destination,12  / _scale_factor, 88,  color4F);
 
     _chat_bubble->addChild(_drawNode);
     _chat_bubble->addChild(_chat_label);
@@ -410,24 +425,42 @@ void CCGameAvatar::popChatBubble(const char* content) {
         _chat_label->runAction(FadeOut::create(2));
         _drawNode->runAction(FadeOut::create(2));
     });
-    _chat_local_z_order++;
 
+    if (_chat_local_z_order > 10000) {
+        _chat_local_z_order = 0;//极限 不至于.
+    }
+    _chat_local_z_order++;
+    log("_chat_local_z_order:%d", _chat_local_z_order);
     auto _self = this;
     _self->setLocalZOrder(_CHAT_LOCAL_Z_ORDER_BASE + _chat_local_z_order);
     auto _removeFunc = CallFunc::create([_self, _chat_bubble](){
+        _self->_self_chat_bubble_count--;
         _chat_bubble->removeFromParentAndCleanup(true);
-        _self->setLocalZOrder(_self->_real_local_z_order);
-        _chat_local_z_order--;
+        if (_self->_self_chat_bubble_count <= 0)
+            _self->setLocalZOrder(_self->_real_local_z_order);
+
     });
 
     auto _action = Sequence::create(_moveBy, _fadeFunc, DelayTime::create(2), _removeFunc, nullptr);
     _chat_bubble->runAction(_action);
+    _self_chat_bubble_count++;
+
+
+    int _chat_local_z_order_py = _chat_local_z_order;
+    auto _resetChatZOrder = CallFunc::create([_chat_local_z_order_py](){
+        if (_chat_local_z_order_py == _chat_local_z_order) {
+            _chat_local_z_order = 0;
+        }
+    });
+
+    runAction(Sequence::create(DelayTime::create(8), _resetChatZOrder, nullptr));
 
 }
 
 void CCGameAvatar::drawRoundRect(DrawNode *drawNode, const Vec2 &origin, const Vec2 &destination,
                                  float radius, unsigned int segments, const Color4F &color)
 {
+    segments = 40;//radius * 2;
     const float coef = 2.0f * (float)M_PI/(segments - 8);
 
     Vec2 *vertices = new (std::nothrow) Vec2[segments];
@@ -501,6 +534,93 @@ void CCGameAvatar::drawRoundRect(DrawNode *drawNode, const Vec2 &origin, const V
     drawNode->drawSolidPoly(vertices, segments, color);
 
     CC_SAFE_DELETE_ARRAY(vertices);
+}
+
+
+void CCGameAvatar::drawRoundRect(DrawNode *drawNode, const Vec2 &origin, const Vec2 &destination,
+                                 float radius, const Color4F &color, int type)
+{
+
+
+    unsigned int segments = radius * 2;
+    const float coef = 2.0f * (float)M_PI / segments;
+
+    Vec2 center = Vec2(0, 0);
+
+    Vec2 *vertices = new (std::nothrow) Vec2[segments];
+
+    if( ! vertices )
+        return;
+
+
+    if (type == 1) {
+
+    }
+
+
+
+    for (int i = 0; i <= segments; ++i) {
+        float rads = (segments - i) * coef;
+        vertices[i].x = radius* SIN(rads);
+        vertices[i].y = radius* COS(rads);
+    }
+
+    float minX = MIN(origin.x, destination.x);
+    float maxX = MAX(origin.x, destination.x);
+    float minY = MIN(origin.y, destination.y);
+    float maxY = MAX(origin.y, destination.y);
+
+    Vec2 *polygons = new(std::nothrow) Vec2[segments*4 + 1 ];
+    if( ! polygons )
+        return;
+
+
+    //left-top
+    center.x     = minX + radius;
+    center.y     = maxY - radius;
+    unsigned int index = 0;
+    for(int i = 0; i <= segments; ++i){
+        ++index;
+        polygons[index].x = center.x - vertices[i].x;
+        polygons[index].y = center.y + vertices[i].y;
+    }
+
+    //right-top
+    center.x        = maxX - radius;
+    center.y        = maxY - radius;
+    for(int j = segments; j!=0; --j){
+        ++index;
+        polygons[index].x = center.x + vertices[j].x;
+        polygons[index].y = center.y + vertices[j].y;
+    }
+
+    //right-bottom
+    center.x        = maxX - radius;
+    center.y        = minY + radius;
+    for(int i = 0; i <= segments; ++i){
+        ++index;
+        polygons[index].x = center.x + vertices[i].x;
+        polygons[index].y = center.y - vertices[i].y;
+    }
+
+    //left-bottom
+    center.x        = minX + radius;
+    center.y        = minY + radius;
+//    thisVertices    = vertices + segments;
+    for(int j=segments; j!=0 ; --j){
+        ++index;
+        polygons[index].x = center.x - vertices[j].x;
+        polygons[index].y = center.y - vertices[j].y;
+
+    }
+
+
+    drawNode->drawSolidPoly(polygons, segments*4 + 1, color);
+
+//    drawNode->drawSolidPoly(vertices, segments, color);
+
+    CC_SAFE_DELETE_ARRAY(vertices);
+    CC_SAFE_DELETE_ARRAY(polygons);
 }
 
 const Vec2 CCGameAvatar::roundPoint(const Vec2 &origin) const {

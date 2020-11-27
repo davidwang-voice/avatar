@@ -8,7 +8,8 @@
 #if CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID
 #include <cocos/editor-support/cocostudio/DictionaryHelper.h>
 #elif CC_TARGET_PLATFORM == CC_PLATFORM_IOS
-#include "DictionaryHelper.h"
+//#include "DictionaryHelper.h"
+#include <cocos/editor-support/cocostudio/DictionaryHelper.h>
 #endif
 
 #include "AppDelegate.h"
@@ -436,7 +437,7 @@ const Vec2 CCRoomDelegate::getSelfPosition() const {
 const Vec2 CCRoomDelegate::getGiftPosition() const {
     float _coord_x = _GIFT_TABLE_WIDTH / _scaleFactor / 2;
     float _coord_y = _GIFT_TABLE_HEIGHT_MAX / _scaleFactor / 2;
-    float _space_x = 40 / _scaleFactor;
+    float _space_x = 36 / _scaleFactor;
     float _space_y = 5 / _scaleFactor;
 
     float _rand_x = rand() % (int)((_coord_x - _space_x) * 2) - (_coord_x - _space_x);
@@ -448,7 +449,7 @@ const Vec2 CCRoomDelegate::getGiftPosition() const {
 //    float _result_y_l = std::sqrt((1 - _rand_x * _rand_x / _coord_x / _coord_x) * _coord_y_l * _coord_y_l);
 
     float _target_x = _rand_x + _centerPosition.x;
-    float _target_y = _centerPosition.y - (_GIFT_TABLE_TOP / _scaleFactor + _rand_y);
+    float _target_y = _centerPosition.y - (_GIFT_TABLE_TOP / _scaleFactor + _rand_y) + 25 / _scaleFactor;
 
     return Vec2(_target_x , _target_y);
 }

@@ -30,11 +30,16 @@ void CCGameGift::setTexture(const std::string &filename) {
 
 void CCGameGift::initGift() {
     this->_scale_factor = Director::getInstance()->getContentScaleFactor();
-    int _star_index = cocos2d::RandomHelper::random_int(1, 5);
-    std::string _star_path = "gift/star_" + std::to_string(_star_index) + ".png";
 
-    loadTexture(_skin.c_str(), _star_path.c_str());
-    setAnchorPoint(Point::ANCHOR_MIDDLE_BOTTOM);
+    std::string _skin_str(_skin);
+    if (_skin_str.empty()) {
+        int _star_index = cocos2d::RandomHelper::random_int(1, 5);
+        std::string _star_path = "gift/star_" + std::to_string(_star_index) + ".png";
+        setTexture(_star_path);
+    } else {
+        loadTexture(_skin.c_str());
+    }
+    setAnchorPoint(Point::ANCHOR_MIDDLE);
 }
 
 void CCGameGift::present(const Vec2 &target) {
@@ -69,7 +74,7 @@ void CCGameGift::present(const Vec2 &target) {
     auto easeOut = CCEaseOut::create(CCBezierTo::create(0.6 , cfg),2.0f);
 
 //    auto rotateBy = RotateBy::create(1, (rand() % (90)) - 45);
-    setRotation((rand() % (90)) - 45);
+    setRotation((rand() % (60)) - 30);
 
     auto callback = CallFunc::create([&](){
         setLocalZOrder(0);

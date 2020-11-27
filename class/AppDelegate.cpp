@@ -124,7 +124,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
     auto visibleSize = Director::getInstance()->getVisibleSize();
 
 
-    director->setContentScaleFactor(designResolutionSize.width / screenSize.width);
+//    director->setContentScaleFactor(designResolutionSize.width / screenSize.width);
 
     log("designResolutionSize width: %f, designResolutionSize height: %f", designResolutionSize.width, designResolutionSize.height);
 

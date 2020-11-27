@@ -26,11 +26,12 @@ private:
     static const unsigned int _TAG_NAME_LAYER = 104;
     static const unsigned int _TAG_SSR_MARKER = 105;
 
-    static const unsigned int _LABEL_HEIGHT_DEFAULT = 120;
+    static const unsigned int _NAME_LABEL_MAX_WIDTH = 240;
+    static const unsigned int _LABEL_HEIGHT_DEFAULT = 100;
     static const unsigned int _CONTENT_SIZE_WIDTH = 90;
     static const unsigned int _CONTENT_SIZE_HEIGHT = 150;
 
-    static const unsigned int _CHAT_POP_BUBBLE_WIDTH = 180;
+    static const unsigned int _CHAT_POP_BUBBLE_WIDTH = 200;
     static const unsigned int _CHAT_LOCAL_Z_ORDER_BASE = 200;
 
     string _skin;
@@ -39,13 +40,16 @@ private:
     bool _loaded;
     float _target_x;
     float _target_y;
-    int _real_local_z_order;
+    unsigned int _real_local_z_order;
+    unsigned int _self_chat_bubble_count;
     float _scale_factor;
     Sprite *_inner_sprite;
 
     void initAvatar();
     void shakingBody();
     void drawRoundRect(DrawNode *drawNode, const Vec2 &origin, const Vec2 &destination, float radius, unsigned int segments, const Color4F &color);
+    void drawRoundRect(DrawNode *drawNode, const Vec2 &origin, const Vec2 &destination, float radius, const Color4F &color, int type);
+
     const Vec2 roundPoint(const Vec2 &origin) const ;
 
 protected:
