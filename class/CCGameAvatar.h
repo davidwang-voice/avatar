@@ -45,6 +45,7 @@ private:
     float _scale_factor;
     Sprite *_inner_sprite;
 
+
     void initAvatar();
     void shakingBody();
     void drawRoundRect(DrawNode *drawNode, const Vec2 &origin, const Vec2 &destination, float radius, unsigned int segments, const Color4F &color);
@@ -62,6 +63,8 @@ protected:
 public:
     virtual ~CCGameAvatar() = default;
     bool isOnStage = false;
+    //for stage.
+    unsigned int stageIndex = 0;
 
     static CCGameAvatar* create(int id, int ranking, string uid, string skin, string name, int priority = 0);
 

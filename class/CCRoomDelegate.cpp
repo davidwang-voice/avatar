@@ -93,13 +93,13 @@ void CCRoomDelegate::setStageBackground(const char *url) {
 }
 
 void CCRoomDelegate::setupStageGiftHeap(const char *json) {
-
-    for (int i = 0; i < _giftHolder.size(); ++i) {
-        auto _gift = dynamic_cast<CCGameGift*>(_giftHolder.at(i));
-        _gift->removeFromParentAndCleanup(true);
-    }
-
-    _giftHolder.clear();
+//    for (int i = 0; i < _giftHolder.size(); ++i) {
+//        auto _gift = dynamic_cast<CCGameGift*>(_giftHolder.at(i));
+//        _gift->removeFromParentAndCleanup(true);
+//    }
+//
+//    _giftHolder.clear();
+//
 
     rapidjson::Document _document;
     _document.Parse<rapidjson::kParseDefaultFlags>(json);
@@ -113,7 +113,8 @@ void CCRoomDelegate::setupStageGiftHeap(const char *json) {
     }
     rapidjson::Value& _data_arr = _document;
 
-    Vector<CCGameAvatar*> _new_stage_avatars;
+    Vector<CCGameGift*> _new_game_gifts;
+
     for (int i = 0; i < _data_arr.Size(); ++i) {
         rapidjson::Value &_value = _data_arr[i];
 
@@ -127,9 +128,14 @@ void CCRoomDelegate::setupStageGiftHeap(const char *json) {
             if (_scene) {
                 _scene->addChild(gift, 0);
             }
-            _giftHolder.pushBack(gift);
+            _new_game_gifts.pushBack(gift);
         }
     }
+
+    _new_game_gifts.pushBack(_giftHolder);
+    _giftHolder.clear();
+    _giftHolder.pushBack(_new_game_gifts);
+    limitGiftHolderSize();
 }
 
 void CCRoomDelegate::updateSelfAvatar(const char *json) {
@@ -243,6 +249,7 @@ void CCRoomDelegate::updateStageAvatars(const char* json) {
             }
 
             auto _new_stage_avatar = _new_stage_avatars.back();
+            _new_stage_avatar->stageIndex = i;
             _standAvatars.eraseObject(_new_stage_avatar);
             _new_stage_avatar->updateElement(_name, _url, _rare, _guard);
 
@@ -386,7 +393,6 @@ void CCRoomDelegate::releaseResource() {
 
 
 const Vec2 CCRoomDelegate::getStepPosition(int index) const {
-    log("_scaleFactor:%f", _scaleFactor);
     if (index >= _STAGE_BLOCK_COUNT) return Vec2::ZERO;
     float _target_x = _STAGE_BLOCK_LEFT / _scaleFactor + index * _STAGE_BLOCK_WIDTH / _scaleFactor;
     float _target_y = _centerPosition.y - _STAGE_STEP_TOP / _scaleFactor;
@@ -618,9 +624,10 @@ void CCRoomDelegate::limitGiftHolderSize() {
 
 void CCRoomDelegate::reorganizeStageAvatars() {
     for (int i = 0; i < _stageAvatars.size(); ++i) {
-        auto _position = this->getStagePosition(i);
-        if (_position.isZero()) continue;
         auto _stage_avatar = _stageAvatars.at(i);
+
+        auto _position = this->getStagePosition(_stage_avatar->stageIndex);
+        if (_position.isZero()) continue;
         _stage_avatar->updateRank(_RANK_STAGE_DEFAULT + i);
         _stage_avatar->jumpToPosition(_position);
         _stage_avatar->isOnStage = true;
@@ -656,7 +663,7 @@ void CCRoomDelegate::reorganizeSelfAvatar() {
             auto _aperture = _scene->getChildByTag(_TAG_SELF_APERTURE);
             if (_aperture) {
                 _aperture->setPosition(_self_avatar->getCenterPosition());
-                _aperture->setVisible(!_self_avatar->isOnStage);
+//                _aperture->setVisible(!_self_avatar->isOnStage);
             }
 
 

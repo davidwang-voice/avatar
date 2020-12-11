@@ -26,6 +26,8 @@ bool CCRoomScene::init() {
 
     _stage = nullptr;
 
+    Director::getInstance()->setClearColor(cocos2d::Color4F(0, 0, 0, 1));
+
 //    auto visibleSize = Director::getInstance()->getVisibleSize();
 //    Vec2 origin = Director::getInstance()->getVisibleOrigin();
 //

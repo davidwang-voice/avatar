@@ -46,7 +46,7 @@ private:
     static const int _RANK_STAGE_DEFAULT = 101;
     static const int _RANK_SELF_DEFAULT = 100;
 
-    static const int _SELF_GROUND_BOTTOM = 120;
+    static const int _SELF_GROUND_BOTTOM = 140;
 
     static const int _STAND_ARC_HEIGHT = 60;
     static const int _STAND_MAX_ROW_COUNT = 7;
