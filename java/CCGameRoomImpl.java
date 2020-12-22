@@ -41,7 +41,7 @@ public class CCGameRoomImpl implements CCGameRoomView {
         this.context = context.getApplicationContext();
 
         Cocos2dxHelper.init((Activity) context);
-        gameRoomJNI.setDesignResolution(1125, 0);
+        gameRoomJNI.setDesignResolution(1125, 1);
         gLContextAttrs = gameRoomJNI.getGLContextAttrs();
 
         glSurfaceView = new Cocos2dxGLSurfaceView(parent.getContext());
@@ -59,7 +59,6 @@ public class CCGameRoomImpl implements CCGameRoomView {
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
 
         Cocos2dxEngineDataManager.init(context.getApplicationContext(), glSurfaceView);
-
 
     }
 
@@ -126,8 +125,8 @@ public class CCGameRoomImpl implements CCGameRoomView {
     }
 
     @Override
-    public void setupGiftHeap(String json) {
-        runOnGLThread(() -> gameRoomJNI.setupStageGiftHeap(json));
+    public void setupGiftHeap(String json, boolean history) {
+        runOnGLThread(() -> gameRoomJNI.setupStageGiftHeap(json, history));
     }
 
     @Override
@@ -158,6 +157,11 @@ public class CCGameRoomImpl implements CCGameRoomView {
     @Override
     public void onVoiceWave(String userIds) {
         runOnGLThread(() -> gameRoomJNI.receiveVoiceWave(userIds));
+    }
+
+    @Override
+    public void onRandomSnore(String userIds) {
+        runOnGLThread(() -> gameRoomJNI.receiveRandomSnore(userIds));
     }
 
     @Override

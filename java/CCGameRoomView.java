@@ -20,7 +20,7 @@ public interface CCGameRoomView {
 
     void setBackground(String url);
 
-    void setupGiftHeap(String json);
+    void setupGiftHeap(String json, boolean history);
 
     void setSelfAvatar(String json);
 
@@ -33,6 +33,8 @@ public interface CCGameRoomView {
     void syncStandUsers(String json);
 
     void onVoiceWave(String userIds);
+
+    void onRandomSnore(String userIds);
 
     void leaveStage(String userId);
     void leaveStand(String userId);

@@ -36,6 +36,21 @@ void CCGameStep::initStep() {
 
     this->addChild(_step_place, 1, _TAG_STEP_PLACE);
 
+    auto _step_add = CCBaseSprite::create();
+    _step_add->setTexture("step_add.png");
+    _step_add->setAnchorPoint(Point::ANCHOR_MIDDLE_BOTTOM);
+    _step_add->setPosition(Vec2(getContentSize().width / 2, 70 / _scale_factor));
+    this->addChild(_step_add, 1, _TAG_STEP_ADD);
+
+
+
+    auto _step_label = Label::createWithSystemFont("連麥", "Arial", 24 / _scale_factor);
+    _step_label->setOverflow(Label::Overflow::CLAMP);
+    _step_label->setAnchorPoint(Point::ANCHOR_MIDDLE);
+    _step_label->setPosition(_step_place->getPosition());
+    _step_label->setTextColor(Color4B(255,255,255,255));
+    this->addChild(_step_label, 1, _TAG_STEP_LABEL);
+
     setUid("");
     setMute(false);
 }
@@ -87,11 +102,15 @@ void CCGameStep::setMute(bool mute) {
 
 void CCGameStep::setUid(const char *uid) {
     this->_uid = uid;
-    auto _child = this->getChildByTag(_TAG_STEP_PLACE);
-    if (auto _step_place = dynamic_cast<CCBaseSprite *>(_child)) {
+    if (auto _step_place = dynamic_cast<CCBaseSprite *>(this->getChildByTag(_TAG_STEP_PLACE))) {
         _step_place->setVisible(!this->_uid.empty());
     }
-
+    if (auto _step_add = dynamic_cast<CCBaseSprite *>(this->getChildByTag(_TAG_STEP_ADD))) {
+        _step_add->setVisible(this->_uid.empty());
+    }
+    if (auto _step_label = dynamic_cast<Label *>(this->getChildByTag(_TAG_STEP_LABEL))) {
+        _step_label->setVisible(this->_uid.empty());
+    }
 }
 
 const char* CCGameStep::getUid() {
@@ -99,7 +118,7 @@ const char* CCGameStep::getUid() {
 }
 
 bool CCGameStep::onTouchBegan(Touch *touch, Event *event) {
-    if (auto _step = dynamic_cast<CCGameStep*>(event->getCurrentTarget())) {
+    if (auto _step = dynamic_cast<CCBaseSprite*>(event->getCurrentTarget())) {
         Point _locationInNode = touch->getLocation();
         auto _pos = _step->getParent()->convertToNodeSpace(_locationInNode);
         Rect _rect = _step->getBoundingBox();
@@ -109,7 +128,7 @@ bool CCGameStep::onTouchBegan(Touch *touch, Event *event) {
 
             if (this->_uid.empty()) {
 
-                log("Step onTouchesBegan... index = %d, uid = %s", _step->_id, _step->getUid());
+                log("Step add onTouchesBegan... index = %d, uid = %s", this->_id, this->getUid());
                 return true;
             }
         }
@@ -124,13 +143,19 @@ void CCGameStep::onTouchMoved(Touch *touch, Event *event) {
 
 void CCGameStep::onTouchEnded(Touch *touch, Event *event) {
     if (!__isTapEvent()) return;
-    if (auto _step = dynamic_cast<CCGameStep*>(event->getCurrentTarget())) {
+    if (auto _step = dynamic_cast<CCBaseSprite*>(event->getCurrentTarget())) {
         Point _locationInNode = touch->getLocation();
         auto _pos = _step->getParent()->convertToNodeSpace(_locationInNode);
         Rect _rect = _step->getBoundingBox();
         if (_rect.containsPoint(_pos)) {
-            log("Step onTouchesEnd... index = %d, uid = %s", _step->_id, _step->getUid());
-            onTouchStageAvatar(_step->getUid());
+            log("Step add onTouchesEnd... index = %d, uid = %s", this->_id, this->getUid());
+            onTouchStageAvatar(this->getUid());
         }
+    }
+}
+
+void CCGameStep::bindTargetNode(EventListener *listener) {
+    if (auto _step_add = dynamic_cast<CCBaseSprite *>(this->getChildByTag(_TAG_STEP_ADD))) {
+        _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, _step_add);
     }
 }

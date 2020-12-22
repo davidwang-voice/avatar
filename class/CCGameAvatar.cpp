@@ -11,7 +11,9 @@
 #include <iomanip>
 #include <cocos/editor-support/spine/extension.h>
 #include "platform/CCDevice.h"
+#include "ui/UIScale9Sprite.h"
 
+using namespace cocos2d::ui;
 
 USING_NS_CC;
 
@@ -193,13 +195,22 @@ void CCGameAvatar::onTouchEnded(Touch *touch, Event *event) {
 }
 
 void CCGameAvatar::updateRank(int rank) {
-    _real_local_z_order = (rank < 100) ? (100 - rank) : rank;
+
+    unsigned int _column = 13;
+
+    if (rank < 100) {
+        _real_local_z_order = rank / _column + (_column - (rank - 1) % _column);
+    } else {
+        _real_local_z_order = rank;
+    }
+
+//    _real_local_z_order = (rank < 100) ? (100 - rank) : rank;
     if (this->getLocalZOrder() < _CHAT_LOCAL_Z_ORDER_BASE)
         this->setLocalZOrder(_real_local_z_order);
     auto _rank_label = dynamic_cast<Label*>(this->getChildByTag(_TAG_RANK_LABEL));
     auto _rank_layer = dynamic_cast<LayerColor*>(this->getChildByTag(_TAG_RANK_LAYER));
     auto _name_layer = dynamic_cast<LayerColor*>(this->getChildByTag(_TAG_NAME_LAYER));
-    if (rank <= 13) {
+    if (rank <= _column) {
         float _labelWidth = 0;
         float _labelHeight = 0;
         if (_rank_label) {
@@ -225,7 +236,7 @@ void CCGameAvatar::updateRank(int rank) {
 
 }
 
-void CCGameAvatar::updateElement(const char *name, const char *path, int rare, int guard) {
+void CCGameAvatar::updateElement(const char *name, const char *path, int rare, int guard, int offline) {
 
     if ((strcmp(path, this->_skin.c_str()) != 0)) {
         this->_skin = path;
@@ -314,6 +325,14 @@ void CCGameAvatar::updateElement(const char *name, const char *path, int rare, i
         }
     }
     _ssr_marker->setVisible(_is_ssr);
+
+    cocos2d::GLProgramState* glProgramState = offline == 1 ? getDarkGLProgramState() : getLightGLProgramState();
+
+    if (nullptr != glProgramState) {
+        if (this->_inner_sprite) {
+            this->_inner_sprite->setGLProgramState(glProgramState);
+        }
+    }
 }
 
 void CCGameAvatar::setUid(const char *uid) {
@@ -370,10 +389,35 @@ void CCGameAvatar::jumpByPresent() {
 
     auto _jump_action = getActionByTag(_TAG_JUMP_BY_ACTION);
     if (nullptr == _jump_action || _jump_action->isDone()) {
-        auto _jump_action = JumpBy::create(0.5f, Vec2(0, 0), 60  / _scale_factor, 1);
-        _jump_action->setTag(_TAG_JUMP_BY_ACTION);
-        runAction(_jump_action);
+        auto _self = this;
+        auto _callback = CallFunc::create([_self](){
+            _self->setPosition(Vec2(_self->_target_x, _self->_target_y));
+        });
+
+        auto _jumpBy = JumpBy::create(0.5f, Vec2(0, 0), 60  / _scale_factor, 1);
+        auto _action = Sequence::create(_jumpBy, _callback, nullptr);
+        _action->setTag(_TAG_JUMP_BY_ACTION);
+        runAction(_action);
     }
+
+    auto _reset_order_action = getActionByTag(_TAG_REST_ORDER_ACTION);
+    if (nullptr != _reset_order_action && !_reset_order_action->isDone()) {
+        this->stopAction(_reset_order_action);
+    }
+
+    auto _self = this;
+    _self->setLocalZOrder(_PRESENT_LOCAL_Z_ORDER);
+    auto _resetSelfZOrder = CallFunc::create([_self](){
+        unsigned int _current_z_order = _self->getLocalZOrder();
+        if (_current_z_order == _PRESENT_LOCAL_Z_ORDER) {
+            if (_self->_self_chat_bubble_count <= 0)
+                _self->setLocalZOrder(_self->_real_local_z_order);
+        }
+    });
+
+    auto _action = Sequence::create(DelayTime::create(1), _resetSelfZOrder, nullptr);
+    _action->setTag(_TAG_REST_ORDER_ACTION);
+    runAction(_action);
 }
 void CCGameAvatar::popChatBubble(const char* content) {
 
@@ -407,30 +451,35 @@ void CCGameAvatar::popChatBubble(const char* content) {
     _chat_bubble->setContentSize(Size(_chat_label->getContentSize().width + 20  / _scale_factor, _chat_label->getContentSize().height + 20  / _scale_factor));
 
 
-    auto _drawNode = DrawNode::create();
-    const Vec2 &origin = Vec2(0,0);
-    const Vec2 &destination = Vec2(_chat_bubble->getContentSize().width, _chat_bubble->getContentSize().height);
-    Color4F color4F(1, 1, 1, 0.95);
+    auto _background = ui::Scale9Sprite::create("avatar/chat_bubble9.png",
+            Rect(0, 0, 25, 25), Rect(13, 13, 1, 1));
+    _background->setAnchorPoint(Point::ANCHOR_MIDDLE);
+    _background->setPosition(_chat_bubble->getContentSize().width / 2, _chat_bubble->getContentSize().height / 2);
+    _background->setContentSize(Size(_chat_bubble->getContentSize().width, _chat_bubble->getContentSize().height));
 
-    drawRoundRect(_drawNode, origin, destination,12  / _scale_factor, 88,  color4F);
+//    auto _drawNode = DrawNode::create();
+//    const Vec2 &origin = Vec2(0,0);
+//    const Vec2 &destination = Vec2(_chat_bubble->getContentSize().width, _chat_bubble->getContentSize().height);
+//    Color4F color4F(1, 1, 1, 0.95);
+//
+//    drawRoundRect(_drawNode, origin, destination,12  / _scale_factor, 88,  color4F);
 
-    _chat_bubble->addChild(_drawNode);
+    _chat_bubble->addChild(_background);
     _chat_bubble->addChild(_chat_label);
     _chat_bubble->addChild(_name_label);
     this->addChild(_chat_bubble, 3);
 
     auto _moveBy = MoveBy::create(4, Vec2(0, 30 / _scale_factor));
 
-    auto _fadeFunc = CallFunc::create([_chat_label, _drawNode](){
+    auto _fadeFunc = CallFunc::create([_chat_label, _background](){
         _chat_label->runAction(FadeOut::create(2));
-        _drawNode->runAction(FadeOut::create(2));
+        _background->runAction(FadeOut::create(2));
     });
 
     if (_chat_local_z_order > 10000) {
         _chat_local_z_order = 0;//极限 不至于.
     }
     _chat_local_z_order++;
-    log("_chat_local_z_order:%d", _chat_local_z_order);
     auto _self = this;
     _self->setLocalZOrder(_CHAT_LOCAL_Z_ORDER_BASE + _chat_local_z_order);
     auto _removeFunc = CallFunc::create([_self, _chat_bubble](){
@@ -533,7 +582,7 @@ void CCGameAvatar::drawRoundRect(DrawNode *drawNode, const Vec2 &origin, const V
 
     drawNode->drawSolidPoly(vertices, segments, color);
 
-    CC_SAFE_DELETE_ARRAY(vertices);
+//    CC_SAFE_DELETE_ARRAY(vertices);
 }
 
 

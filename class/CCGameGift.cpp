@@ -39,7 +39,7 @@ void CCGameGift::initGift() {
     } else {
         loadTexture(_skin.c_str());
     }
-    setAnchorPoint(Point::ANCHOR_MIDDLE);
+    setAnchorPoint(Point::ANCHOR_MIDDLE_BOTTOM);
 }
 
 void CCGameGift::present(const Vec2 &target) {
@@ -71,7 +71,7 @@ void CCGameGift::present(const Vec2 &target) {
     cfg.controlPoint_2 = q2;
     cfg.endPosition = target;
     //使用CCEaseInOut让曲线运动有一个由慢到快的变化，显得更自然
-    auto easeOut = CCEaseOut::create(CCBezierTo::create(0.6 , cfg),2.0f);
+    auto easeOut = CCEaseOut::create(CCBezierTo::create(0.8 , cfg),1.0f);
 
 //    auto rotateBy = RotateBy::create(1, (rand() % (90)) - 45);
     setRotation((rand() % (60)) - 30);

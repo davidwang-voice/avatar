@@ -39,11 +39,12 @@ extern "C" {
     }
     JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_setStageBackground(JNIEnv *env, jobject thiz, jstring url) {
         CCRoomDelegate::getInstance()->setStageBackground(jstringToChar(env, url));
+
     }
 
     JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_setupStageGiftHeap(JNIEnv *env, jobject thiz,
-                                                                          jstring json) {
-        CCRoomDelegate::getInstance()->setupStageGiftHeap(jstringToChar(env, json));
+                                                                          jstring json, jboolean history) {
+        CCRoomDelegate::getInstance()->setupStageGiftHeap(jstringToChar(env, json), history);
     }
 
     JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_updateSelfAvatar(JNIEnv *env, jobject thiz,
@@ -81,6 +82,10 @@ extern "C" {
     JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_receiveVoiceWave(JNIEnv *env, jobject thiz,
                                                                       jstring uids) {
         CCRoomDelegate::getInstance()->receiveVoiceWave(jstringToChar(env, uids));
+    }
+
+    JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_receiveRandomSnore(JNIEnv *env, jobject thiz, jstring uids) {
+        CCRoomDelegate::getInstance()->receiveRandomSnore(jstringToChar(env, uids));
     }
 
     JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_releaseResource(JNIEnv *env, jobject thiz) {

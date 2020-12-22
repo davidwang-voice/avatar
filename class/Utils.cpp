@@ -65,3 +65,35 @@ bool __isTapEvent() {
     return false;
 }
 
+cocos2d::GLProgramState *darkGLProgramState = nullptr;
+cocos2d::GLProgramState* getDarkGLProgramState() {
+
+    if (nullptr == darkGLProgramState) {
+        auto _file_utils = cocos2d::FileUtils::getInstance();
+        auto _frag_full_path = _file_utils->fullPathForFilename("shader/dark.fsh");
+        auto _frag_content = _file_utils->getStringFromFile(_frag_full_path);
+        auto _gl_program = cocos2d::GLProgram::createWithByteArrays(cocos2d::ccPositionTextureColor_noMVP_vert, _frag_content.c_str());
+        darkGLProgramState = cocos2d::GLProgramState::getOrCreateWithGLProgram(_gl_program);
+        darkGLProgramState->retain();
+    }
+    return darkGLProgramState;
+}
+
+cocos2d::GLProgramState *lightGLProgramState = nullptr;
+cocos2d::GLProgramState* getLightGLProgramState() {
+
+    if (nullptr == lightGLProgramState) {
+        auto _file_utils = cocos2d::FileUtils::getInstance();
+        auto _frag_full_path = _file_utils->fullPathForFilename("shader/light.fsh");
+        auto _frag_content = _file_utils->getStringFromFile(_frag_full_path);
+        auto _gl_program = cocos2d::GLProgram::createWithByteArrays(cocos2d::ccPositionTextureColor_noMVP_vert, _frag_content.c_str());
+        lightGLProgramState = cocos2d::GLProgramState::getOrCreateWithGLProgram(_gl_program);
+        lightGLProgramState->retain();
+    }
+    return lightGLProgramState;
+}
+
+void releaseGLProgramState() {
+    CC_SAFE_RELEASE_NULL(darkGLProgramState);
+    CC_SAFE_RELEASE_NULL(lightGLProgramState);
+}

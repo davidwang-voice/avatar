@@ -81,23 +81,23 @@ public class CCGameRoomJNI {
      * 初始化房间礼物堆
      * @param json = "[{"id": 100, "url": "xxx.png", "count": 5}, ...]"
      */
-    public native void setupStageGiftHeap(String json);
+    public native void setupStageGiftHeap(String json, boolean history);
 
     /**
      * 当前用户更新avatar形象
-     * @param json = "{"uid": "100001", "name": "david", "url": "xxx.png", "rare": 1}"
+     * @param json = "{"uid": "100001", "name": "david", "url": "xxx.png", "rare": 1, "guard": 1, "offline": 1}"
      */
     public native void updateSelfAvatar(String json);
 
     /**
      * 更新连麦舞台所有avatar形象
-     * @param json = "[{"uid":"100001", "name": "david", "url": "xxx.png", "rare": 1, "mute": true}, ...]"
+     * @param json = "[{"uid":"100001", "name": "david", "url": "xxx.png", "rare": 1, "guard": 1, "offline": 1, "mute": true}, ...]"
      */
     public native void updateStageAvatars(String json);
 
     /**
      * 更新普通站台所有avatar形象
-     * @param json = "[{"uid":"100001", "name": "david", "url": "xxx.png", "rare": 1}, ...]"
+     * @param json = "[{"uid":"100001", "name": "david", "url": "xxx.png", "rare": 1, "guard": 1, "offline": 1}, ...]"
      */
     public native void updateStandAvatars(String json);
 
@@ -126,6 +126,12 @@ public class CCGameRoomJNI {
      * @param uids = "100001,100002,..."
      */
     public native void receiveVoiceWave(String uids);
+
+    /**
+     * 随机用户打呼动效
+     * @param uids = "100001,100002,..."
+     */
+    public native void receiveRandomSnore(String uids);
 
     /**
      * 释放房间资源

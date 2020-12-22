@@ -71,6 +71,10 @@ void CCRoomDelegate::ensureStageSteps() {
     }
 }
 
+void CCRoomDelegate::resumeAllChildren() {
+//    _scene->resume();
+}
+
 void CCRoomDelegate::setStageBackground(const char *url) {
     if (_scene) {
         auto _child = _scene->getChildByTag(_TAG_STAGE_BACKGROUND);
@@ -92,7 +96,7 @@ void CCRoomDelegate::setStageBackground(const char *url) {
     ensureStageSteps();
 }
 
-void CCRoomDelegate::setupStageGiftHeap(const char *json) {
+void CCRoomDelegate::setupStageGiftHeap(const char *json, bool history) {
 //    for (int i = 0; i < _giftHolder.size(); ++i) {
 //        auto _gift = dynamic_cast<CCGameGift*>(_giftHolder.at(i));
 //        _gift->removeFromParentAndCleanup(true);
@@ -132,9 +136,13 @@ void CCRoomDelegate::setupStageGiftHeap(const char *json) {
         }
     }
 
-    _new_game_gifts.pushBack(_giftHolder);
-    _giftHolder.clear();
-    _giftHolder.pushBack(_new_game_gifts);
+    if (history) {
+        _new_game_gifts.pushBack(_giftHolder);
+        _giftHolder.clear();
+        _giftHolder.pushBack(_new_game_gifts);
+    } else {
+        _giftHolder.pushBack(_new_game_gifts);
+    }
     limitGiftHolderSize();
 }
 
@@ -163,12 +171,13 @@ void CCRoomDelegate::updateSelfAvatar(const char *json) {
 
     int _rare = cocostudio::DICTOOL->getIntValue_json(_value, "rare");
     int _guard = cocostudio::DICTOOL->getIntValue_json(_value, "guard");
+    int _offline = cocostudio::DICTOOL->getIntValue_json(_value, "offline");
 
 
     auto _self_avatar = CCGameAvatar::create(_RANK_SELF_DEFAULT, _RANK_SELF_DEFAULT, _uid, _url, _name);
 
     _self_avatar->setUid(_uid);
-    _self_avatar->updateElement(_name, _url, _rare, _guard);
+    _self_avatar->updateElement(_name, _url, _rare, _guard, _offline);
     _self_avatar->updateRank(_RANK_SELF_DEFAULT);
 
     auto _self_position = this->getSelfPosition();
@@ -197,7 +206,7 @@ void CCRoomDelegate::updateSelfAvatar(const char *json) {
 }
 
 void CCRoomDelegate::updateStageAvatars(const char* json) {
-
+    if (isInBackgroundState("updateStageAvatars")) return;
     ensureStageSteps();
 
     rapidjson::Document _document;
@@ -225,6 +234,7 @@ void CCRoomDelegate::updateStageAvatars(const char* json) {
 
         int _rare = cocostudio::DICTOOL->getIntValue_json(_value, "rare");
         int _guard = cocostudio::DICTOOL->getIntValue_json(_value, "guard");
+        int _offline = cocostudio::DICTOOL->getIntValue_json(_value, "offline");
 
         bool _mute = cocostudio::DICTOOL->getBooleanValue_json(_value, "mute");
 
@@ -251,7 +261,7 @@ void CCRoomDelegate::updateStageAvatars(const char* json) {
             auto _new_stage_avatar = _new_stage_avatars.back();
             _new_stage_avatar->stageIndex = i;
             _standAvatars.eraseObject(_new_stage_avatar);
-            _new_stage_avatar->updateElement(_name, _url, _rare, _guard);
+            _new_stage_avatar->updateElement(_name, _url, _rare, _guard, _offline);
 
         }
 
@@ -277,6 +287,7 @@ void CCRoomDelegate::updateStageAvatars(const char* json) {
 }
 
 void CCRoomDelegate::updateStandAvatars(const char* json) {
+    if (isInBackgroundState("updateStandAvatars")) return;
     rapidjson::Document _document;
     _document.Parse<rapidjson::kParseDefaultFlags>(json);
     if (_document.HasParseError()) {
@@ -301,6 +312,7 @@ void CCRoomDelegate::updateStandAvatars(const char* json) {
         const char *_name = cocostudio::DICTOOL->getStringValue_json(_value, "name");
         int _rare = cocostudio::DICTOOL->getIntValue_json(_value, "rare");
         int _guard = cocostudio::DICTOOL->getIntValue_json(_value, "guard");
+        int _offline = cocostudio::DICTOOL->getIntValue_json(_value, "offline");
 
         auto _cur_self_avatar = this->findSelfAvatar(_uid);
 
@@ -313,7 +325,7 @@ void CCRoomDelegate::updateStandAvatars(const char* json) {
             _new_stand_avatars.pushBack(_new_stand_avatar);
         }
 
-        _new_stand_avatars.back()->updateElement(_name, _url, _rare, _guard);
+        _new_stand_avatars.back()->updateElement(_name, _url, _rare, _guard, _offline);
     }
 
 
@@ -343,6 +355,10 @@ void CCRoomDelegate::backOffStandAvatar(const char* uid) {
 }
 
 void CCRoomDelegate::receiveGiftMessage(const char* uid, const char* url) {
+    if (isInBackgroundState("receiveGiftMessage")) return;
+
+    std::string _uid_str(uid);
+    if (_uid_str.empty()) return;
 
     auto _avatar = this->findAvatar(uid);
 
@@ -350,11 +366,27 @@ void CCRoomDelegate::receiveGiftMessage(const char* uid, const char* url) {
         _avatar->jumpByPresent();
         createAndPresentGift(_avatar->getPosition(), url);
     } else {
-        createAndPresentGift(this->getNonePosition(), url);
+
+        if (_randomWheres.size() >= 10) {
+            _randomWheres.erase(_randomWheres.begin());
+        }
+
+        unsigned int _where;
+        map<std::string, unsigned int>::iterator _iterator;
+        _iterator = _randomWheres.find(uid);
+        if (_iterator != _randomWheres.end())  {
+            _where = _iterator->second;
+        } else {
+            _where = cocos2d::RandomHelper::random_int(1, 2);
+            _randomWheres.insert(pair<std::string, unsigned int>(uid, _where));
+        }
+
+        createAndPresentGift(this->getNonePosition(_where), url);
     }
 }
 
 void CCRoomDelegate::receiveChatMessage(const char* uid, const char* content) {
+    if (isInBackgroundState("receiveChatMessage")) return;
     auto _avatar = this->findAvatar(uid);
     if (nullptr == _avatar) return;
 
@@ -362,7 +394,7 @@ void CCRoomDelegate::receiveChatMessage(const char* uid, const char* content) {
 }
 
 void CCRoomDelegate::receiveVoiceWave(const char *uids) {
-
+    if (isInBackgroundState("receiveVoiceWave")) return;
     log("receive voice wave uids: %s", uids);
     std::vector<string> _uid_arr;
     std::string _raw = uids, _tmp;
@@ -378,6 +410,9 @@ void CCRoomDelegate::receiveVoiceWave(const char *uids) {
     }
 }
 
+void CCRoomDelegate::receiveRandomSnore(const char *uids) {
+    if (isInBackgroundState("receiveRandomSnore")) return;
+}
 
 void CCRoomDelegate::releaseResource() {
 
@@ -385,11 +420,14 @@ void CCRoomDelegate::releaseResource() {
     _standAvatars.clear();
     _stageAvatars.clear();
     _stageSteps.clear();
+    _randomWheres.clear();
 
     if (_scene) {
         _scene->removeAllChildren();
     }
+    releaseGLProgramState();
 }
+
 
 
 const Vec2 CCRoomDelegate::getStepPosition(int index) const {
@@ -455,18 +493,18 @@ const Vec2 CCRoomDelegate::getGiftPosition() const {
 //    float _result_y_l = std::sqrt((1 - _rand_x * _rand_x / _coord_x / _coord_x) * _coord_y_l * _coord_y_l);
 
     float _target_x = _rand_x + _centerPosition.x;
-    float _target_y = _centerPosition.y - (_GIFT_TABLE_TOP / _scaleFactor + _rand_y) + 25 / _scaleFactor;
+    float _target_y = _centerPosition.y - (_GIFT_TABLE_TOP / _scaleFactor + _rand_y);
 
     return Vec2(_target_x , _target_y);
 }
 
-const Vec2 CCRoomDelegate::getNonePosition() const {
-    int _where = cocos2d::RandomHelper::random_int(1, 2);
+const Vec2 CCRoomDelegate::getNonePosition(unsigned int where) const {
+//    int _where = cocos2d::RandomHelper::random_int(1, 2);
     float _target_x = - _NONE_SPACE_X / _scaleFactor;
-    if (_where == 2) {
+    if (where == 2) {
         _target_x =  _visibleSize.width +  _NONE_SPACE_X / _scaleFactor;
     }
-    float _target_y = _centerPosition.y - _NONE_SPACE_Y / _scaleFactor;
+    float _target_y = MAX((_centerPosition.y - _NONE_SPACE_Y / _scaleFactor), 100 / _scaleFactor);
     return Vec2(_target_x , _target_y);
 }
 
@@ -580,10 +618,9 @@ void CCRoomDelegate::createAndPresentGift(const Vec2& pos, const char* url) {
 
     auto _position = getGiftPosition();
 
-
     gift->present(_position);
     if (_scene) {
-        _scene->addChild(gift, 10000);
+        _scene->addChild(gift, 399);
     }
     _giftHolder.pushBack(gift);
     limitGiftHolderSize();
@@ -596,12 +633,8 @@ void CCRoomDelegate::limitGiftHolderSize() {
     if(_length > _limit * 2) {
         auto _removeList = Vector<CCGameGift*>(_limit);
 
-        for (int i = 0; i < _length; ++i) {
-            if (i < _limit) {
-                _removeList.pushBack(_giftHolder.at(i));
-            } else {
-                break;
-            }
+        for (int i = 0; i < (_length - _limit); ++i) {
+            _removeList.pushBack(_giftHolder.at(i));
         }
 
         for (int i = 0; i < _limit; ++i) {
@@ -611,8 +644,9 @@ void CCRoomDelegate::limitGiftHolderSize() {
                 _gift->removeFromParentAndCleanup(true);
             });
             auto _action = Spawn::createWithTwoActions(
-                    MoveBy::create(0.5, Vec2(0, 50 / _scaleFactor)),
-                    FadeOut::create(0.5)
+                    JumpBy::create(0.6f, Vec2(0, 0), 80  / _scaleFactor, 1),
+//                    JumpBy::create(0.4, Vec2(0, 100 / _scaleFactor)),
+                    FadeOut::create(0.5f)
                     );
             auto _sequence = Sequence::create(_action, _removeFunc, nullptr);
             _gift->runAction(_sequence);
@@ -669,6 +703,16 @@ void CCRoomDelegate::reorganizeSelfAvatar() {
 
         }
     }
+}
+
+bool CCRoomDelegate::isInBackgroundState(const char* tag) {
+    return false;
+    if (Director::getInstance()->isPaused() || !Director::getInstance()->isValid()) {
+        log("%s ignored, game is in background state!", tag);
+        return true;
+    }
+
+    return false;
 }
 
 

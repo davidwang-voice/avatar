@@ -19,12 +19,14 @@ private:
     static const unsigned int _TAG_JUMP_TO_ACTION = 1001;
     static const unsigned int _TAG_MOVE_TO_ACTION = 1002;
     static const unsigned int _TAG_JUMP_BY_ACTION = 1003;
+    static const unsigned int _TAG_REST_ORDER_ACTION = 1004;
 
     static const unsigned int _TAG_RANK_LABEL = 101;
     static const unsigned int _TAG_RANK_LAYER = 102;
     static const unsigned int _TAG_NAME_LABEL = 103;
     static const unsigned int _TAG_NAME_LAYER = 104;
     static const unsigned int _TAG_SSR_MARKER = 105;
+
 
     static const unsigned int _NAME_LABEL_MAX_WIDTH = 240;
     static const unsigned int _LABEL_HEIGHT_DEFAULT = 100;
@@ -33,6 +35,8 @@ private:
 
     static const unsigned int _CHAT_POP_BUBBLE_WIDTH = 200;
     static const unsigned int _CHAT_LOCAL_Z_ORDER_BASE = 200;
+    static const unsigned int _PRESENT_LOCAL_Z_ORDER = 400;
+
 
     string _skin;
     string _name;
@@ -79,7 +83,7 @@ public:
     void onTouchEnded(Touch *touch, Event *event) override;
 
     void updateRank(int rank);
-    void updateElement(const char* name, const char* path, int rare, int guard);
+    void updateElement(const char* name, const char* path, int rare, int guard, int offline);
 
     void jumpToPosition(const Vec2& target);
     void jumpByPresent();

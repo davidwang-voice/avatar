@@ -31,6 +31,8 @@ public:
     int getRanking();
     void updateRanking(int ranking);
 
+    virtual void bindTargetNode(EventListener* listener);
+
     virtual bool onTouchBegan(Touch* touch, Event  *event);
     virtual void onTouchMoved(Touch* touch, Event  *event);
     virtual void onTouchEnded(Touch* touch, Event  *event);

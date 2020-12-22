@@ -61,14 +61,14 @@ private:
     static const int _STAGE_STEP_TOP = 586;
 
 
-    static const int _GIFT_HOLDER_SIZE = 200;
+    static const int _GIFT_HOLDER_SIZE = 100;
     static const int _GIFT_TABLE_WIDTH = 960;
     static const int _GIFT_TABLE_HEIGHT_MIN = 100;
     static const int _GIFT_TABLE_HEIGHT_MAX = 120;
     static const int _GIFT_TABLE_TOP = 870;
 
     static const int _NONE_SPACE_X = 100;
-    static const int _NONE_SPACE_Y = 1000;
+    static const int _NONE_SPACE_Y = 1600;
 
     Scene* _scene;
     Vec2 _visibleOrigin = Vec2::ZERO;
@@ -80,6 +80,7 @@ private:
     Vector<CCGameAvatar*> _stageAvatars;
     Vector<CCGameStep*> _stageSteps;
     Vector<CCGameGift*> _giftHolder;
+    map<std::string, unsigned int> _randomWheres;
 
 
     void ensureStageSteps();
@@ -89,7 +90,7 @@ private:
     const Vec2 getStandPosition(int index) const;
     const Vec2 getSelfPosition() const;
     const Vec2 getGiftPosition() const;
-    const Vec2 getNonePosition() const;
+    const Vec2 getNonePosition(unsigned int where) const;
 
 
     CCGameAvatar* findStageAvatar(const char* uid);
@@ -108,13 +109,15 @@ private:
 
     void createAndPresentGift(const Vec2& pos, const char* url);
     void limitGiftHolderSize();
+    bool isInBackgroundState(const char* tag);
 
 public:
     virtual ~CCRoomDelegate();
     void init(Scene* scene);
+    void resumeAllChildren();
 
     void setStageBackground(const char* url);
-    void setupStageGiftHeap(const char* json);
+    void setupStageGiftHeap(const char* json, bool history = true);
     void updateSelfAvatar(const char* json);
     void updateStageAvatars(const char* json);
     void updateStandAvatars(const char* json);
@@ -124,6 +127,7 @@ public:
     void receiveGiftMessage(const char* uid, const char* url);
     void receiveChatMessage(const char* uid, const char* content);
     void receiveVoiceWave(const char* uids);
+    void receiveRandomSnore(const char* uids);
     void releaseResource();
 
     // Static Methods

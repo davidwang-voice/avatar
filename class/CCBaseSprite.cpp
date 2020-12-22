@@ -28,8 +28,9 @@ void CCBaseSprite::onEnter() {
 //    if (_fixedPriority != 0) {
 //        _eventDispatcher->addEventListenerWithFixedPriority(listener, _ranking + 1);
 //    } else {
-        _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
+
 //    }
+    bindTargetNode(listener);
 
     _listener = listener;
 }
@@ -38,6 +39,10 @@ void CCBaseSprite::onExit() {
     _eventDispatcher->removeEventListener(_listener);
 
     Sprite::onExit();
+}
+
+void CCBaseSprite::bindTargetNode(EventListener* listener) {
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
 }
 
 int CCBaseSprite::getId() {

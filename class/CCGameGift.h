@@ -16,8 +16,8 @@ using namespace cocos2d;
 class CCGameGift : public CCBaseSprite {
 
 private:
-    static const int _CONTENT_SIZE_WIDTH_MAX = 100;
-    static const int _CONTENT_SIZE_HEIGHT_MAX = 100;
+    static const int _CONTENT_SIZE_WIDTH_MAX = 500;
+    static const int _CONTENT_SIZE_HEIGHT_MAX = 500;
 
     string _skin;
     float _scale_factor;

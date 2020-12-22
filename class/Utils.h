@@ -17,6 +17,7 @@ static const long _TOUCH_EVENT_TAP_GAP_MS = 200;
 static long long _touch_down_timestamp = 0;
 static long long _touch_tap_timestamp = 0;
 
+
 bool __touchBegin();
 
 bool __isTapEvent();
@@ -29,6 +30,15 @@ void getGameResourceUrl(std::string &res_url, const char* name);
 void getGameResourcePath(std::string &res_path, const char* name);
 
 std::string getStringMD5Hash(const std::string &string);
+
+extern cocos2d::GLProgramState *darkGLProgramState;
+extern cocos2d::GLProgramState *lightGLProgramState;
+
+cocos2d::GLProgramState* getDarkGLProgramState();
+cocos2d::GLProgramState* getLightGLProgramState();
+void releaseGLProgramState();
+
+
 
 #endif
 
