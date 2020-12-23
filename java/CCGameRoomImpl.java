@@ -125,8 +125,8 @@ public class CCGameRoomImpl implements CCGameRoomView {
     }
 
     @Override
-    public void setupGiftHeap(String json, boolean history) {
-        runOnGLThread(() -> gameRoomJNI.setupStageGiftHeap(json, history));
+    public void setupGiftHeap(String json) {
+        runOnGLThread(() -> gameRoomJNI.setupStageGiftHeap(json));
     }
 
     @Override

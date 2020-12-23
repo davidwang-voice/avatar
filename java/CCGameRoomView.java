@@ -20,7 +20,7 @@ public interface CCGameRoomView {
 
     void setBackground(String url);
 
-    void setupGiftHeap(String json, boolean history);
+    void setupGiftHeap(String json);
 
     void setSelfAvatar(String json);
 

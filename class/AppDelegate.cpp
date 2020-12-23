@@ -24,6 +24,7 @@
 
 #include "AppDelegate.h"
 #include "CCRoomScene.h"
+#include "CCRoomDelegate.h"
 
 // #define USE_AUDIO_ENGINE 1
 // #define USE_SIMPLE_AUDIO_ENGINE 1
@@ -179,6 +180,8 @@ void AppDelegate::applicationDidEnterBackground() {
 void AppDelegate::applicationWillEnterForeground() {
     Director::getInstance()->startAnimation();
     log("Screen applicationWillEnterForeground");
+
+    CCRoomDelegate::getInstance()->resumeFromCache();
 
 #if USE_AUDIO_ENGINE
     AudioEngine::resumeAll();

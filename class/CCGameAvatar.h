@@ -20,12 +20,14 @@ private:
     static const unsigned int _TAG_MOVE_TO_ACTION = 1002;
     static const unsigned int _TAG_JUMP_BY_ACTION = 1003;
     static const unsigned int _TAG_REST_ORDER_ACTION = 1004;
+    static const unsigned int _TAG_SNORE_ANIM_ACTION = 1005;
 
     static const unsigned int _TAG_RANK_LABEL = 101;
     static const unsigned int _TAG_RANK_LAYER = 102;
     static const unsigned int _TAG_NAME_LABEL = 103;
     static const unsigned int _TAG_NAME_LAYER = 104;
     static const unsigned int _TAG_SSR_MARKER = 105;
+    static const unsigned int _TAG_SNORE_ANIM = 106;
 
 
     static const unsigned int _NAME_LABEL_MAX_WIDTH = 240;
@@ -41,6 +43,7 @@ private:
     string _skin;
     string _name;
     string _uid;
+    unsigned int _offline;
     bool _loaded;
     float _target_x;
     float _target_y;
@@ -88,7 +91,7 @@ public:
     void jumpToPosition(const Vec2& target);
     void jumpByPresent();
     void popChatBubble(const char* content);
-
+    void runSnoreAnim();
 
     void setUid(const char* uid);
     const char* getUid();

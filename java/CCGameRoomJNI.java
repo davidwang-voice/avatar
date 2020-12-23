@@ -81,7 +81,7 @@ public class CCGameRoomJNI {
      * 初始化房间礼物堆
      * @param json = "[{"id": 100, "url": "xxx.png", "count": 5}, ...]"
      */
-    public native void setupStageGiftHeap(String json, boolean history);
+    public native void setupStageGiftHeap(String json);
 
     /**
      * 当前用户更新avatar形象

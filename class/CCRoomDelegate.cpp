@@ -18,6 +18,7 @@
 
 #include "json/rapidjson.h"
 #include "json/document.h"
+#include <cocos/editor-support/spine/extension.h>
 
 using namespace rapidjson;
 
@@ -71,11 +72,33 @@ void CCRoomDelegate::ensureStageSteps() {
     }
 }
 
-void CCRoomDelegate::resumeAllChildren() {
-//    _scene->resume();
+void CCRoomDelegate::resumeFromCache() {
+
+    if (!_bgCache.empty()) {
+        setStageBackground(_bgCache.c_str());
+    }
+    if (!_heapCache.empty()) {
+        setupStageGiftHeap(_heapCache.c_str());
+    }
+    if (!_selfCache.empty()) {
+        updateSelfAvatar(_selfCache.c_str());
+    }
+    if (!_standCache.empty()) {
+        updateStandAvatars(_standCache.c_str());
+    }
+    if (!_stageCache.empty()) {
+        updateStandAvatars(_stageCache.c_str());
+    }
+    tryPresentCacheGift();
 }
 
 void CCRoomDelegate::setStageBackground(const char *url) {
+    if (isInBackgroundState("setStageBackground")) {
+        _bgCache = url;
+        return;
+    }
+    _bgCache.clear();
+
     if (_scene) {
         auto _child = _scene->getChildByTag(_TAG_STAGE_BACKGROUND);
         if (_child) {
@@ -96,7 +119,7 @@ void CCRoomDelegate::setStageBackground(const char *url) {
     ensureStageSteps();
 }
 
-void CCRoomDelegate::setupStageGiftHeap(const char *json, bool history) {
+void CCRoomDelegate::setupStageGiftHeap(const char *json) {
 //    for (int i = 0; i < _giftHolder.size(); ++i) {
 //        auto _gift = dynamic_cast<CCGameGift*>(_giftHolder.at(i));
 //        _gift->removeFromParentAndCleanup(true);
@@ -104,6 +127,11 @@ void CCRoomDelegate::setupStageGiftHeap(const char *json, bool history) {
 //
 //    _giftHolder.clear();
 //
+    if (isInBackgroundState("setupStageGiftHeap")) {
+        _heapCache = json;
+        return;
+    }
+    _heapCache.clear();
 
     rapidjson::Document _document;
     _document.Parse<rapidjson::kParseDefaultFlags>(json);
@@ -136,17 +164,18 @@ void CCRoomDelegate::setupStageGiftHeap(const char *json, bool history) {
         }
     }
 
-    if (history) {
-        _new_game_gifts.pushBack(_giftHolder);
-        _giftHolder.clear();
-        _giftHolder.pushBack(_new_game_gifts);
-    } else {
-        _giftHolder.pushBack(_new_game_gifts);
-    }
+    _new_game_gifts.pushBack(_giftHolder);
+    _giftHolder.clear();
+    _giftHolder.pushBack(_new_game_gifts);
     limitGiftHolderSize();
 }
 
 void CCRoomDelegate::updateSelfAvatar(const char *json) {
+    if (isInBackgroundState("updateSelfAvatar")) {
+        _selfCache = json;
+        return;
+    }
+    _selfCache.clear();
     if (_scene) {
         auto _child = _scene->getChildByTag(_TAG_SELF_AVATAR);
         if (_child) {
@@ -206,7 +235,11 @@ void CCRoomDelegate::updateSelfAvatar(const char *json) {
 }
 
 void CCRoomDelegate::updateStageAvatars(const char* json) {
-    if (isInBackgroundState("updateStageAvatars")) return;
+    if (isInBackgroundState("updateStageAvatars")) {
+        _stageCache = json;
+        return;
+    }
+    _stageCache.clear();
     ensureStageSteps();
 
     rapidjson::Document _document;
@@ -287,7 +320,11 @@ void CCRoomDelegate::updateStageAvatars(const char* json) {
 }
 
 void CCRoomDelegate::updateStandAvatars(const char* json) {
-    if (isInBackgroundState("updateStandAvatars")) return;
+    if (isInBackgroundState("updateStandAvatars")) {
+        _standCache = json;
+        return;
+    }
+    _standCache.clear();
     rapidjson::Document _document;
     _document.Parse<rapidjson::kParseDefaultFlags>(json);
     if (_document.HasParseError()) {
@@ -355,10 +392,15 @@ void CCRoomDelegate::backOffStandAvatar(const char* uid) {
 }
 
 void CCRoomDelegate::receiveGiftMessage(const char* uid, const char* url) {
-    if (isInBackgroundState("receiveGiftMessage")) return;
-
     std::string _uid_str(uid);
     if (_uid_str.empty()) return;
+
+    if (isInBackgroundState("receiveGiftMessage")) {
+        _giftCache.push_back(url);
+        return;
+    }
+
+    _giftCache.clear();
 
     auto _avatar = this->findAvatar(uid);
 
@@ -412,6 +454,18 @@ void CCRoomDelegate::receiveVoiceWave(const char *uids) {
 
 void CCRoomDelegate::receiveRandomSnore(const char *uids) {
     if (isInBackgroundState("receiveRandomSnore")) return;
+    log("receive random snore uids: %s", uids);
+    std::vector<string> _uid_arr;
+    std::string _raw = uids, _tmp;
+    std::stringstream input(_raw);
+    while (getline(input, _tmp, ',')) _uid_arr.push_back(_tmp);
+
+    for (int i = 0; i < _uid_arr.size(); ++i) {
+        auto _avatar = findAvatar(_uid_arr.at(i).c_str());
+        if (nullptr != _avatar) {
+            _avatar->runSnoreAnim();
+        }
+    }
 }
 
 void CCRoomDelegate::releaseResource() {
@@ -421,6 +475,13 @@ void CCRoomDelegate::releaseResource() {
     _stageAvatars.clear();
     _stageSteps.clear();
     _randomWheres.clear();
+
+    _bgCache.clear();
+    _selfCache.clear();
+    _heapCache.clear();
+    _standCache.clear();
+    _stageCache.clear();
+    _giftCache.clear();
 
     if (_scene) {
         _scene->removeAllChildren();
@@ -455,7 +516,7 @@ const Vec2 CCRoomDelegate::getStandPosition(int index) const {
         }
     }
     if (_row < 0) return Vec2::ZERO;
-    int _column = _row == 0 ? index : index - _standRowCount[_row - 1];
+    int _column = (_row == 0 ? index : index - _standRowCount[_row - 1]);
 
     int _count = _row == 0 ? _standRowCount[0] : _standRowCount[_row] - _standRowCount[_row - 1];
     float _block_w = (float) _visibleSize.width / _count;
@@ -469,7 +530,14 @@ const Vec2 CCRoomDelegate::getStandPosition(int index) const {
     int _direct_x = (float) pow(-1, _column % 2);
     float _offset_x = _count % 2 == 0 ? _block_w / 2 : 0;
     float _target_x = _refer_x + (_offset_x + ((_count % 2 + _column) / 2) * _block_w) * _direct_x;
-    float _target_y = _refer_y + (_column / 2) * _arc_seg;
+
+
+    float _coord_x = _STAGE_TABLE_WIDTH / _scaleFactor / 2;
+    float _coord_y = _STAGE_TABLE_HEIGHT / _scaleFactor / 2;
+    float _result_x = _target_x - _refer_x;
+    float _result_y = std::sqrt((1 - _result_x * _result_x / _coord_x / _coord_x) * _coord_y * _coord_y);
+
+    float _target_y = _refer_y + (_coord_y - _result_y) + 10 / _scaleFactor;
 
     return Vec2(_target_x , _target_y);
 }
@@ -481,14 +549,14 @@ const Vec2 CCRoomDelegate::getSelfPosition() const {
 const Vec2 CCRoomDelegate::getGiftPosition() const {
     float _coord_x = _GIFT_TABLE_WIDTH / _scaleFactor / 2;
     float _coord_y = _GIFT_TABLE_HEIGHT_MAX / _scaleFactor / 2;
-    float _space_x = 36 / _scaleFactor;
-    float _space_y = 5 / _scaleFactor;
+    float _space_x = 40 / _scaleFactor;
+    float _space_y = 20 / _scaleFactor;
 
-    float _rand_x = rand() % (int)((_coord_x - _space_x) * 2) - (_coord_x - _space_x);
+    float _rand_x = RandomHelper::random_int(- (_coord_x - _space_x), (_coord_x - _space_x));
     float _result_y = std::sqrt((1 - _rand_x * _rand_x / _coord_x / _coord_x) * _coord_y * _coord_y);
 
-    float _rand_y = rand() % (int)((_result_y - _space_y) * 2) - (_result_y);
-
+    float _rand_y = RandomHelper::random_int(- (_result_y - _space_y), (_result_y));
+//    float _rand_y = rand() % (int)((_result_y) * 2) - (_result_y);
 //    float _coord_y_l = _GIFT_TABLE_HEIGHT_MIN / _scaleFactor / 2;
 //    float _result_y_l = std::sqrt((1 - _rand_x * _rand_x / _coord_x / _coord_x) * _coord_y_l * _coord_y_l);
 
@@ -606,24 +674,58 @@ void CCRoomDelegate::createAndPresentGift(const Vec2& pos, const char* url) {
 //    AudioManager::getInstance()->playBG();
 
     float start_x = pos.x;
-    float start_y = pos.y + 60;
+    float start_y = pos.y + 60 / _scaleFactor;
 
     int _gift_index = _giftHolder.size();
+    auto _gift = CCGameGift::create(_gift_index, _gift_index, url);
+    _gift->setPosition(Vec2(start_x, start_y));
+
+    auto _position = getGiftPosition();
+
+    _gift->present(_position);
+    if (_scene) {
+        _scene->addChild(_gift, 399);
+    }
+    _giftHolder.pushBack(_gift);
 
 //    int _star_index = cocos2d::RandomHelper::random_int(1, 5);
 //    std::string _star_path = "gift/star_" + std::to_string(_star_index) + ".png";
 
-    auto gift = CCGameGift::create(_gift_index, _gift_index, url);
-    gift->setPosition(Vec2(start_x, start_y));
 
-    auto _position = getGiftPosition();
-
-    gift->present(_position);
-    if (_scene) {
-        _scene->addChild(gift, 399);
-    }
-    _giftHolder.pushBack(gift);
     limitGiftHolderSize();
+}
+
+void CCRoomDelegate::tryPresentCacheGift() {
+    for (int i = 0; i < _giftCache.size(); ++i) {
+
+        int _gift_index = _giftHolder.size();
+        auto _cache_gift = CCGameGift::create(_gift_index, _gift_index, _giftCache.at(i));
+        _cache_gift->setPosition(getGiftPosition());
+        if (_scene) {
+            _scene->addChild(_cache_gift, 0);
+        }
+        _giftHolder.pushBack(_cache_gift);
+    }
+    limitGiftHolderSize();
+
+//    int _length = _giftHolder.size();
+//    if (_length > 2 * _GIFT_HOLDER_SIZE) {
+//        unsigned int _remove_size = _length - _GIFT_HOLDER_SIZE;
+//        auto _removeList = Vector<CCGameGift*>(_remove_size);
+//        for (int i = 0; i < _remove_size; ++i) {
+//            _removeList.pushBack(_giftHolder.at(i));
+//        }
+//
+//        for (int i = 0; i < _remove_size; ++i) {
+//            auto _gift = dynamic_cast<CCGameGift *>(_removeList.at(i));
+//            if (_gift) {
+//                _gift->removeFromParentAndCleanup(true);
+//                _giftHolder.eraseObject(_gift);
+//            }
+//        }
+//
+//        _removeList.clear();
+//    }
 }
 
 
@@ -631,13 +733,14 @@ void CCRoomDelegate::limitGiftHolderSize() {
     int _length = _giftHolder.size();
     int _limit = _GIFT_HOLDER_SIZE;
     if(_length > _limit * 2) {
-        auto _removeList = Vector<CCGameGift*>(_limit);
+        unsigned int _remove_size = _length - _limit;
+        auto _removeList = Vector<CCGameGift*>(_remove_size);
 
-        for (int i = 0; i < (_length - _limit); ++i) {
+        for (int i = 0; i < _remove_size; ++i) {
             _removeList.pushBack(_giftHolder.at(i));
         }
 
-        for (int i = 0; i < _limit; ++i) {
+        for (int i = 0; i < _remove_size; ++i) {
             auto _gift = dynamic_cast<CCGameGift*>(_removeList.at(i));
 
             auto _removeFunc = CallFunc::create([_gift](){
@@ -706,7 +809,6 @@ void CCRoomDelegate::reorganizeSelfAvatar() {
 }
 
 bool CCRoomDelegate::isInBackgroundState(const char* tag) {
-    return false;
     if (Director::getInstance()->isPaused() || !Director::getInstance()->isValid()) {
         log("%s ignored, game is in background state!", tag);
         return true;

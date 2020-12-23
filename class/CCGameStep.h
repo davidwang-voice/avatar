@@ -20,7 +20,7 @@ private:
     static const int _TAG_STEP_ADD = 101;
     static const int _TAG_STEP_LABEL = 102;
 
-    static const int _CONTENT_SIZE_WIDTH = 120;
+    static const int _CONTENT_SIZE_WIDTH = 125;
     static const int _CONTENT_SIZE_HEIGHT = 195;
 
     string _skin;

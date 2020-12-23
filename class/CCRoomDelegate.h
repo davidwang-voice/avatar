@@ -48,24 +48,26 @@ private:
 
     static const int _SELF_GROUND_BOTTOM = 140;
 
-    static const int _STAND_ARC_HEIGHT = 60;
+    static const int _STAND_ARC_HEIGHT = 66;
     static const int _STAND_MAX_ROW_COUNT = 7;
-    static const int _STAND_ROW_HEIGHT = 120;
-    static const int _STAND_FRONT_ROW_HEIGHT = 140;
-    static const int _STAND_FRONT_ROW_TOP = 1052;
+    static const int _STAND_ROW_HEIGHT = 136;
+    static const int _STAND_FRONT_ROW_HEIGHT = 136;
+    static const int _STAND_FRONT_ROW_TOP = 1120;
 
     static const int _STAGE_BLOCK_COUNT = 3;
-    static const int _STAGE_BLOCK_WIDTH = 135;
-    static const int _STAGE_BLOCK_TOP = 530;
-    static const int _STAGE_BLOCK_LEFT = 764;
-    static const int _STAGE_STEP_TOP = 586;
+    static const int _STAGE_BLOCK_WIDTH = 144;
+    static const int _STAGE_BLOCK_TOP = 546;
+    static const int _STAGE_BLOCK_LEFT = 758;
+    static const int _STAGE_STEP_TOP = 592;
 
+    static const int _STAGE_TABLE_WIDTH = 1329;
+    static const int _STAGE_TABLE_HEIGHT = 320;
 
     static const int _GIFT_HOLDER_SIZE = 100;
-    static const int _GIFT_TABLE_WIDTH = 960;
+    static const int _GIFT_TABLE_WIDTH = 978;
     static const int _GIFT_TABLE_HEIGHT_MIN = 100;
-    static const int _GIFT_TABLE_HEIGHT_MAX = 120;
-    static const int _GIFT_TABLE_TOP = 870;
+    static const int _GIFT_TABLE_HEIGHT_MAX = 174;
+    static const int _GIFT_TABLE_TOP = 912;
 
     static const int _NONE_SPACE_X = 100;
     static const int _NONE_SPACE_Y = 1600;
@@ -80,8 +82,15 @@ private:
     Vector<CCGameAvatar*> _stageAvatars;
     Vector<CCGameStep*> _stageSteps;
     Vector<CCGameGift*> _giftHolder;
-    map<std::string, unsigned int> _randomWheres;
 
+
+    map<std::string, unsigned int> _randomWheres;
+    std::string _bgCache;
+    std::string _selfCache;
+    std::string _heapCache;
+    std::string _standCache;
+    std::string _stageCache;
+    std::vector<std::string> _giftCache;
 
     void ensureStageSteps();
 
@@ -108,16 +117,17 @@ private:
     void reorganizeSelfAvatar();
 
     void createAndPresentGift(const Vec2& pos, const char* url);
+    void tryPresentCacheGift();
     void limitGiftHolderSize();
     bool isInBackgroundState(const char* tag);
 
 public:
     virtual ~CCRoomDelegate();
     void init(Scene* scene);
-    void resumeAllChildren();
+    void resumeFromCache();
 
     void setStageBackground(const char* url);
-    void setupStageGiftHeap(const char* json, bool history = true);
+    void setupStageGiftHeap(const char* json);
     void updateSelfAvatar(const char* json);
     void updateStageAvatars(const char* json);
     void updateStandAvatars(const char* json);

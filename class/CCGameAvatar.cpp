@@ -121,13 +121,22 @@ void CCGameAvatar::initAvatar() {
     addChild(_rank_layer);
 
 
-    auto _ssr_marker = Sprite::create("avatar/avatar_rare_ssr.png");
+    auto _ssr_marker = Sprite::create("avatar/avatar_rare_sr.png");
     _ssr_marker->setTag(_TAG_SSR_MARKER);
     _ssr_marker->setLocalZOrder(3);
     _ssr_marker->setAnchorPoint(Point::ANCHOR_BOTTOM_RIGHT);
-    _ssr_marker->setPosition(getContentSize().width, 0);
+    _ssr_marker->setPosition(getContentSize().width + 10 / _scale_factor, 0);
     addChild(_ssr_marker);
     _ssr_marker->setVisible(false);
+
+
+    auto _snore_anim = Sprite::create();
+    _snore_anim->setTexture("anim/snore_ani_1.png");
+    _snore_anim->setAnchorPoint(Point::ANCHOR_MIDDLE_TOP);
+    _snore_anim->setPosition(Vec2(getContentSize().width, getContentSize().height));
+    _snore_anim->setLocalZOrder(4);
+    this->addChild(_snore_anim, 1, _TAG_SNORE_ANIM);
+    _snore_anim->setVisible(false);
 
 
     this->setLocalZOrder(1);
@@ -135,6 +144,7 @@ void CCGameAvatar::initAvatar() {
     _loaded = false;
     _target_x = 0.0;
     _target_y = 0.0;
+    _offline = 0;
     _self_chat_bubble_count = 0;
 }
 
@@ -199,7 +209,7 @@ void CCGameAvatar::updateRank(int rank) {
     unsigned int _column = 13;
 
     if (rank < 100) {
-        _real_local_z_order = rank / _column + (_column - (rank - 1) % _column);
+        _real_local_z_order = (rank / _column) * _column + (_column - (rank - 1) % _column);
     } else {
         _real_local_z_order = rank;
     }
@@ -243,13 +253,14 @@ void CCGameAvatar::updateElement(const char *name, const char *path, int rare, i
         loadTexture(_skin.c_str(), "avatar/default_avatar.png");
     }
 
-    bool _is_ssr = rare == 4;
+    bool _is_sr = rare == 4;
     bool _is_guard = guard == 1;
     auto _rank_label = dynamic_cast<Label*>(this->getChildByTag(_TAG_RANK_LABEL));
     auto _rank_layer = dynamic_cast<LayerColor*>(this->getChildByTag(_TAG_RANK_LAYER));
     auto _name_label = dynamic_cast<Label*>(this->getChildByTag(_TAG_NAME_LABEL));
     auto _name_layer = dynamic_cast<LayerColor*>(this->getChildByTag(_TAG_NAME_LAYER));
     auto _ssr_marker = dynamic_cast<Sprite*>(this->getChildByTag(_TAG_SSR_MARKER));
+    auto _snore_anim = dynamic_cast<Sprite*>(this->getChildByTag(_TAG_SNORE_ANIM));
 
 
     if ((strcmp(name, this->_name.c_str()) != 0)) {
@@ -305,7 +316,7 @@ void CCGameAvatar::updateElement(const char *name, const char *path, int rare, i
             _rank_label->setColor(Color3B(255, 255, 255));
     }
 
-    if (_is_ssr) {
+    if (_is_sr) {
         if (_name_layer) {
             _name_layer->setColor(Color3B(235, 94, 137));
             _name_layer->setOpacity(250);
@@ -324,13 +335,25 @@ void CCGameAvatar::updateElement(const char *name, const char *path, int rare, i
             _rank_layer->setOpacity(100);
         }
     }
-    _ssr_marker->setVisible(_is_ssr);
+    if (_ssr_marker) {
+        _ssr_marker->setVisible(_is_sr);
+    }
 
+    this->_offline = offline;
+    if (offline == 1) {
+
+    } else {
+
+        _snore_anim->setVisible(false);
+    }
     cocos2d::GLProgramState* glProgramState = offline == 1 ? getDarkGLProgramState() : getLightGLProgramState();
 
     if (nullptr != glProgramState) {
         if (this->_inner_sprite) {
             this->_inner_sprite->setGLProgramState(glProgramState);
+        }
+        if (_ssr_marker) {
+            _ssr_marker->setGLProgramState(glProgramState);
         }
     }
 }
@@ -689,6 +712,33 @@ const Vec2 CCGameAvatar::roundPoint(const Vec2 &origin) const {
     return Vec2(_ret_x, _ret_y);
 }
 
+void CCGameAvatar::runSnoreAnim() {
 
+    log("run snore anim, id: %s", _uid.c_str());
+    auto _child = this->getChildByTag(_TAG_SNORE_ANIM);
+    if (auto _snore_anim = dynamic_cast<Sprite *>(_child)) {
+        if (this->_offline != 1) return;
+        _snore_anim->setVisible(true);
 
+        auto _anim_action = _snore_anim->getActionByTag(_TAG_SNORE_ANIM_ACTION);
+        if (nullptr != _anim_action && !_anim_action->isDone()) {
+            _snore_anim->stopAction(_anim_action);
+        }
 
+        Animation *_animation = Animation::create();
+        for (int i = 1; i <= 75; i++) {
+            auto imagePath = "anim/snore_ani_" + std::to_string(i) + ".png";
+            _animation->addSpriteFrameWithFileName(imagePath.c_str());
+        }
+        _animation->setDelayPerUnit(0.040f);
+        _animation->setRestoreOriginalFrame(false);
+        Animate *_animate = Animate::create(_animation);
+        auto _callback = CallFunc::create([_snore_anim](){
+            _snore_anim->setVisible(false);
+        });
+        auto _action = Sequence::create(_animate, _callback, NULL);
+        _action->setTag(_TAG_SNORE_ANIM_ACTION);
+        _snore_anim->runAction(_action);
+    }
+
+}

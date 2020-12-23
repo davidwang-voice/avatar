@@ -27,16 +27,16 @@ void CCGameStep::initStep() {
 //    setTexture("bg_stage_step.png");
     setAnchorPoint(Point::ANCHOR_MIDDLE_BOTTOM);
 
-    auto _step_place = CCBaseSprite::create();
+    auto _step_place = Sprite::create();
     _step_place->setTexture("anim/wave_ani_1.png");
     _step_place->setAnchorPoint(Point::ANCHOR_MIDDLE);
     float _target_x = getContentSize().width / 2;
-    float _target_y = 18 / _scale_factor;
+    float _target_y = 19 / _scale_factor;
     _step_place->setPosition(Vec2(_target_x, _target_y));
 
     this->addChild(_step_place, 1, _TAG_STEP_PLACE);
 
-    auto _step_add = CCBaseSprite::create();
+    auto _step_add = Sprite::create();
     _step_add->setTexture("step_add.png");
     _step_add->setAnchorPoint(Point::ANCHOR_MIDDLE_BOTTOM);
     _step_add->setPosition(Vec2(getContentSize().width / 2, 70 / _scale_factor));
@@ -59,7 +59,7 @@ void CCGameStep::initStep() {
 void CCGameStep::runVoiceWave() {
 
     auto _child = this->getChildByTag(_TAG_STEP_PLACE);
-    if (auto _step_place = dynamic_cast<CCBaseSprite *>(_child)) {
+    if (auto _step_place = dynamic_cast<Sprite *>(_child)) {
         if (this->_mute || !_step_place->isVisible()) return;
 
         auto _wave_action = _step_place->getActionByTag(_TAG_WAVE_ANIM_ACTION);
@@ -88,7 +88,7 @@ void CCGameStep::runVoiceWave() {
 
 void CCGameStep::setMute(bool mute) {
     auto _child = this->getChildByTag(_TAG_STEP_PLACE);
-    if (auto _step_place = dynamic_cast<CCBaseSprite *>(_child)) {
+    if (auto _step_place = dynamic_cast<Sprite *>(_child)) {
 
         auto _wave_action = _step_place->getActionByTag(_TAG_WAVE_ANIM_ACTION);
         if (nullptr != _wave_action && !_wave_action->isDone()) {
@@ -102,10 +102,10 @@ void CCGameStep::setMute(bool mute) {
 
 void CCGameStep::setUid(const char *uid) {
     this->_uid = uid;
-    if (auto _step_place = dynamic_cast<CCBaseSprite *>(this->getChildByTag(_TAG_STEP_PLACE))) {
+    if (auto _step_place = dynamic_cast<Sprite *>(this->getChildByTag(_TAG_STEP_PLACE))) {
         _step_place->setVisible(!this->_uid.empty());
     }
-    if (auto _step_add = dynamic_cast<CCBaseSprite *>(this->getChildByTag(_TAG_STEP_ADD))) {
+    if (auto _step_add = dynamic_cast<Sprite *>(this->getChildByTag(_TAG_STEP_ADD))) {
         _step_add->setVisible(this->_uid.empty());
     }
     if (auto _step_label = dynamic_cast<Label *>(this->getChildByTag(_TAG_STEP_LABEL))) {
@@ -118,7 +118,7 @@ const char* CCGameStep::getUid() {
 }
 
 bool CCGameStep::onTouchBegan(Touch *touch, Event *event) {
-    if (auto _step = dynamic_cast<CCBaseSprite*>(event->getCurrentTarget())) {
+    if (auto _step = dynamic_cast<Sprite*>(event->getCurrentTarget())) {
         Point _locationInNode = touch->getLocation();
         auto _pos = _step->getParent()->convertToNodeSpace(_locationInNode);
         Rect _rect = _step->getBoundingBox();
@@ -143,7 +143,7 @@ void CCGameStep::onTouchMoved(Touch *touch, Event *event) {
 
 void CCGameStep::onTouchEnded(Touch *touch, Event *event) {
     if (!__isTapEvent()) return;
-    if (auto _step = dynamic_cast<CCBaseSprite*>(event->getCurrentTarget())) {
+    if (auto _step = dynamic_cast<Sprite*>(event->getCurrentTarget())) {
         Point _locationInNode = touch->getLocation();
         auto _pos = _step->getParent()->convertToNodeSpace(_locationInNode);
         Rect _rect = _step->getBoundingBox();
@@ -155,7 +155,7 @@ void CCGameStep::onTouchEnded(Touch *touch, Event *event) {
 }
 
 void CCGameStep::bindTargetNode(EventListener *listener) {
-    if (auto _step_add = dynamic_cast<CCBaseSprite *>(this->getChildByTag(_TAG_STEP_ADD))) {
+    if (auto _step_add = dynamic_cast<Sprite *>(this->getChildByTag(_TAG_STEP_ADD))) {
         _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, _step_add);
     }
 }

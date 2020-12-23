@@ -43,8 +43,8 @@ extern "C" {
     }
 
     JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_setupStageGiftHeap(JNIEnv *env, jobject thiz,
-                                                                          jstring json, jboolean history) {
-        CCRoomDelegate::getInstance()->setupStageGiftHeap(jstringToChar(env, json), history);
+                                                                          jstring json) {
+        CCRoomDelegate::getInstance()->setupStageGiftHeap(jstringToChar(env, json));
     }
 
     JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_updateSelfAvatar(JNIEnv *env, jobject thiz,
