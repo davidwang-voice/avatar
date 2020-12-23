@@ -75,19 +75,24 @@ void CCRoomDelegate::ensureStageSteps() {
 void CCRoomDelegate::resumeFromCache() {
 
     if (!_bgCache.empty()) {
-        setStageBackground(_bgCache.c_str());
+        string json(_bgCache.c_str());
+        setStageBackground(json.c_str());
     }
     if (!_heapCache.empty()) {
-        setupStageGiftHeap(_heapCache.c_str());
+        string json(_heapCache.c_str());
+        setupStageGiftHeap(json.c_str());
     }
     if (!_selfCache.empty()) {
-        updateSelfAvatar(_selfCache.c_str());
+        string json(_selfCache.c_str());
+        updateSelfAvatar(json.c_str());
     }
     if (!_standCache.empty()) {
-        updateStandAvatars(_standCache.c_str());
+        string json(_standCache.c_str());
+        updateStandAvatars(json.c_str());
     }
     if (!_stageCache.empty()) {
-        updateStandAvatars(_stageCache.c_str());
+        string json(_stageCache.c_str());
+        updateStageAvatars(json.c_str());
     }
     tryPresentCacheGift();
 }
@@ -235,13 +240,13 @@ void CCRoomDelegate::updateSelfAvatar(const char *json) {
 }
 
 void CCRoomDelegate::updateStageAvatars(const char* json) {
+
     if (isInBackgroundState("updateStageAvatars")) {
         _stageCache = json;
         return;
     }
     _stageCache.clear();
     ensureStageSteps();
-
     rapidjson::Document _document;
     _document.Parse<rapidjson::kParseDefaultFlags>(json);
     if (_document.HasParseError()) {
@@ -252,6 +257,7 @@ void CCRoomDelegate::updateStageAvatars(const char* json) {
         log("stage json is not array %s\n", json);
         return;
     }
+
     rapidjson::Value& _data_arr = _document;
 
     Vector<CCGameAvatar*> _new_stage_avatars;
@@ -335,6 +341,7 @@ void CCRoomDelegate::updateStandAvatars(const char* json) {
         log("stand json is not array %s\n", json);
         return;
     }
+
     rapidjson::Value& _data_arr = _document;
 
     Vector<CCGameAvatar*> _new_stand_avatars;
@@ -352,6 +359,10 @@ void CCRoomDelegate::updateStandAvatars(const char* json) {
         int _offline = cocostudio::DICTOOL->getIntValue_json(_value, "offline");
 
         auto _cur_self_avatar = this->findSelfAvatar(_uid);
+
+
+        std::string _uid_str(_uid);
+        if (_uid_str.empty()) continue;
 
         if (nullptr != _cur_self_avatar && !_cur_self_avatar->isOnStage) {
             _new_stand_avatars.pushBack(_cur_self_avatar);
@@ -399,8 +410,6 @@ void CCRoomDelegate::receiveGiftMessage(const char* uid, const char* url) {
         _giftCache.push_back(url);
         return;
     }
-
-    _giftCache.clear();
 
     auto _avatar = this->findAvatar(uid);
 
@@ -706,7 +715,9 @@ void CCRoomDelegate::tryPresentCacheGift() {
         }
         _giftHolder.pushBack(_cache_gift);
     }
+    _giftCache.clear();
     limitGiftHolderSize();
+
 
 //    int _length = _giftHolder.size();
 //    if (_length > 2 * _GIFT_HOLDER_SIZE) {
