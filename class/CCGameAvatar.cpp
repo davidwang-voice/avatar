@@ -21,6 +21,13 @@ using namespace cocos2d::network;
 
 static unsigned int _chat_local_z_order = 0;
 
+const std::string CCGameAvatar::_BG_NAME_NORMAL_PNG = "bg_name_nor9.png";
+const std::string CCGameAvatar::_BG_RANK_LABEL_PNG = "bg_rank_label9.png";
+const std::string CCGameAvatar::_BG_RANK_NAME_PNG = "bg_rank_name9.png";
+const std::string CCGameAvatar::_BG_SR_NAME_NORMAL_PNG = "bg_sr_name_nor9.png";
+const std::string CCGameAvatar::_BG_SR_RANK_LABEL_PNG = "bg_sr_rank_label9.png";
+const std::string CCGameAvatar::_BG_SR_RANK_NAME_PNG = "bg_sr_rank_name9.png";
+
 CCGameAvatar *CCGameAvatar::create(int id, int ranking, string uid, string skin, string name, int priority) {
     auto avatar = new (nothrow) CCGameAvatar(id, ranking, uid, move(skin), move(name), priority);
     if (avatar && avatar->init()) {
@@ -75,7 +82,7 @@ void CCGameAvatar::initAvatar() {
 
     int dpi = Device::getDPI();
 //    auto _name_label = Label::createWithTTF(labelConfig, _name);
-
+    _name = "";
     auto _name_label = Label::createWithSystemFont(_name, "Arial", 24 / _scale_factor);
     _name_label->setOverflow(Label::Overflow::CLAMP);
     _name_label->setAnchorPoint(Point::ANCHOR_MIDDLE_BOTTOM);
@@ -94,9 +101,18 @@ void CCGameAvatar::initAvatar() {
     _name_label->setDimensions(_name_label_width, _name_label_height);
 
 
-    auto _name_layer = LayerColor::create(Color4B(0, 0, 0, 100),
-                                          _name_label_width + 10 / _scale_factor,
-                                          _name_label_height);
+    auto _name_layer = ui::Scale9Sprite::create();
+//    _name_layer->setTexture("avatar/bg_rank_name.png");
+//    _name_layer->setCapInsets(Rect(6, 6, 1, 1));
+//    _name_layer->setContentSize(Size(_name_label_width + 10 / _scale_factor,
+//                                     _name_label_height));
+
+
+//    auto _name_layer = ui::Scale9Sprite::create("avatar/chat_bubble9.png",
+//                                                Rect(0, 0, 13, 13), Rect(6, 6, 1, 1));
+//    auto _name_layer = LayerColor::create(Color4B(0, 0, 0, 100),
+//                                          _name_label_width + 10 / _scale_factor,
+//                                          _name_label_height);
     _name_layer->setTag(_TAG_NAME_LAYER);
     _name_layer->setLocalZOrder(1);
     _name_layer->setAnchorPoint(Point::ANCHOR_BOTTOM_LEFT);
@@ -113,7 +129,7 @@ void CCGameAvatar::initAvatar() {
 
     addChild(_rank_label);
 
-    auto _rank_layer = LayerColor::create(Color4B(0, 0, 0, 100), _rank_label->getContentSize().width, _rank_label->getContentSize().height);
+    auto _rank_layer = ui::Scale9Sprite::create();//LayerColor::create(Color4B(0, 0, 0, 100), _rank_label->getContentSize().width, _rank_label->getContentSize().height);
     _rank_layer->setTag(_TAG_RANK_LAYER);
     _rank_layer->setLocalZOrder(1);
     _rank_layer->setAnchorPoint(Point::ANCHOR_BOTTOM_LEFT);
@@ -132,8 +148,8 @@ void CCGameAvatar::initAvatar() {
 
     auto _snore_anim = Sprite::create();
     _snore_anim->setTexture("anim/snore_ani_1.png");
-    _snore_anim->setAnchorPoint(Point::ANCHOR_MIDDLE_TOP);
-    _snore_anim->setPosition(Vec2(getContentSize().width, getContentSize().height));
+    _snore_anim->setAnchorPoint(Point::ANCHOR_TOP_RIGHT);
+    _snore_anim->setPosition(Vec2(getContentSize().width + 10 / _scale_factor, getContentSize().height));
     _snore_anim->setLocalZOrder(4);
     this->addChild(_snore_anim, 1, _TAG_SNORE_ANIM);
     _snore_anim->setVisible(false);
@@ -145,6 +161,7 @@ void CCGameAvatar::initAvatar() {
     _target_x = 0.0;
     _target_y = 0.0;
     _offline = 0;
+    _rare_sr = 0;
     _self_chat_bubble_count = 0;
 }
 
@@ -206,7 +223,7 @@ void CCGameAvatar::onTouchEnded(Touch *touch, Event *event) {
 
 void CCGameAvatar::updateRank(int rank) {
 
-    unsigned int _column = 13;
+    unsigned int _column = _FRONT_COLUMN_COUNT;
 
     if (rank < 100) {
         _real_local_z_order = (rank / _column) * _column + (_column - (rank - 1) % _column);
@@ -218,9 +235,12 @@ void CCGameAvatar::updateRank(int rank) {
     if (this->getLocalZOrder() < _CHAT_LOCAL_Z_ORDER_BASE)
         this->setLocalZOrder(_real_local_z_order);
     auto _rank_label = dynamic_cast<Label*>(this->getChildByTag(_TAG_RANK_LABEL));
-    auto _rank_layer = dynamic_cast<LayerColor*>(this->getChildByTag(_TAG_RANK_LAYER));
-    auto _name_layer = dynamic_cast<LayerColor*>(this->getChildByTag(_TAG_NAME_LAYER));
-    if (rank <= _column) {
+    auto _rank_layer = dynamic_cast<ui::Scale9Sprite*>(this->getChildByTag(_TAG_RANK_LAYER));
+    auto _name_layer = dynamic_cast<ui::Scale9Sprite*>(this->getChildByTag(_TAG_NAME_LAYER));
+
+    bool _is_front = rank <= _column;
+    bool _is_sr = this->_rare_sr == 1;
+    if (_is_front) {
         float _labelWidth = 0;
         float _labelHeight = 0;
         if (_rank_label) {
@@ -231,6 +251,15 @@ void CCGameAvatar::updateRank(int rank) {
         }
         if (_rank_layer) {
             _rank_layer->setVisible(true);
+
+            std::string _bg_rank_label = _is_sr ? _BG_SR_RANK_LABEL_PNG : _BG_RANK_LABEL_PNG;
+            string _origin_name = _rank_layer->getName();
+            if ((strcmp(_bg_rank_label.c_str(), _origin_name.c_str()) != 0)) {
+                _rank_layer->setTexture("avatar/" + _bg_rank_label);
+                _rank_layer->setName(_bg_rank_label);
+                _rank_layer->setCapInsets(Rect(6, 6, 1, 1));
+            }
+
             _rank_layer->setContentSize(Size(_labelWidth + 10 / _scale_factor, _labelHeight));
         }
 
@@ -244,6 +273,24 @@ void CCGameAvatar::updateRank(int rank) {
     }
 
 
+    std::string _bg_name_label;
+    if (_is_sr) {
+        _bg_name_label = _is_front ? _BG_SR_RANK_NAME_PNG : _BG_SR_NAME_NORMAL_PNG;
+    } else {
+        _bg_name_label = _is_front ? _BG_RANK_NAME_PNG : _BG_NAME_NORMAL_PNG;
+    }
+
+    if (_name_layer) {
+        string _origin_name = _name_layer->getName();
+        log("update rank origin_name:%s, new_name:%s", _origin_name.c_str(), _bg_name_label.c_str());
+        if ((strcmp(_bg_name_label.c_str(), _origin_name.c_str()) != 0)) {
+            Size _origin_size = _name_layer->getContentSize();
+            _name_layer->setTexture("avatar/" + _bg_name_label);
+            _name_layer->setName(_bg_name_label);
+            _name_layer->setCapInsets(Rect(6, 6, 1, 1));
+            _name_layer->setContentSize(_origin_size);
+        }
+    }
 }
 
 void CCGameAvatar::updateElement(const char *name, const char *path, int rare, int guard, int offline) {
@@ -253,15 +300,18 @@ void CCGameAvatar::updateElement(const char *name, const char *path, int rare, i
         loadTexture(_skin.c_str(), "avatar/default_avatar.png");
     }
 
-    bool _is_sr = rare == 4;
+
+    this->_rare_sr = rare;
+    this->_offline = offline;
+
+    bool _is_sr = rare == 1;
     bool _is_guard = guard == 1;
     auto _rank_label = dynamic_cast<Label*>(this->getChildByTag(_TAG_RANK_LABEL));
-    auto _rank_layer = dynamic_cast<LayerColor*>(this->getChildByTag(_TAG_RANK_LAYER));
+    auto _rank_layer = dynamic_cast<ui::Scale9Sprite*>(this->getChildByTag(_TAG_RANK_LAYER));
     auto _name_label = dynamic_cast<Label*>(this->getChildByTag(_TAG_NAME_LABEL));
-    auto _name_layer = dynamic_cast<LayerColor*>(this->getChildByTag(_TAG_NAME_LAYER));
+    auto _name_layer = dynamic_cast<ui::Scale9Sprite*>(this->getChildByTag(_TAG_NAME_LAYER));
     auto _ssr_marker = dynamic_cast<Sprite*>(this->getChildByTag(_TAG_SSR_MARKER));
     auto _snore_anim = dynamic_cast<Sprite*>(this->getChildByTag(_TAG_SNORE_ANIM));
-
 
     if ((strcmp(name, this->_name.c_str()) != 0)) {
         log("avatar old name: %s, new name: %s", this->_name.c_str(), name);
@@ -302,8 +352,6 @@ void CCGameAvatar::updateElement(const char *name, const char *path, int rare, i
         }
     }
 
-
-
     if (_is_guard) {
         if (_name_label)
             _name_label->setColor(Color3B(255, 230, 138));
@@ -316,34 +364,20 @@ void CCGameAvatar::updateElement(const char *name, const char *path, int rare, i
             _rank_label->setColor(Color3B(255, 255, 255));
     }
 
-    if (_is_sr) {
-        if (_name_layer) {
-            _name_layer->setColor(Color3B(235, 94, 137));
-            _name_layer->setOpacity(250);
-        }
-        if (_rank_layer) {
-            _rank_layer->setColor(Color3B(235, 94, 137));
-            _rank_layer->setOpacity(250);
-        }
-    } else {
-        if (_name_layer) {
-            _name_layer->setColor(Color3B(0, 0, 0));
-            _name_layer->setOpacity(100);
-        }
-        if (_rank_layer) {
-            _rank_layer->setColor(Color3B(0, 0, 0));
-            _rank_layer->setOpacity(100);
-        }
-    }
     if (_ssr_marker) {
         _ssr_marker->setVisible(_is_sr);
     }
 
-    this->_offline = offline;
     if (offline == 1) {
-
+        _rank_label->setOpacity(_is_sr ? 179 : 125);
+        _rank_layer->setOpacity(_is_sr ? 230 : 255);
+        _name_label->setOpacity(_is_sr ? 179 : 125);
+        _name_layer->setOpacity(_is_sr ? 230 : 255);
     } else {
-
+        _rank_label->setOpacity(255);
+        _rank_layer->setOpacity(255);
+        _name_label->setOpacity(255);
+        _name_layer->setOpacity(255);
         _snore_anim->setVisible(false);
     }
     cocos2d::GLProgramState* glProgramState = offline == 1 ? getDarkGLProgramState() : getLightGLProgramState();
@@ -356,6 +390,10 @@ void CCGameAvatar::updateElement(const char *name, const char *path, int rare, i
             _ssr_marker->setGLProgramState(glProgramState);
         }
     }
+
+
+
+
 }
 
 void CCGameAvatar::setUid(const char *uid) {

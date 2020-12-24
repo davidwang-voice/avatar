@@ -16,6 +16,15 @@ using namespace cocos2d::network;
 
 class CCGameAvatar : public CCBaseSprite {
 private:
+    static const std::string _BG_NAME_NORMAL_PNG;
+    static const std::string _BG_RANK_LABEL_PNG;
+    static const std::string _BG_RANK_NAME_PNG;
+    static const std::string _BG_SR_NAME_NORMAL_PNG;
+    static const std::string _BG_SR_RANK_LABEL_PNG;
+    static const std::string _BG_SR_RANK_NAME_PNG;
+
+    static const unsigned int _FRONT_COLUMN_COUNT = 13;
+
     static const unsigned int _TAG_JUMP_TO_ACTION = 1001;
     static const unsigned int _TAG_MOVE_TO_ACTION = 1002;
     static const unsigned int _TAG_JUMP_BY_ACTION = 1003;
@@ -44,6 +53,8 @@ private:
     string _name;
     string _uid;
     unsigned int _offline;
+    unsigned int _rare_sr;
+    unsigned int _rank;
     bool _loaded;
     float _target_x;
     float _target_y;
