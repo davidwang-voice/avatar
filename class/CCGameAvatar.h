@@ -53,8 +53,8 @@ private:
     string _name;
     string _uid;
     unsigned int _offline;
-    unsigned int _rare_sr;
-    unsigned int _rank;
+
+    unsigned int _rare;//avatar等级 1,2,3对应N,R,SR
     bool _loaded;
     float _target_x;
     float _target_y;
@@ -97,7 +97,7 @@ public:
     void onTouchEnded(Touch *touch, Event *event) override;
 
     void updateRank(int rank);
-    void updateElement(const char* name, const char* path, int rare, int guard, int offline);
+    void updateElement(const char* name, const char* path, int rare, int guard, int offline = 0);
 
     void jumpToPosition(const Vec2& target);
     void jumpByPresent();

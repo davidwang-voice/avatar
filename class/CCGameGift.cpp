@@ -34,7 +34,7 @@ void CCGameGift::initGift() {
     std::string _skin_str(_skin);
     if (_skin_str.empty()) {
         int _star_index = cocos2d::RandomHelper::random_int(1, 5);
-        std::string _star_path = "gift/star_" + std::to_string(_star_index) + ".png";
+        std::string _star_path = "cocos/gift/star_" + std::to_string(_star_index) + ".png";
         setTexture(_star_path);
     } else {
         loadTexture(_skin.c_str());

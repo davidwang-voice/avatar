@@ -44,7 +44,7 @@ void CCGameAvatar::setTexture(const std::string &filename) {
 
     if (this->_inner_sprite) {
         this->_inner_sprite->setTexture(filename);
-        if (strcmp(filename.c_str(), "avatar/default_avatar.png") != 0) {
+        if (strcmp(filename.c_str(), "cocos/avatar/default_avatar.png") != 0) {
             float _width_ratio = this->_inner_sprite->getContentSize().width / getContentSize().width;
             float _height_ratio = this->_inner_sprite->getContentSize().height / getContentSize().height;
             this->_inner_sprite->setScale(1 / MAX(_width_ratio, _height_ratio));
@@ -64,7 +64,7 @@ void CCGameAvatar::initAvatar() {
     this->_inner_sprite->setPosition(getContentSize().width / 2, 0);
     this->addChild(this->_inner_sprite, 0);
 
-    loadTexture(_skin.c_str(), "avatar/default_avatar.png");
+    loadTexture(_skin.c_str(), "cocos/avatar/default_avatar.png");
 
     float random = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * 1.5;
     auto delay = DelayTime::create(random);
@@ -137,7 +137,7 @@ void CCGameAvatar::initAvatar() {
     addChild(_rank_layer);
 
 
-    auto _ssr_marker = Sprite::create("avatar/avatar_rare_sr.png");
+    auto _ssr_marker = Sprite::create("cocos/avatar/avatar_rare_sr.png");
     _ssr_marker->setTag(_TAG_SSR_MARKER);
     _ssr_marker->setLocalZOrder(3);
     _ssr_marker->setAnchorPoint(Point::ANCHOR_BOTTOM_RIGHT);
@@ -147,7 +147,7 @@ void CCGameAvatar::initAvatar() {
 
 
     auto _snore_anim = Sprite::create();
-    _snore_anim->setTexture("anim/snore_ani_1.png");
+    _snore_anim->setTexture("cocos/anim/snore_ani_1.png");
     _snore_anim->setAnchorPoint(Point::ANCHOR_TOP_RIGHT);
     _snore_anim->setPosition(Vec2(getContentSize().width + 10 / _scale_factor, getContentSize().height));
     _snore_anim->setLocalZOrder(4);
@@ -161,7 +161,7 @@ void CCGameAvatar::initAvatar() {
     _target_x = 0.0;
     _target_y = 0.0;
     _offline = 0;
-    _rare_sr = 0;
+    _rare = 0;
     _self_chat_bubble_count = 0;
 }
 
@@ -239,7 +239,7 @@ void CCGameAvatar::updateRank(int rank) {
     auto _name_layer = dynamic_cast<ui::Scale9Sprite*>(this->getChildByTag(_TAG_NAME_LAYER));
 
     bool _is_front = rank <= _column;
-    bool _is_sr = this->_rare_sr == 1;
+    bool _is_sr = this->_rare == 3;
     if (_is_front) {
         float _labelWidth = 0;
         float _labelHeight = 0;
@@ -255,7 +255,7 @@ void CCGameAvatar::updateRank(int rank) {
             std::string _bg_rank_label = _is_sr ? _BG_SR_RANK_LABEL_PNG : _BG_RANK_LABEL_PNG;
             string _origin_name = _rank_layer->getName();
             if ((strcmp(_bg_rank_label.c_str(), _origin_name.c_str()) != 0)) {
-                _rank_layer->setTexture("avatar/" + _bg_rank_label);
+                _rank_layer->setTexture("cocos/avatar/" + _bg_rank_label);
                 _rank_layer->setName(_bg_rank_label);
                 _rank_layer->setCapInsets(Rect(6, 6, 1, 1));
             }
@@ -285,7 +285,7 @@ void CCGameAvatar::updateRank(int rank) {
         log("update rank origin_name:%s, new_name:%s", _origin_name.c_str(), _bg_name_label.c_str());
         if ((strcmp(_bg_name_label.c_str(), _origin_name.c_str()) != 0)) {
             Size _origin_size = _name_layer->getContentSize();
-            _name_layer->setTexture("avatar/" + _bg_name_label);
+            _name_layer->setTexture("cocos/avatar/" + _bg_name_label);
             _name_layer->setName(_bg_name_label);
             _name_layer->setCapInsets(Rect(6, 6, 1, 1));
             _name_layer->setContentSize(_origin_size);
@@ -297,14 +297,14 @@ void CCGameAvatar::updateElement(const char *name, const char *path, int rare, i
 
     if ((strcmp(path, this->_skin.c_str()) != 0)) {
         this->_skin = path;
-        loadTexture(_skin.c_str(), "avatar/default_avatar.png");
+        loadTexture(_skin.c_str(), "cocos/avatar/default_avatar.png");
     }
 
 
-    this->_rare_sr = rare;
+    this->_rare = rare;
     this->_offline = offline;
 
-    bool _is_sr = rare == 1;
+    bool _is_sr = rare == 3;
     bool _is_guard = guard == 1;
     auto _rank_label = dynamic_cast<Label*>(this->getChildByTag(_TAG_RANK_LABEL));
     auto _rank_layer = dynamic_cast<ui::Scale9Sprite*>(this->getChildByTag(_TAG_RANK_LAYER));
@@ -512,7 +512,7 @@ void CCGameAvatar::popChatBubble(const char* content) {
     _chat_bubble->setContentSize(Size(_chat_label->getContentSize().width + 20  / _scale_factor, _chat_label->getContentSize().height + 20  / _scale_factor));
 
 
-    auto _background = ui::Scale9Sprite::create("avatar/chat_bubble9.png",
+    auto _background = ui::Scale9Sprite::create("cocos/avatar/chat_bubble9.png",
             Rect(0, 0, 25, 25), Rect(13, 13, 1, 1));
     _background->setAnchorPoint(Point::ANCHOR_MIDDLE);
     _background->setPosition(_chat_bubble->getContentSize().width / 2, _chat_bubble->getContentSize().height / 2);
@@ -765,7 +765,7 @@ void CCGameAvatar::runSnoreAnim() {
 
         Animation *_animation = Animation::create();
         for (int i = 1; i <= 75; i++) {
-            auto imagePath = "anim/snore_ani_" + std::to_string(i) + ".png";
+            auto imagePath = "cocos/anim/snore_ani_" + std::to_string(i) + ".png";
             _animation->addSpriteFrameWithFileName(imagePath.c_str());
         }
         _animation->setDelayPerUnit(0.040f);

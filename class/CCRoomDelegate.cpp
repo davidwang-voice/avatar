@@ -112,7 +112,7 @@ void CCRoomDelegate::setStageBackground(const char *url) {
     }
 
     auto _stage_background = CCBaseSprite::create();
-    _stage_background->loadTexture(url, "bg_game_room.png");
+    _stage_background->loadTexture(url, "cocos/bg_game_room.png");
     float _target_x = _centerPosition.x;
     float _target_y = _centerPosition.y - _stage_background->getContentSize().height / 2;
     _stage_background->setPosition(Vec2(_target_x, _target_y));
@@ -205,13 +205,12 @@ void CCRoomDelegate::updateSelfAvatar(const char *json) {
 
     int _rare = cocostudio::DICTOOL->getIntValue_json(_value, "rare");
     int _guard = cocostudio::DICTOOL->getIntValue_json(_value, "guard");
-    int _offline = cocostudio::DICTOOL->getIntValue_json(_value, "offline");
 
 
     auto _self_avatar = CCGameAvatar::create(_RANK_SELF_DEFAULT, _RANK_SELF_DEFAULT, _uid, _url, _name);
 
     _self_avatar->setUid(_uid);
-    _self_avatar->updateElement(_name, _url, _rare, _guard, _offline);
+    _self_avatar->updateElement(_name, _url, _rare, _guard);
     _self_avatar->updateRank(_RANK_SELF_DEFAULT);
 
     auto _self_position = this->getSelfPosition();
@@ -229,7 +228,7 @@ void CCRoomDelegate::updateSelfAvatar(const char *json) {
         if (nullptr == _child) {
             auto _aperture = CCBaseSprite::create();
             _aperture->setAnchorPoint(Point::ANCHOR_MIDDLE);
-            _aperture->setTexture("aperture.png");
+            _aperture->setTexture("cocos/aperture.png");
 
             _aperture->setPosition(_position);
             _scene->addChild(_aperture, 1, _TAG_SELF_APERTURE);
@@ -273,7 +272,6 @@ void CCRoomDelegate::updateStageAvatars(const char* json) {
 
         int _rare = cocostudio::DICTOOL->getIntValue_json(_value, "rare");
         int _guard = cocostudio::DICTOOL->getIntValue_json(_value, "guard");
-        int _offline = cocostudio::DICTOOL->getIntValue_json(_value, "offline");
 
         bool _mute = cocostudio::DICTOOL->getBooleanValue_json(_value, "mute");
 
@@ -300,7 +298,7 @@ void CCRoomDelegate::updateStageAvatars(const char* json) {
             auto _new_stage_avatar = _new_stage_avatars.back();
             _new_stage_avatar->stageIndex = i;
             _standAvatars.eraseObject(_new_stage_avatar);
-            _new_stage_avatar->updateElement(_name, _url, _rare, _guard, _offline);
+            _new_stage_avatar->updateElement(_name, _url, _rare, _guard);
 
         }
 
@@ -561,10 +559,10 @@ const Vec2 CCRoomDelegate::getGiftPosition() const {
     float _space_x = 40 / _scaleFactor;
     float _space_y = 20 / _scaleFactor;
 
-    float _rand_x = RandomHelper::random_int(- (_coord_x - _space_x), (_coord_x - _space_x));
+    float _rand_x = RandomHelper::random_real(- (_coord_x - _space_x), (_coord_x - _space_x));
     float _result_y = std::sqrt((1 - _rand_x * _rand_x / _coord_x / _coord_x) * _coord_y * _coord_y);
 
-    float _rand_y = RandomHelper::random_int(- (_result_y - _space_y), (_result_y));
+    float _rand_y = RandomHelper::random_real(- (_result_y - _space_y), (_result_y));
 //    float _rand_y = rand() % (int)((_result_y) * 2) - (_result_y);
 //    float _coord_y_l = _GIFT_TABLE_HEIGHT_MIN / _scaleFactor / 2;
 //    float _result_y_l = std::sqrt((1 - _rand_x * _rand_x / _coord_x / _coord_x) * _coord_y_l * _coord_y_l);

@@ -28,7 +28,7 @@ void CCGameStep::initStep() {
     setAnchorPoint(Point::ANCHOR_MIDDLE_BOTTOM);
 
     auto _step_place = Sprite::create();
-    _step_place->setTexture("anim/wave_ani_1.png");
+    _step_place->setTexture("cocos/anim/wave_ani_1.png");
     _step_place->setAnchorPoint(Point::ANCHOR_MIDDLE);
     float _target_x = getContentSize().width / 2;
     float _target_y = 19 / _scale_factor;
@@ -37,7 +37,7 @@ void CCGameStep::initStep() {
     this->addChild(_step_place, 1, _TAG_STEP_PLACE);
 
     auto _step_add = Sprite::create();
-    _step_add->setTexture("step_add.png");
+    _step_add->setTexture("cocos/step_add.png");
     _step_add->setAnchorPoint(Point::ANCHOR_MIDDLE_BOTTOM);
     _step_add->setPosition(Vec2(getContentSize().width / 2, 70 / _scale_factor));
     this->addChild(_step_add, 1, _TAG_STEP_ADD);
@@ -69,7 +69,7 @@ void CCGameStep::runVoiceWave() {
 
         Animation *_animation = Animation::create();
         for (int i = 1; i <= 12; i++) {
-            auto imagePath = "anim/wave_ani_" + std::to_string(i) + ".png";
+            auto imagePath = "cocos/anim/wave_ani_" + std::to_string(i) + ".png";
             _animation->addSpriteFrameWithFileName(imagePath.c_str());
         }
         // should last 2.8 seconds. And there are 14 frames.
@@ -95,7 +95,7 @@ void CCGameStep::setMute(bool mute) {
             _step_place->stopAction(_wave_action);
         }
         this->_mute = mute;
-        _step_place->setTexture(mute ? "voice_mute.png": "anim/wave_ani_1.png");
+        _step_place->setTexture(mute ? "cocos/voice_mute.png": "cocos/anim/wave_ani_1.png");
     }
 
 }
