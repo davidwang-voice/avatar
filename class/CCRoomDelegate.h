@@ -46,12 +46,12 @@ private:
     static const int _RANK_STAGE_DEFAULT = 101;
     static const int _RANK_SELF_DEFAULT = 100;
 
-    static const int _SELF_GROUND_BOTTOM = 140;
+    static const int _SELF_GROUND_BOTTOM = 100;
 
     static const int _STAND_ARC_HEIGHT = 66;
-    static const int _STAND_MAX_ROW_COUNT = 7;
-    static const int _STAND_ROW_HEIGHT = 136;
-    static const int _STAND_FRONT_ROW_HEIGHT = 136;
+    static const int _STAND_MAX_ROW_COUNT = 8;
+    static const int _STAND_ROW_HEIGHT = 135;
+    static const int _STAND_FRONT_ROW_HEIGHT = 165;
     static const int _STAND_FRONT_ROW_TOP = 1120;
 
     static const int _STAGE_BLOCK_COUNT = 3;

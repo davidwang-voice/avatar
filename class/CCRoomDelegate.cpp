@@ -51,9 +51,9 @@ void CCRoomDelegate::init(Scene* scene) {
 
     for (int i = 0; i < _STAND_MAX_ROW_COUNT; ++i) {
         if (i == 0) {
-            _standRowCount[0] = 13;
+            _standRowCount[0] = 11;
         } else {
-            _standRowCount[i] = _standRowCount[i - 1] + 13;
+            _standRowCount[i] = _standRowCount[i - 1] + 11;
         }
     }
 }
@@ -231,7 +231,7 @@ void CCRoomDelegate::updateSelfAvatar(const char *json) {
             _aperture->setTexture("cocos/aperture.png");
 
             _aperture->setPosition(_position);
-            _scene->addChild(_aperture, 1, _TAG_SELF_APERTURE);
+            _scene->addChild(_aperture, _RANK_SELF_DEFAULT - 1, _TAG_SELF_APERTURE);
         } else {
             _child->setPosition(_position);
         }
@@ -805,10 +805,11 @@ void CCRoomDelegate::reorganizeSelfAvatar() {
                 _self_avatar->isOnStage = false;
             }
 
-
             auto _aperture = _scene->getChildByTag(_TAG_SELF_APERTURE);
             if (_aperture) {
                 _aperture->setPosition(_self_avatar->getCenterPosition());
+                unsigned int _local_z_order = MAX(_self_avatar->_real_local_z_order - 1, 1);
+                _aperture->setLocalZOrder(_local_z_order);
 //                _aperture->setVisible(!_self_avatar->isOnStage);
             }
 

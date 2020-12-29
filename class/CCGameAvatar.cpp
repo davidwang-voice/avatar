@@ -40,6 +40,9 @@ CCGameAvatar *CCGameAvatar::create(int id, int ranking, string uid, string skin,
     return avatar;
 }
 
+CCGameAvatar::~CCGameAvatar() {
+}
+
 void CCGameAvatar::setTexture(const std::string &filename) {
 
     if (this->_inner_sprite) {
@@ -163,6 +166,8 @@ void CCGameAvatar::initAvatar() {
     _offline = 0;
     _rare = 0;
     _self_chat_bubble_count = 0;
+    _real_local_z_order = 0;
+    isRequestRetry = false;
 }
 
 void CCGameAvatar::shakingBody() {
@@ -222,18 +227,24 @@ void CCGameAvatar::onTouchEnded(Touch *touch, Event *event) {
 }
 
 void CCGameAvatar::updateRank(int rank) {
-
     unsigned int _column = _FRONT_COLUMN_COUNT;
 
+    unsigned int _new_local_z_order = rank;
     if (rank < 100) {
-        _real_local_z_order = (rank / _column) * _column + (_column - (rank - 1) % _column);
+        _new_local_z_order = (rank / _column) * _column + (_column - (rank - 1) % _column);
     } else {
-        _real_local_z_order = rank;
+        _new_local_z_order = rank;
     }
 
 //    _real_local_z_order = (rank < 100) ? (100 - rank) : rank;
     if (this->getLocalZOrder() < _CHAT_LOCAL_Z_ORDER_BASE)
-        this->setLocalZOrder(_real_local_z_order);
+        this->setLocalZOrder(_new_local_z_order);
+
+    if (_new_local_z_order == this->_real_local_z_order)
+        return;
+
+    this->_real_local_z_order = _new_local_z_order;
+
     auto _rank_label = dynamic_cast<Label*>(this->getChildByTag(_TAG_RANK_LABEL));
     auto _rank_layer = dynamic_cast<ui::Scale9Sprite*>(this->getChildByTag(_TAG_RANK_LAYER));
     auto _name_layer = dynamic_cast<ui::Scale9Sprite*>(this->getChildByTag(_TAG_NAME_LAYER));
@@ -295,7 +306,7 @@ void CCGameAvatar::updateRank(int rank) {
 
 void CCGameAvatar::updateElement(const char *name, const char *path, int rare, int guard, int offline) {
 
-    if ((strcmp(path, this->_skin.c_str()) != 0)) {
+    if ((strcmp(path, this->_skin.c_str()) != 0) || this->isRequestRetry) {
         this->_skin = path;
         loadTexture(_skin.c_str(), "cocos/avatar/default_avatar.png");
     }

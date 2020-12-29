@@ -25,7 +25,7 @@
 
 cmake_minimum_required(VERSION 3.6)
 
-set(APP_NAME kkcocos2dx-sdk)
+set(APP_NAME ccgameroom-sdk)
 
 project(${APP_NAME})
 
@@ -52,7 +52,6 @@ list(APPEND GAME_SOURCE
         Classes/AudioManager.cpp
         Classes/Config.cpp
         Classes/Wrapper.cpp
-        Classes/Avatar/AvatarManager.cpp
         Classes/Utils.cpp
         Classes/CCBaseSprite.cpp
         Classes/CCRoomScene.cpp
@@ -60,6 +59,7 @@ list(APPEND GAME_SOURCE
         Classes/CCGameAvatar.cpp
         Classes/CCGameStep.cpp
         Classes/CCRoomDelegate.cpp
+        Classes/CCImageLoader.cpp
      )
 list(APPEND GAME_HEADER
         Classes/AppDelegate.h
@@ -67,7 +67,6 @@ list(APPEND GAME_HEADER
         Classes/AudioManager.h
         Classes/Config.h
         Classes/Wrapper.h
-        Classes/Avatar/AvatarManager.h
         Classes/Utils.h
         Classes/CCBaseSprite.h
         Classes/CCRoomScene.h
@@ -75,6 +74,7 @@ list(APPEND GAME_HEADER
         Classes/CCGameAvatar.h
         Classes/CCGameStep.h
         Classes/CCRoomDelegate.h
+        Classes/CCImageLoader.h
      )
 
 if(ANDROID)

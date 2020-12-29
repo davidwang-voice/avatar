@@ -14,6 +14,12 @@ CCBaseSprite *CCBaseSprite::create(int priority, int id, int ranking) {
     return avatar;
 }
 
+CCBaseSprite::~CCBaseSprite() {
+    removeAllChildrenWithCleanup(true);
+    CC_SAFE_RELEASE(_imageLoader);
+    log("base sprite del alloc. ranking=%d", _ranking);
+}
+
 void CCBaseSprite::onEnter() {
     Sprite::onEnter();
 
@@ -82,7 +88,6 @@ void CCBaseSprite::loadTexture(const char *name, const char *def) {
     std::string _file_path("");
     getGameResourcePath(_file_path, name);
 
-    log("request start - resource _file_path: %s", _file_path.c_str());
     if (FileUtils::sharedFileUtils()->isFileExist(_file_path)) {
         setTexture(_file_path);
     } else {
@@ -99,17 +104,30 @@ void CCBaseSprite::loadTexture(const char *name, const char *def) {
 
 void CCBaseSprite::sendResourceRequest(const char *url, const char *tag) {
     log("request start - resource url: %s , tag: %s", url, tag);
-    HttpRequest* _request = new (std::nothrow) HttpRequest();
-    _request->setUrl(url);
-    _request->setRequestType(HttpRequest::Type::GET);
-    _request->setResponseCallback(CC_CALLBACK_2(CCBaseSprite::onRequestCompleted, this));
-    _request->setTag(tag);
-    HttpClient::getInstance()->setTimeoutForConnect(30);
-    HttpClient::getInstance()->sendImmediate(_request);
-    _request->release();
+
+    if (nullptr == _imageLoader) {
+        _imageLoader = new CCImageLoader();
+    }
+    _imageLoader->sendRequest(this, url, tag);
+    this->isRequestRetry = false;
+
+//    try {
+//        HttpRequest* _request = new (std::nothrow) HttpRequest();
+//        _request->setUrl(url);
+//        _request->setRequestType(HttpRequest::Type::GET);
+//        this->retain();
+//        _request->setResponseCallback(CC_CALLBACK_2(CCBaseSprite::onRequestCompleted, this));
+//        _request->setTag(tag);
+//        HttpClient::getInstance()->setTimeoutForConnect(30);
+//        HttpClient::getInstance()->sendImmediate(_request);
+//        _request->release();
+//    } catch(...) {
+//        log("sendResourceRequest error");
+//    }
 }
 
 void CCBaseSprite::onRequestCompleted(HttpClient *sender, HttpResponse *response) {
+
     if (!response) {
         log("request completed - No Response");
         return;
@@ -155,3 +173,4 @@ void CCBaseSprite::onRequestCompleted(HttpClient *sender, HttpResponse *response
         log("request completed - save to local error: %s", _file_path.c_str());
     }
 }
+

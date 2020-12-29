@@ -23,7 +23,7 @@ private:
     static const std::string _BG_SR_RANK_LABEL_PNG;
     static const std::string _BG_SR_RANK_NAME_PNG;
 
-    static const unsigned int _FRONT_COLUMN_COUNT = 13;
+    static const unsigned int _FRONT_COLUMN_COUNT = 11;
 
     static const unsigned int _TAG_JUMP_TO_ACTION = 1001;
     static const unsigned int _TAG_MOVE_TO_ACTION = 1002;
@@ -40,9 +40,9 @@ private:
 
 
     static const unsigned int _NAME_LABEL_MAX_WIDTH = 240;
-    static const unsigned int _LABEL_HEIGHT_DEFAULT = 100;
-    static const unsigned int _CONTENT_SIZE_WIDTH = 90;
-    static const unsigned int _CONTENT_SIZE_HEIGHT = 150;
+    static const unsigned int _LABEL_HEIGHT_DEFAULT = 120;
+    static const unsigned int _CONTENT_SIZE_WIDTH = 135;
+    static const unsigned int _CONTENT_SIZE_HEIGHT = 135;
 
     static const unsigned int _CHAT_POP_BUBBLE_WIDTH = 200;
     static const unsigned int _CHAT_LOCAL_Z_ORDER_BASE = 200;
@@ -58,10 +58,10 @@ private:
     bool _loaded;
     float _target_x;
     float _target_y;
-    unsigned int _real_local_z_order;
     unsigned int _self_chat_bubble_count;
     float _scale_factor;
     Sprite *_inner_sprite;
+
 
 
     void initAvatar();
@@ -79,8 +79,9 @@ protected:
             , _name(move(name)) {}
 
 public:
-    virtual ~CCGameAvatar() = default;
+    virtual ~CCGameAvatar();
     bool isOnStage = false;
+    unsigned int _real_local_z_order;
     //for stage.
     unsigned int stageIndex = 0;
 
@@ -107,6 +108,5 @@ public:
     void setUid(const char* uid);
     const char* getUid();
 };
-
 
 #endif //__VOICE_ROOM_AVATAR_H_
