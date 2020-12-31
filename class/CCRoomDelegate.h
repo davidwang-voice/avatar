@@ -49,7 +49,7 @@ private:
     static const int _SELF_GROUND_BOTTOM = 100;
 
     static const int _STAND_ARC_HEIGHT = 66;
-    static const int _STAND_MAX_ROW_COUNT = 8;
+    static const int _STAND_MAX_ROW_COUNT = 6;
     static const int _STAND_ROW_HEIGHT = 135;
     static const int _STAND_FRONT_ROW_HEIGHT = 165;
     static const int _STAND_FRONT_ROW_TOP = 1120;
@@ -87,6 +87,9 @@ private:
     map<std::string, unsigned int> _randomWheres;
     std::string _bgCache;
     std::string _selfCache;
+
+    std::vector<std::string> _targetCache;
+
     std::string _heapCache;
     std::string _standCache;
     std::string _stageCache;
@@ -116,6 +119,9 @@ private:
     void reorganizeStandAvatars();
     void reorganizeSelfAvatar();
 
+    void refreshTargetAvatar(const char* json);
+    void tryRefreshCacheAvatar();
+
     void createAndPresentGift(const Vec2& pos, const char* url);
     void tryPresentCacheGift();
     void limitGiftHolderSize();
@@ -129,6 +135,8 @@ public:
     void setStageBackground(const char* url);
     void setupStageGiftHeap(const char* json);
     void updateSelfAvatar(const char* json);
+    void updateTargetAvatar(const char* json);
+
     void updateStageAvatars(const char* json);
     void updateStandAvatars(const char* json);
     void backOffStageAvatar(const char* uid);

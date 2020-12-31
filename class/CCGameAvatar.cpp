@@ -163,10 +163,12 @@ void CCGameAvatar::initAvatar() {
     _loaded = false;
     _target_x = 0.0;
     _target_y = 0.0;
-    _offline = 0;
     _rare = 0;
     _self_chat_bubble_count = 0;
     _real_local_z_order = 0;
+    offline = 0;
+    realRanking = false;
+
     isRequestRetry = false;
 }
 
@@ -227,6 +229,7 @@ void CCGameAvatar::onTouchEnded(Touch *touch, Event *event) {
 }
 
 void CCGameAvatar::updateRank(int rank) {
+    this->realRanking = rank;
     unsigned int _column = _FRONT_COLUMN_COUNT;
 
     unsigned int _new_local_z_order = rank;
@@ -240,9 +243,10 @@ void CCGameAvatar::updateRank(int rank) {
     if (this->getLocalZOrder() < _CHAT_LOCAL_Z_ORDER_BASE)
         this->setLocalZOrder(_new_local_z_order);
 
-    if (_new_local_z_order == this->_real_local_z_order)
+    if ((_new_local_z_order == this->_real_local_z_order) && (this->_last_rare == this->_rare))
         return;
 
+    this->_last_rare = this->_rare;
     this->_real_local_z_order = _new_local_z_order;
 
     auto _rank_label = dynamic_cast<Label*>(this->getChildByTag(_TAG_RANK_LABEL));
@@ -313,7 +317,7 @@ void CCGameAvatar::updateElement(const char *name, const char *path, int rare, i
 
 
     this->_rare = rare;
-    this->_offline = offline;
+    this->offline = offline;
 
     bool _is_sr = rare == 3;
     bool _is_guard = guard == 1;
@@ -766,7 +770,7 @@ void CCGameAvatar::runSnoreAnim() {
     log("run snore anim, id: %s", _uid.c_str());
     auto _child = this->getChildByTag(_TAG_SNORE_ANIM);
     if (auto _snore_anim = dynamic_cast<Sprite *>(_child)) {
-        if (this->_offline != 1) return;
+        if (this->offline != 1) return;
         _snore_anim->setVisible(true);
 
         auto _anim_action = _snore_anim->getActionByTag(_TAG_SNORE_ANIM_ACTION);

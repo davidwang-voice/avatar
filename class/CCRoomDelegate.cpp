@@ -77,24 +77,37 @@ void CCRoomDelegate::resumeFromCache() {
     if (!_bgCache.empty()) {
         string json(_bgCache.c_str());
         setStageBackground(json.c_str());
+        log("resumeFromCache->setStageBackground");
     }
     if (!_heapCache.empty()) {
         string json(_heapCache.c_str());
         setupStageGiftHeap(json.c_str());
+        log("resumeFromCache->setupStageGiftHeap");
     }
     if (!_selfCache.empty()) {
         string json(_selfCache.c_str());
         updateSelfAvatar(json.c_str());
+        log("resumeFromCache->updateSelfAvatar");
     }
     if (!_standCache.empty()) {
         string json(_standCache.c_str());
         updateStandAvatars(json.c_str());
+        log("resumeFromCache->updateStandAvatars");
     }
     if (!_stageCache.empty()) {
         string json(_stageCache.c_str());
         updateStageAvatars(json.c_str());
+        log("resumeFromCache->updateStageAvatars");
     }
-    tryPresentCacheGift();
+    if (!_giftCache.empty()) {
+        tryPresentCacheGift();
+        log("resumeFromCache->tryPresentCacheGift");
+    }
+
+    if (!_targetCache.empty()) {
+        tryRefreshCacheAvatar();
+        log("resumeFromCache->tryRefreshCacheAvatar");
+    }
 }
 
 void CCRoomDelegate::setStageBackground(const char *url) {
@@ -181,12 +194,6 @@ void CCRoomDelegate::updateSelfAvatar(const char *json) {
         return;
     }
     _selfCache.clear();
-    if (_scene) {
-        auto _child = _scene->getChildByTag(_TAG_SELF_AVATAR);
-        if (_child) {
-            _child->removeFromParent();
-        }
-    }
 
     rapidjson::Document _document;
     _document.Parse<rapidjson::kParseDefaultFlags>(json);
@@ -207,19 +214,28 @@ void CCRoomDelegate::updateSelfAvatar(const char *json) {
     int _guard = cocostudio::DICTOOL->getIntValue_json(_value, "guard");
 
 
-    auto _self_avatar = CCGameAvatar::create(_RANK_SELF_DEFAULT, _RANK_SELF_DEFAULT, _uid, _url, _name);
+    CCGameAvatar* _self_avatar = nullptr;
+
+    if (_scene) {
+        auto _child = _scene->getChildByTag(_TAG_SELF_AVATAR);
+        _self_avatar = dynamic_cast<CCGameAvatar*>(_child);
+    }
+
+    if (nullptr == _self_avatar) {
+        _self_avatar = CCGameAvatar::create(_RANK_SELF_DEFAULT, _RANK_SELF_DEFAULT, _uid, _url, _name);
+
+        auto _self_position = this->getSelfPosition();
+        _self_avatar->setPosition(Vec2(_visibleOrigin.x - _self_avatar->getContentSize().width, _self_position.y));
+        if (_scene) {
+            _scene->addChild(_self_avatar, _RANK_SELF_DEFAULT, _TAG_SELF_AVATAR);
+        }
+        _self_avatar->jumpToPosition(_self_position);
+    }
 
     _self_avatar->setUid(_uid);
     _self_avatar->updateElement(_name, _url, _rare, _guard);
     _self_avatar->updateRank(_RANK_SELF_DEFAULT);
 
-    auto _self_position = this->getSelfPosition();
-    _self_avatar->setPosition(Vec2(_visibleOrigin.x - _self_avatar->getContentSize().width, _self_position.y));
-
-    if (_scene) {
-        _scene->addChild(_self_avatar, _RANK_SELF_DEFAULT, _TAG_SELF_AVATAR);
-    }
-    _self_avatar->jumpToPosition(_self_position);
 
     if (_scene) {
         auto _child = _scene->getChildByTag(_TAG_SELF_APERTURE);
@@ -236,6 +252,17 @@ void CCRoomDelegate::updateSelfAvatar(const char *json) {
             _child->setPosition(_position);
         }
     }
+}
+
+void CCRoomDelegate::updateTargetAvatar(const char *json) {
+    if (isInBackgroundState("updateTargetAvatar")) {
+        if (_targetCache.size() > 10) {
+            _targetCache.erase(_targetCache.begin());
+        }
+        _targetCache.push_back(json);
+        return;
+    }
+    refreshTargetAvatar(json);
 }
 
 void CCRoomDelegate::updateStageAvatars(const char* json) {
@@ -405,6 +432,10 @@ void CCRoomDelegate::receiveGiftMessage(const char* uid, const char* url) {
     if (_uid_str.empty()) return;
 
     if (isInBackgroundState("receiveGiftMessage")) {
+        if (_giftCache.size() > _GIFT_HOLDER_SIZE * 2) {
+            _giftCache.erase(_giftCache.begin());
+        }
+
         _giftCache.push_back(url);
         return;
     }
@@ -715,26 +746,6 @@ void CCRoomDelegate::tryPresentCacheGift() {
     }
     _giftCache.clear();
     limitGiftHolderSize();
-
-
-//    int _length = _giftHolder.size();
-//    if (_length > 2 * _GIFT_HOLDER_SIZE) {
-//        unsigned int _remove_size = _length - _GIFT_HOLDER_SIZE;
-//        auto _removeList = Vector<CCGameGift*>(_remove_size);
-//        for (int i = 0; i < _remove_size; ++i) {
-//            _removeList.pushBack(_giftHolder.at(i));
-//        }
-//
-//        for (int i = 0; i < _remove_size; ++i) {
-//            auto _gift = dynamic_cast<CCGameGift *>(_removeList.at(i));
-//            if (_gift) {
-//                _gift->removeFromParentAndCleanup(true);
-//                _giftHolder.eraseObject(_gift);
-//            }
-//        }
-//
-//        _removeList.clear();
-//    }
 }
 
 
@@ -766,6 +777,42 @@ void CCRoomDelegate::limitGiftHolderSize() {
         }
         _removeList.clear();
     }
+}
+
+void CCRoomDelegate::refreshTargetAvatar(const char *json) {
+    rapidjson::Document _document;
+    _document.Parse<rapidjson::kParseDefaultFlags>(json);
+    if (_document.HasParseError()) {
+        log("parse target avatar json error %d\n", _document.GetParseError());
+        return;
+    }
+    if (!_document.IsObject()) {
+        log("target json is not object %s\n", json);
+        return;
+    }
+    rapidjson::Value& _value = _document;
+    const char *_url = cocostudio::DICTOOL->getStringValue_json(_value, "url");
+    const char *_uid = cocostudio::DICTOOL->getStringValue_json(_value, "uid");
+    const char *_name = cocostudio::DICTOOL->getStringValue_json(_value, "name");
+
+    int _rare = cocostudio::DICTOOL->getIntValue_json(_value, "rare");
+    int _guard = cocostudio::DICTOOL->getIntValue_json(_value, "guard");
+
+
+    auto _target_avatar = findAvatar(_uid);
+    if (_target_avatar) {
+        _target_avatar->updateElement(_name, _url, _rare, _guard, _target_avatar->offline);
+        _target_avatar->updateRank(_target_avatar->realRanking);
+    }
+}
+
+void CCRoomDelegate::tryRefreshCacheAvatar() {
+
+    for (int i = 0; i < _targetCache.size(); ++i) {
+        string json = _targetCache.at(i);
+        refreshTargetAvatar(json.c_str());
+    }
+    _targetCache.clear();
 }
 
 void CCRoomDelegate::reorganizeStageAvatars() {

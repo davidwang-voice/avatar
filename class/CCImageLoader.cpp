@@ -29,7 +29,6 @@ void CCImageLoader::sendRequest(Sprite* sprite, string url, string tag)
     _request->release();
 
     _imageSprite = sprite;
-    log("request completed - sprite ref count:%d", _imageSprite->getReferenceCount());
     CC_SAFE_RETAIN(sprite);
 }
 

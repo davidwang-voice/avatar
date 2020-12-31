@@ -135,6 +135,11 @@ public class CCGameRoomImpl implements CCGameRoomView {
     }
 
     @Override
+    public void setTargetAvatar(String json) {
+        runOnGLThread(() -> gameRoomJNI.updateTargetAvatar(json));
+    }
+
+    @Override
     public void presentGift(String userId, String url) {
         runOnGLThread(() -> gameRoomJNI.receiveGiftMessage(userId, url));
     }

@@ -51,6 +51,10 @@ extern "C" {
                                                                           jstring json) {
         CCRoomDelegate::getInstance()->updateSelfAvatar(jstringToChar(env, json));
     }
+    JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_updateTargetAvatar(JNIEnv *env, jobject thiz,
+                                                                        jstring json) {
+        CCRoomDelegate::getInstance()->updateTargetAvatar(jstringToChar(env, json));
+    }
 
     JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_updateStageAvatars(JNIEnv *env, jobject thiz,
                                                                                                    jstring json) {

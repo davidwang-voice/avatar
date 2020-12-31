@@ -85,9 +85,15 @@ public class CCGameRoomJNI {
 
     /**
      * 当前用户更新avatar形象
-     * @param json = "{"uid": "100001", "name": "david", "url": "xxx.png", "rare": 1, "guard": 1, "offline": 1}"
+     * @param json = "{"uid": "100001", "name": "david", "url": "xxx.png", "rare": 1, "guard": 1}"
      */
     public native void updateSelfAvatar(String json);
+
+    /**
+     * 指定用户更新avatar形象
+     * @param json = "{"uid": "100001", "name": "david", "url": "xxx.png", "rare": 1, "guard": 1}"
+     */
+    public native void updateTargetAvatar(String json);
 
     /**
      * 更新连麦舞台所有avatar形象
@@ -97,7 +103,7 @@ public class CCGameRoomJNI {
 
     /**
      * 更新普通站台所有avatar形象
-     * @param json = "[{"uid":"100001", "name": "david", "url": "xxx.png", "rare": 1, "guard": 1, "offline": 1}, ...]"
+     * @param json = "[{"uid":"100001", "name": "david", "url": "xxx.png", "rare": 1, "guard": 1}, ...]"
      */
     public native void updateStandAvatars(String json);
 
