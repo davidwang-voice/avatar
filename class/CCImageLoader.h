@@ -21,10 +21,15 @@ public:
     ~CCImageLoader(void);
 //    CC_SYNTHESIZE(Sprite*, _imageSprite, ImageSprite);
 
-    void sendRequest(Sprite* sprite, string url, string tag);
+    void sendRequest(Sprite* sprite, string url);
+
+    // Static Methods
+    static CCImageLoader *getInstance();
+    static void destroyInstance();
 
 private:
-    Sprite* _imageSprite;
+    map<std::string, Vector<Sprite*>> _imageMap;
+    void releaseImageWithRetry(const char* url, bool retry);
     void onHttpRequestCompleted(HttpClient* sender,HttpResponse* response);
 };
 

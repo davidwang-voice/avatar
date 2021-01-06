@@ -16,7 +16,6 @@ CCBaseSprite *CCBaseSprite::create(int priority, int id, int ranking) {
 
 CCBaseSprite::~CCBaseSprite() {
     removeAllChildrenWithCleanup(true);
-    CC_SAFE_RELEASE(_imageLoader);
     log("base sprite del alloc. ranking=%d", _ranking);
 }
 
@@ -104,26 +103,8 @@ void CCBaseSprite::loadTexture(const char *name, const char *def) {
 
 void CCBaseSprite::sendResourceRequest(const char *url, const char *tag) {
     log("request start - resource url: %s , tag: %s", url, tag);
-
-    if (nullptr == _imageLoader) {
-        _imageLoader = new CCImageLoader();
-    }
-    _imageLoader->sendRequest(this, url, tag);
+    CCImageLoader::getInstance()->sendRequest(this, url);
     this->isRequestRetry = false;
-
-//    try {
-//        HttpRequest* _request = new (std::nothrow) HttpRequest();
-//        _request->setUrl(url);
-//        _request->setRequestType(HttpRequest::Type::GET);
-//        this->retain();
-//        _request->setResponseCallback(CC_CALLBACK_2(CCBaseSprite::onRequestCompleted, this));
-//        _request->setTag(tag);
-//        HttpClient::getInstance()->setTimeoutForConnect(30);
-//        HttpClient::getInstance()->sendImmediate(_request);
-//        _request->release();
-//    } catch(...) {
-//        log("sendResourceRequest error");
-//    }
 }
 
 void CCBaseSprite::onRequestCompleted(HttpClient *sender, HttpResponse *response) {

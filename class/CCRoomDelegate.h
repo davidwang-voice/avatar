@@ -50,8 +50,9 @@ private:
 
     static const int _STAND_ARC_HEIGHT = 66;
     static const int _STAND_MAX_ROW_COUNT = 6;
+    static const int _STAND_MAX_COLUMN_COUNT = 11;
     static const int _STAND_ROW_HEIGHT = 135;
-    static const int _STAND_FRONT_ROW_HEIGHT = 165;
+    static const int _STAND_FRONT_ROW_HEIGHT = 250;
     static const int _STAND_FRONT_ROW_TOP = 1120;
 
     static const int _STAGE_BLOCK_COUNT = 3;

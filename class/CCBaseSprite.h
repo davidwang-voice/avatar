@@ -16,9 +16,6 @@ using namespace cocos2d::network;
 
 class CCBaseSprite : public Sprite {
 private:
-
-    CCImageLoader* _imageLoader = nullptr;
-
     void sendResourceRequest(const char* url, const char* tag);
     void onRequestCompleted(HttpClient *sender, HttpResponse *response);
 

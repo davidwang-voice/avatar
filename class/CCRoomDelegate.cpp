@@ -51,9 +51,9 @@ void CCRoomDelegate::init(Scene* scene) {
 
     for (int i = 0; i < _STAND_MAX_ROW_COUNT; ++i) {
         if (i == 0) {
-            _standRowCount[0] = 11;
+            _standRowCount[0] = _STAND_MAX_COLUMN_COUNT;
         } else {
-            _standRowCount[i] = _standRowCount[i - 1] + 11;
+            _standRowCount[i] = _standRowCount[i - 1] + _STAND_MAX_COLUMN_COUNT;
         }
     }
 }
@@ -65,7 +65,7 @@ void CCRoomDelegate::ensureStageSteps() {
             auto _stage_pos = this->getStepPosition(i);
             _stage_step->setPosition(Vec2(_stage_pos.x, _stage_pos.y));
             if (_scene) {
-                _scene->addChild(_stage_step);
+                _scene->addChild(_stage_step, 1);
             }
             _stageSteps.pushBack(_stage_step);
         }
@@ -525,6 +525,11 @@ void CCRoomDelegate::releaseResource() {
         _scene->removeAllChildren();
     }
     releaseGLProgramState();
+
+
+    Director::getInstance()->purgeCachedData();
+    Director::getInstance()->purgeDirector();
+    CCImageLoader::getInstance()->destroyInstance();
 }
 
 
@@ -828,12 +833,24 @@ void CCRoomDelegate::reorganizeStageAvatars() {
 }
 
 void CCRoomDelegate::reorganizeStandAvatars() {
+    unsigned int _index_offset = 0;
     for (int i = 0; i < _standAvatars.size(); ++i) {
-        auto _position = this->getStandPosition(i);
-        if (_position.isZero()) continue;
         auto _stand_avatar = _standAvatars.at(i);
+        int _index_real = i;
+        if (_stand_avatar->offline == 1 && _index_offset == 0) {
+            if (_index_real < _STAND_MAX_COLUMN_COUNT) {
+                _index_offset = _STAND_MAX_COLUMN_COUNT - _index_real;
+            }
+        }
+
+        if (_index_offset > 0) {
+            _index_real = _index_real + _index_offset;
+        }
+        auto _position = this->getStandPosition(_index_real);
+        if (_position.isZero()) continue;
+
         log("stand user tag:%d", _stand_avatar->getTag());
-        _stand_avatar->updateRank(_RANK_STAND_DEFAULT + i);
+        _stand_avatar->updateRank(_index_real + _RANK_STAND_DEFAULT);
         _stand_avatar->jumpToPosition(_position);
         _stand_avatar->isOnStage = false;
     }
@@ -848,6 +865,7 @@ void CCRoomDelegate::reorganizeSelfAvatar() {
             if (!_standAvatars.contains(_self_avatar) && !_stageAvatars.contains(_self_avatar)) {
                 auto _position = this->getSelfPosition();
                 _self_avatar->updateRank(_RANK_SELF_DEFAULT);
+                _self_avatar->setOffline(0);
                 _self_avatar->jumpToPosition(_position);
                 _self_avatar->isOnStage = false;
             }

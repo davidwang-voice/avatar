@@ -35,6 +35,7 @@ public class CCGameRoomImpl implements CCGameRoomView {
 
     private boolean hasFocus = false;
     private boolean gainAudioFocus = false;
+    private boolean isPaused = false;
 
 
     public CCGameRoomImpl(Context context, FrameLayout parent) {
@@ -96,6 +97,7 @@ public class CCGameRoomImpl implements CCGameRoomView {
 
     @Override
     public void resume() {
+        isPaused = false;
         if(gainAudioFocus)
             Cocos2dxAudioFocusManager.registerAudioFocusListener(context);
         resumeIfHasFocus();
@@ -104,6 +106,7 @@ public class CCGameRoomImpl implements CCGameRoomView {
 
     @Override
     public void pause() {
+        isPaused = true;
         if(gainAudioFocus)
             Cocos2dxAudioFocusManager.unregisterAudioFocusListener(context);
         Cocos2dxHelper.onPause();
@@ -184,7 +187,7 @@ public class CCGameRoomImpl implements CCGameRoomView {
         //even though it is locked or asleep
         boolean readyToPlay = !isDeviceLocked(context) && !isDeviceAsleep(context);
 
-        if(hasFocus && readyToPlay) {
+        if(hasFocus && readyToPlay && !isPaused) {
             Cocos2dxHelper.onResume();
             glSurfaceView.onResume();
         }

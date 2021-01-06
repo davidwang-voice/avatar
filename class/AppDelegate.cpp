@@ -100,7 +100,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
 
     if (!glview) {
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32) || (CC_TARGET_PLATFORM == CC_PLATFORM_MAC) || (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX)
-        glview = GLViewImpl::createWithRect("libkkcocos2dx", cocos2d::Rect(0, 0, designResolutionSize.width, designResolutionSize.height));
+        glview = GLViewImpl::createWithRect("ccgameroom", cocos2d::Rect(0, 0, designResolutionSize.width, designResolutionSize.height));
 #else
         glview = GLViewImpl::create("ccgameroom");
 #endif
@@ -158,7 +158,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
     scene->setAnchorPoint(Point::ANCHOR_MIDDLE_TOP);
 //    scene->setScale(screenSize.width / designResolutionSize.width);
     // run
-    director->runWithScene(scene);
+    director->replaceScene(scene);
 
     return true;
 }

@@ -41,6 +41,7 @@ CCGameAvatar *CCGameAvatar::create(int id, int ranking, string uid, string skin,
 }
 
 CCGameAvatar::~CCGameAvatar() {
+    log("game avatar del alloc. uid=%s", _uid.c_str());
 }
 
 void CCGameAvatar::setTexture(const std::string &filename) {
@@ -51,6 +52,8 @@ void CCGameAvatar::setTexture(const std::string &filename) {
             float _width_ratio = this->_inner_sprite->getContentSize().width / getContentSize().width;
             float _height_ratio = this->_inner_sprite->getContentSize().height / getContentSize().height;
             this->_inner_sprite->setScale(1 / MAX(_width_ratio, _height_ratio));
+        } else {
+            this->_inner_sprite->setScale(1);
         }
     }
 }
@@ -405,10 +408,22 @@ void CCGameAvatar::updateElement(const char *name, const char *path, int rare, i
             _ssr_marker->setGLProgramState(glProgramState);
         }
     }
+}
 
-
-
-
+void CCGameAvatar::setOffline(unsigned int offline) {
+    if (this->offline != offline) {
+        this->offline = offline;
+        auto _ssr_marker = dynamic_cast<Sprite*>(this->getChildByTag(_TAG_SSR_MARKER));
+        cocos2d::GLProgramState* glProgramState = offline == 1 ? getDarkGLProgramState() : getLightGLProgramState();
+        if (nullptr != glProgramState) {
+            if (this->_inner_sprite) {
+                this->_inner_sprite->setGLProgramState(glProgramState);
+            }
+            if (_ssr_marker) {
+                _ssr_marker->setGLProgramState(glProgramState);
+            }
+        }
+    }
 }
 
 void CCGameAvatar::setUid(const char *uid) {

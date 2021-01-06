@@ -107,6 +107,7 @@ public:
     void popChatBubble(const char* content);
     void runSnoreAnim();
 
+    void setOffline(unsigned int offline);
     void setUid(const char* uid);
     const char* getUid();
 };
