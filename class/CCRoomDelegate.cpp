@@ -38,8 +38,13 @@ CCRoomDelegate::~CCRoomDelegate() {
     _standAvatars.clear();
     _stageAvatars.clear();
 }
+void CCRoomDelegate::init() {
+    this->_is_released = false;
+    this->_is_bg_init = false;
+    log("delegate:init room delegate.");
+}
 
-void CCRoomDelegate::init(Scene* scene) {
+void CCRoomDelegate::attachScene(Scene* scene) {
     this->_scene = scene;
     this->_visibleOrigin = Director::getInstance()->getVisibleOrigin();
     this->_visibleSize = Director::getInstance()->getVisibleSize();
@@ -73,49 +78,51 @@ void CCRoomDelegate::ensureStageSteps() {
 }
 
 void CCRoomDelegate::resumeFromCache() {
-
-    if (!_bgCache.empty()) {
+    if (!_bgCache.empty() || !_is_bg_init) {
         string json(_bgCache.c_str());
         setStageBackground(json.c_str());
-        log("resumeFromCache->setStageBackground");
+        log("delegate:resumeFromCache->setStageBackground");
     }
     if (!_heapCache.empty()) {
         string json(_heapCache.c_str());
         setupStageGiftHeap(json.c_str());
-        log("resumeFromCache->setupStageGiftHeap");
+        log("delegate:resumeFromCache->setupStageGiftHeap");
     }
     if (!_selfCache.empty()) {
         string json(_selfCache.c_str());
         updateSelfAvatar(json.c_str());
-        log("resumeFromCache->updateSelfAvatar");
+        log("delegate:resumeFromCache->updateSelfAvatar");
     }
     if (!_standCache.empty()) {
         string json(_standCache.c_str());
         updateStandAvatars(json.c_str());
-        log("resumeFromCache->updateStandAvatars");
+        log("delegate:resumeFromCache->updateStandAvatars");
     }
     if (!_stageCache.empty()) {
         string json(_stageCache.c_str());
         updateStageAvatars(json.c_str());
-        log("resumeFromCache->updateStageAvatars");
+        log("delegate:resumeFromCache->updateStageAvatars");
     }
     if (!_giftCache.empty()) {
         tryPresentCacheGift();
-        log("resumeFromCache->tryPresentCacheGift");
+        log("delegate:resumeFromCache->tryPresentCacheGift");
     }
 
     if (!_targetCache.empty()) {
         tryRefreshCacheAvatar();
-        log("resumeFromCache->tryRefreshCacheAvatar");
+        log("delegate:resumeFromCache->tryRefreshCacheAvatar");
     }
 }
 
 void CCRoomDelegate::setStageBackground(const char *url) {
+    if (isApplicationReleased("setStageBackground")) return;
     if (isInBackgroundState("setStageBackground")) {
         _bgCache = url;
         return;
     }
     _bgCache.clear();
+
+    log("delegate:setStageBackground url:%s", url);
 
     if (_scene) {
         auto _child = _scene->getChildByTag(_TAG_STAGE_BACKGROUND);
@@ -133,18 +140,13 @@ void CCRoomDelegate::setStageBackground(const char *url) {
     if (_scene) {
         _scene->addChild(_stage_background, 0, _TAG_STAGE_BACKGROUND);
     }
+    _is_bg_init = true;
 
     ensureStageSteps();
 }
 
 void CCRoomDelegate::setupStageGiftHeap(const char *json) {
-//    for (int i = 0; i < _giftHolder.size(); ++i) {
-//        auto _gift = dynamic_cast<CCGameGift*>(_giftHolder.at(i));
-//        _gift->removeFromParentAndCleanup(true);
-//    }
-//
-//    _giftHolder.clear();
-//
+    if (isApplicationReleased("setupStageGiftHeap")) return;
     if (isInBackgroundState("setupStageGiftHeap")) {
         _heapCache = json;
         return;
@@ -189,6 +191,7 @@ void CCRoomDelegate::setupStageGiftHeap(const char *json) {
 }
 
 void CCRoomDelegate::updateSelfAvatar(const char *json) {
+    if (isApplicationReleased("updateSelfAvatar")) return;
     if (isInBackgroundState("updateSelfAvatar")) {
         _selfCache = json;
         return;
@@ -255,6 +258,7 @@ void CCRoomDelegate::updateSelfAvatar(const char *json) {
 }
 
 void CCRoomDelegate::updateTargetAvatar(const char *json) {
+    if (isApplicationReleased("updateTargetAvatar")) return;
     if (isInBackgroundState("updateTargetAvatar")) {
         if (_targetCache.size() > 10) {
             _targetCache.erase(_targetCache.begin());
@@ -266,7 +270,7 @@ void CCRoomDelegate::updateTargetAvatar(const char *json) {
 }
 
 void CCRoomDelegate::updateStageAvatars(const char* json) {
-
+    if (isApplicationReleased("updateStageAvatars")) return;
     if (isInBackgroundState("updateStageAvatars")) {
         _stageCache = json;
         return;
@@ -351,6 +355,7 @@ void CCRoomDelegate::updateStageAvatars(const char* json) {
 }
 
 void CCRoomDelegate::updateStandAvatars(const char* json) {
+    if (isApplicationReleased("updateStandAvatars")) return;
     if (isInBackgroundState("updateStandAvatars")) {
         _standCache = json;
         return;
@@ -431,6 +436,7 @@ void CCRoomDelegate::receiveGiftMessage(const char* uid, const char* url) {
     std::string _uid_str(uid);
     if (_uid_str.empty()) return;
 
+    if (isApplicationReleased("receiveGiftMessage")) return;
     if (isInBackgroundState("receiveGiftMessage")) {
         if (_giftCache.size() > _GIFT_HOLDER_SIZE * 2) {
             _giftCache.erase(_giftCache.begin());
@@ -466,6 +472,7 @@ void CCRoomDelegate::receiveGiftMessage(const char* uid, const char* url) {
 }
 
 void CCRoomDelegate::receiveChatMessage(const char* uid, const char* content) {
+    if (isApplicationReleased("receiveChatMessage")) return;
     if (isInBackgroundState("receiveChatMessage")) return;
     auto _avatar = this->findAvatar(uid);
     if (nullptr == _avatar) return;
@@ -474,8 +481,8 @@ void CCRoomDelegate::receiveChatMessage(const char* uid, const char* content) {
 }
 
 void CCRoomDelegate::receiveVoiceWave(const char *uids) {
+    if (isApplicationReleased("receiveVoiceWave")) return;
     if (isInBackgroundState("receiveVoiceWave")) return;
-    log("receive voice wave uids: %s", uids);
     std::vector<string> _uid_arr;
     std::string _raw = uids, _tmp;
     std::stringstream input(_raw);
@@ -491,8 +498,8 @@ void CCRoomDelegate::receiveVoiceWave(const char *uids) {
 }
 
 void CCRoomDelegate::receiveRandomSnore(const char *uids) {
+    if (isApplicationReleased("receiveRandomSnore")) return;
     if (isInBackgroundState("receiveRandomSnore")) return;
-    log("receive random snore uids: %s", uids);
     std::vector<string> _uid_arr;
     std::string _raw = uids, _tmp;
     std::stringstream input(_raw);
@@ -508,6 +515,9 @@ void CCRoomDelegate::receiveRandomSnore(const char *uids) {
 
 void CCRoomDelegate::releaseResource() {
 
+    _is_released = true;
+    _is_bg_init = false;
+
     _giftHolder.clear();
     _standAvatars.clear();
     _stageAvatars.clear();
@@ -520,6 +530,7 @@ void CCRoomDelegate::releaseResource() {
     _standCache.clear();
     _stageCache.clear();
     _giftCache.clear();
+    _targetCache.clear();
 
     if (_scene) {
         _scene->removeAllChildren();
@@ -849,7 +860,6 @@ void CCRoomDelegate::reorganizeStandAvatars() {
         auto _position = this->getStandPosition(_index_real);
         if (_position.isZero()) continue;
 
-        log("stand user tag:%d", _stand_avatar->getTag());
         _stand_avatar->updateRank(_index_real + _RANK_STAND_DEFAULT);
         _stand_avatar->jumpToPosition(_position);
         _stand_avatar->isOnStage = false;
@@ -885,10 +895,18 @@ void CCRoomDelegate::reorganizeSelfAvatar() {
 
 bool CCRoomDelegate::isInBackgroundState(const char* tag) {
     if (Director::getInstance()->isPaused() || !Director::getInstance()->isValid()) {
-        log("%s ignored, game is in background state!", tag);
+        log("delegate:%s is cached, game is in background state!", tag);
         return true;
     }
 
+    return false;
+}
+
+bool CCRoomDelegate::isApplicationReleased(const char *tag) {
+    if (this->_is_released) {
+        log("delegate:%s is ignored, game is released!", tag);
+        return true;
+    }
     return false;
 }
 

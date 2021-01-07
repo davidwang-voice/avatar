@@ -300,7 +300,6 @@ void CCGameAvatar::updateRank(int rank) {
 
     if (_name_layer) {
         string _origin_name = _name_layer->getName();
-        log("update rank origin_name:%s, new_name:%s", _origin_name.c_str(), _bg_name_label.c_str());
         if ((strcmp(_bg_name_label.c_str(), _origin_name.c_str()) != 0)) {
             Size _origin_size = _name_layer->getContentSize();
             _name_layer->setTexture("cocos/avatar/" + _bg_name_label);

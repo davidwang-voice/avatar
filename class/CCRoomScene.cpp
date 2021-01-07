@@ -50,7 +50,7 @@ bool CCRoomScene::init() {
 
     // avatar
     auto _room_delegate = CCRoomDelegate::getInstance();
-    _room_delegate->init(this);
+    _room_delegate->attachScene(this);
 
     auto size = Director::getInstance()->getOpenGLView()->getFrameSize();
     bool isPortrait = size.width < size.height;
