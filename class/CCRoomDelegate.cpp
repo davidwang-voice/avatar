@@ -38,13 +38,14 @@ CCRoomDelegate::~CCRoomDelegate() {
     _standAvatars.clear();
     _stageAvatars.clear();
 }
+
 void CCRoomDelegate::init() {
     this->_is_released = false;
-    this->_is_bg_init = false;
-    log("delegate:init room delegate.");
+    log("delegate: init.");
 }
 
 void CCRoomDelegate::attachScene(Scene* scene) {
+    log("delegate: attach scene.");
     this->_scene = scene;
     this->_visibleOrigin = Director::getInstance()->getVisibleOrigin();
     this->_visibleSize = Director::getInstance()->getVisibleSize();
@@ -78,7 +79,7 @@ void CCRoomDelegate::ensureStageSteps() {
 }
 
 void CCRoomDelegate::resumeFromCache() {
-    if (!_bgCache.empty() || !_is_bg_init) {
+    if (!_bgCache.empty()) {
         string json(_bgCache.c_str());
         setStageBackground(json.c_str());
         log("delegate:resumeFromCache->setStageBackground");
@@ -118,11 +119,14 @@ void CCRoomDelegate::setStageBackground(const char *url) {
     if (isApplicationReleased("setStageBackground")) return;
     if (isInBackgroundState("setStageBackground")) {
         _bgCache = url;
+
+        if (_bgCache.empty()) {
+            _bgCache = "placeholder";
+        }
+
         return;
     }
     _bgCache.clear();
-
-    log("delegate:setStageBackground url:%s", url);
 
     if (_scene) {
         auto _child = _scene->getChildByTag(_TAG_STAGE_BACKGROUND);
@@ -132,7 +136,12 @@ void CCRoomDelegate::setStageBackground(const char *url) {
     }
 
     auto _stage_background = CCBaseSprite::create();
-    _stage_background->loadTexture(url, "cocos/bg_game_room.png");
+    if (strcmp("placeholder", url) == 0) {
+        _stage_background->loadTexture("", "cocos/bg_game_room.png");
+    } else {
+        _stage_background->loadTexture(url, "cocos/bg_game_room.png");
+    }
+
     float _target_x = _centerPosition.x;
     float _target_y = _centerPosition.y - _stage_background->getContentSize().height / 2;
     _stage_background->setPosition(Vec2(_target_x, _target_y));
@@ -140,7 +149,6 @@ void CCRoomDelegate::setStageBackground(const char *url) {
     if (_scene) {
         _scene->addChild(_stage_background, 0, _TAG_STAGE_BACKGROUND);
     }
-    _is_bg_init = true;
 
     ensureStageSteps();
 }
@@ -516,7 +524,7 @@ void CCRoomDelegate::receiveRandomSnore(const char *uids) {
 void CCRoomDelegate::releaseResource() {
 
     _is_released = true;
-    _is_bg_init = false;
+    _is_launched = false;
 
     _giftHolder.clear();
     _standAvatars.clear();
@@ -894,6 +902,11 @@ void CCRoomDelegate::reorganizeSelfAvatar() {
 }
 
 bool CCRoomDelegate::isInBackgroundState(const char* tag) {
+//    if (!this->_is_launched) {
+//        log("delegate:%s is cached, game is not launch actual!", tag);
+//        return true;
+//    }
+
     if (Director::getInstance()->isPaused() || !Director::getInstance()->isValid()) {
         log("delegate:%s is cached, game is in background state!", tag);
         return true;

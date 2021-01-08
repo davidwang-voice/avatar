@@ -42,6 +42,7 @@ public class CCGameRoomImpl implements CCGameRoomView {
         this.context = context.getApplicationContext();
 
         Cocos2dxHelper.init((Activity) context);
+
         gameRoomJNI.setDesignResolution(1125, 1);
         gLContextAttrs = gameRoomJNI.getGLContextAttrs();
 
@@ -58,9 +59,9 @@ public class CCGameRoomImpl implements CCGameRoomView {
 //        glSurfaceView.setOnTouchDetector(event -> {});
         parent.addView(glSurfaceView, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+        runOnGLThread(() -> gameRoomJNI.init());
 
         Cocos2dxEngineDataManager.init(context.getApplicationContext(), glSurfaceView);
-
     }
 
     @Override
@@ -101,6 +102,9 @@ public class CCGameRoomImpl implements CCGameRoomView {
         if(gainAudioFocus)
             Cocos2dxAudioFocusManager.registerAudioFocusListener(context);
         resumeIfHasFocus();
+//        Cocos2dxHelper.onResume();
+//        glSurfaceView.onResume();
+
         Cocos2dxEngineDataManager.resume();
     }
 

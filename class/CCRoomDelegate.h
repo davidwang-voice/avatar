@@ -73,8 +73,8 @@ private:
     static const int _NONE_SPACE_X = 100;
     static const int _NONE_SPACE_Y = 1600;
 
+    bool _is_launched = false;
     bool _is_released = false;
-    bool _is_bg_init = false;
     Scene* _scene;
     Vec2 _visibleOrigin = Vec2::ZERO;
     CCSize _visibleSize = CCSize::ZERO;

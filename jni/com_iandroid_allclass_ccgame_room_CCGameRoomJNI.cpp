@@ -17,6 +17,10 @@ static const std::string className = "com.iandroid.allclass.ccgame.room.CCGameRo
 using namespace cocos2d;
 
 extern "C" {
+    JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_init(JNIEnv *env, jobject thiz) {
+        CCRoomDelegate::getInstance()->init();
+    }
+
     JNIEXPORT jintArray JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_getGLContextAttrs(JNIEnv *env, jobject thiz) {
         cocos2d::Application::getInstance()->initGLContextAttrs();
         GLContextAttrs _glContextAttrs = GLView::getGLContextAttrs();

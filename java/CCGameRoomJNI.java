@@ -65,6 +65,8 @@ public class CCGameRoomJNI {
             getInstance().getCCListener().onTouchScene();
     }
 
+    public native void init();
+
     public native int[] getGLContextAttrs();
 
     /**

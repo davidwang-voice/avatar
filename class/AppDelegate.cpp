@@ -93,8 +93,6 @@ static int register_all_packages()
 }
 
 bool AppDelegate::applicationDidFinishLaunching() {
-
-    CCRoomDelegate::getInstance()->init();
     // initialize director
     auto director = Director::getInstance();
     auto glview = director->getOpenGLView();
@@ -161,14 +159,14 @@ bool AppDelegate::applicationDidFinishLaunching() {
 //    scene->setScale(screenSize.width / designResolutionSize.width);
     // run
     director->replaceScene(scene);
-
     return true;
 }
 
 // This function will be called when the app is inactive. Note, when receiving a phone call it is invoked.
 void AppDelegate::applicationDidEnterBackground() {
-    Director::getInstance()->stopAnimation();
+    this->_in_background = true;
     log("Screen applicationDidEnterBackground");
+    Director::getInstance()->stopAnimation();
 
 #if USE_AUDIO_ENGINE
     AudioEngine::pauseAll();
@@ -180,9 +178,12 @@ void AppDelegate::applicationDidEnterBackground() {
 
 // this function will be called when the app is active again
 void AppDelegate::applicationWillEnterForeground() {
-    Director::getInstance()->startAnimation();
+    if (!this->_in_background) {
+        return;
+    }
+    this->_in_background = false;
     log("Screen applicationWillEnterForeground");
-
+    Director::getInstance()->startAnimation();
     CCRoomDelegate::getInstance()->resumeFromCache();
 
 #if USE_AUDIO_ENGINE
