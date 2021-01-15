@@ -40,6 +40,7 @@ void CCGameGift::initGift() {
         loadTexture(_skin.c_str());
     }
     setAnchorPoint(Point::ANCHOR_MIDDLE_BOTTOM);
+    setRotation((rand() % (60)) - 30);
 }
 
 void CCGameGift::present(const Vec2 &target) {
@@ -74,7 +75,6 @@ void CCGameGift::present(const Vec2 &target) {
     auto easeOut = CCEaseOut::create(CCBezierTo::create(0.8 , cfg),1.0f);
 
 //    auto rotateBy = RotateBy::create(1, (rand() % (90)) - 45);
-    setRotation((rand() % (60)) - 30);
 
     auto callback = CallFunc::create([&](){
         setLocalZOrder(0);

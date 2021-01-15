@@ -182,6 +182,10 @@ void CCRoomDelegate::setupStageGiftHeap(const char *json) {
         int count = cocostudio::DICTOOL->getIntValue_json(_value, "count");
 
         for (int i = 0; i < count; ++i) {
+            if (_new_game_gifts.size() >= _GIFT_HOLDER_SIZE * 2) {
+                break;
+            }
+
             auto gift = CCGameGift::create(i, i, _url);
             gift->setPosition(getGiftPosition());
 
@@ -189,6 +193,7 @@ void CCRoomDelegate::setupStageGiftHeap(const char *json) {
                 _scene->addChild(gift, 0);
             }
             _new_game_gifts.pushBack(gift);
+
         }
     }
 
@@ -446,7 +451,7 @@ void CCRoomDelegate::receiveGiftMessage(const char* uid, const char* url) {
 
     if (isApplicationReleased("receiveGiftMessage")) return;
     if (isInBackgroundState("receiveGiftMessage")) {
-        if (_giftCache.size() > _GIFT_HOLDER_SIZE * 2) {
+        if (_giftCache.size() >= _GIFT_HOLDER_SIZE * 2) {
             _giftCache.erase(_giftCache.begin());
         }
 
