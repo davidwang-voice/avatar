@@ -128,14 +128,22 @@ void CCRoomDelegate::setStageBackground(const char *url) {
     }
     _bgCache.clear();
 
+
+    CCBaseSprite *_stage_background = nullptr;
     if (_scene) {
         auto _child = _scene->getChildByTag(_TAG_STAGE_BACKGROUND);
-        if (_child) {
-            _child->removeFromParent();
+        _stage_background = dynamic_cast<CCBaseSprite *>(_child);
+
+        if (nullptr == _stage_background) {
+            _stage_background = CCBaseSprite::create();
+            _scene->addChild(_stage_background, 0, _TAG_STAGE_BACKGROUND);
         }
     }
 
-    auto _stage_background = CCBaseSprite::create();
+    if (nullptr == _stage_background) {
+        return;
+    }
+
     if (strcmp("placeholder", url) == 0) {
         _stage_background->loadTexture("", "cocos/bg_game_room.png");
     } else {
@@ -145,10 +153,6 @@ void CCRoomDelegate::setStageBackground(const char *url) {
     float _target_x = _centerPosition.x;
     float _target_y = _centerPosition.y - _stage_background->getContentSize().height / 2;
     _stage_background->setPosition(Vec2(_target_x, _target_y));
-
-    if (_scene) {
-        _scene->addChild(_stage_background, 0, _TAG_STAGE_BACKGROUND);
-    }
 
     ensureStageSteps();
 }
