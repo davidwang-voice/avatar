@@ -43,7 +43,6 @@ void CCImageLoader::sendRequest(Sprite* sprite, string url)
     if (nullptr == sprite || url.empty()) {
         return;
     }
-
     map<std::string, Vector<Sprite*>>::iterator _iterator;
     _iterator = _imageMap.find(url.c_str());
     if (_iterator == _imageMap.end())  {
@@ -109,7 +108,11 @@ void CCImageLoader::onHttpRequestCompleted(HttpClient *sender, HttpResponse *res
                 for (int i = 0; i < _images.size(); ++i) {
                     auto _sprite = _images.at(i);
                     if (_sprite && nullptr != _sprite->getParent()) {
-                        _sprite->setTexture(_file_path);
+                        if (strcmp(_tag, _sprite->getName().c_str()) == 0) {
+                            _sprite->setTexture(_file_path);
+                        } else {
+                            log("request completed - sprite's url is changed!");
+                        }
                     } else {
                         log("request completed - sprite is removed already!");
                     }

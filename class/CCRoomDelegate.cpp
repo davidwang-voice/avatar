@@ -277,7 +277,7 @@ void CCRoomDelegate::updateSelfAvatar(const char *json) {
 void CCRoomDelegate::updateTargetAvatar(const char *json) {
     if (isApplicationReleased("updateTargetAvatar")) return;
     if (isInBackgroundState("updateTargetAvatar")) {
-        if (_targetCache.size() > 10) {
+        if (_targetCache.size() > 20) {
             _targetCache.erase(_targetCache.begin());
         }
         _targetCache.push_back(json);
@@ -813,6 +813,8 @@ void CCRoomDelegate::limitGiftHolderSize() {
 }
 
 void CCRoomDelegate::refreshTargetAvatar(const char *json) {
+    log("delegate:refreshTargetAvatar json:%s", json);
+
     rapidjson::Document _document;
     _document.Parse<rapidjson::kParseDefaultFlags>(json);
     if (_document.HasParseError()) {
@@ -842,8 +844,7 @@ void CCRoomDelegate::refreshTargetAvatar(const char *json) {
 void CCRoomDelegate::tryRefreshCacheAvatar() {
 
     for (int i = 0; i < _targetCache.size(); ++i) {
-        string json = _targetCache.at(i);
-        refreshTargetAvatar(json.c_str());
+        refreshTargetAvatar(_targetCache.at(i).c_str());
     }
     _targetCache.clear();
 }

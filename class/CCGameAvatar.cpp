@@ -780,8 +780,6 @@ const Vec2 CCGameAvatar::roundPoint(const Vec2 &origin) const {
 }
 
 void CCGameAvatar::runSnoreAnim() {
-
-    log("run snore anim, id: %s", _uid.c_str());
     auto _child = this->getChildByTag(_TAG_SNORE_ANIM);
     if (auto _snore_anim = dynamic_cast<Sprite *>(_child)) {
         if (this->offline != 1) return;
