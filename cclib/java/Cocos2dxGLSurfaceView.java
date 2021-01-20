@@ -106,6 +106,11 @@ public class Cocos2dxGLSurfaceView extends GLSurfaceView {
         this.touchDetector = touchDetector;
     }
 
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+    }
+
     @SuppressLint("HandlerLeak")
     protected void initView() {
         this.setEGLContextClientVersion(2);
@@ -378,54 +383,54 @@ public class Cocos2dxGLSurfaceView extends GLSurfaceView {
         }
     }
 
-    @Override
-    public boolean onKeyDown(final int pKeyCode, final KeyEvent pKeyEvent) {
-        switch (pKeyCode) {
-            case KeyEvent.KEYCODE_BACK:
-                Cocos2dxVideoHelper.mVideoHandler.sendEmptyMessage(Cocos2dxVideoHelper.KeyEventBack);
-            case KeyEvent.KEYCODE_MENU:
-            case KeyEvent.KEYCODE_DPAD_LEFT:
-            case KeyEvent.KEYCODE_DPAD_RIGHT:
-            case KeyEvent.KEYCODE_DPAD_UP:
-            case KeyEvent.KEYCODE_DPAD_DOWN:
-            case KeyEvent.KEYCODE_ENTER:
-            case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
-            case KeyEvent.KEYCODE_DPAD_CENTER:
-                this.queueEvent(new Runnable() {
-                    @Override
-                    public void run() {
-                        Cocos2dxGLSurfaceView.this.mCocos2dxRenderer.handleKeyDown(pKeyCode);
-                    }
-                });
-                return true;
-            default:
-                return super.onKeyDown(pKeyCode, pKeyEvent);
-        }
-    }
-
-    @Override
-    public boolean onKeyUp(final int keyCode, KeyEvent event) {
-        switch (keyCode) {
-            case KeyEvent.KEYCODE_BACK:
-            case KeyEvent.KEYCODE_MENU:
-            case KeyEvent.KEYCODE_DPAD_LEFT:
-            case KeyEvent.KEYCODE_DPAD_RIGHT:
-            case KeyEvent.KEYCODE_DPAD_UP:
-            case KeyEvent.KEYCODE_DPAD_DOWN:
-            case KeyEvent.KEYCODE_ENTER:
-            case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
-            case KeyEvent.KEYCODE_DPAD_CENTER:
-                this.queueEvent(new Runnable() {
-                    @Override
-                    public void run() {
-                        Cocos2dxGLSurfaceView.this.mCocos2dxRenderer.handleKeyUp(keyCode);
-                    }
-                });
-                return true;
-            default:
-                return super.onKeyUp(keyCode, event);
-        }
-    }
+//    @Override
+//    public boolean onKeyDown(final int pKeyCode, final KeyEvent pKeyEvent) {
+//        switch (pKeyCode) {
+//            case KeyEvent.KEYCODE_BACK:
+//                Cocos2dxVideoHelper.mVideoHandler.sendEmptyMessage(Cocos2dxVideoHelper.KeyEventBack);
+//            case KeyEvent.KEYCODE_MENU:
+//            case KeyEvent.KEYCODE_DPAD_LEFT:
+//            case KeyEvent.KEYCODE_DPAD_RIGHT:
+//            case KeyEvent.KEYCODE_DPAD_UP:
+//            case KeyEvent.KEYCODE_DPAD_DOWN:
+//            case KeyEvent.KEYCODE_ENTER:
+//            case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+//            case KeyEvent.KEYCODE_DPAD_CENTER:
+//                this.queueEvent(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        Cocos2dxGLSurfaceView.this.mCocos2dxRenderer.handleKeyDown(pKeyCode);
+//                    }
+//                });
+//                return true;
+//            default:
+//                return super.onKeyDown(pKeyCode, pKeyEvent);
+//        }
+//    }
+//
+//    @Override
+//    public boolean onKeyUp(final int keyCode, KeyEvent event) {
+//        switch (keyCode) {
+//            case KeyEvent.KEYCODE_BACK:
+//            case KeyEvent.KEYCODE_MENU:
+//            case KeyEvent.KEYCODE_DPAD_LEFT:
+//            case KeyEvent.KEYCODE_DPAD_RIGHT:
+//            case KeyEvent.KEYCODE_DPAD_UP:
+//            case KeyEvent.KEYCODE_DPAD_DOWN:
+//            case KeyEvent.KEYCODE_ENTER:
+//            case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+//            case KeyEvent.KEYCODE_DPAD_CENTER:
+//                this.queueEvent(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        Cocos2dxGLSurfaceView.this.mCocos2dxRenderer.handleKeyUp(keyCode);
+//                    }
+//                });
+//                return true;
+//            default:
+//                return super.onKeyUp(keyCode, event);
+//        }
+//    }
 
     // ===========================================================
     // Methods

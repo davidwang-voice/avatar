@@ -73,7 +73,7 @@ private:
     static const int _NONE_SPACE_X = 100;
     static const int _NONE_SPACE_Y = 1600;
 
-    bool _is_launched = false;
+    bool _is_attached = false;
     bool _is_released = false;
     Scene* _scene;
     Vec2 _visibleOrigin = Vec2::ZERO;
@@ -128,7 +128,7 @@ private:
     void createAndPresentGift(const Vec2& pos, const char* url);
     void tryPresentCacheGift();
     void limitGiftHolderSize();
-    bool isInBackgroundState(const char* tag);
+    bool isApplicationInvalid(const char* tag);
     bool isApplicationReleased(const char* tag);
 
 public:

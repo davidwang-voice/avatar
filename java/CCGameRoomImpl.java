@@ -18,6 +18,8 @@ import org.cocos2dx.lib.Cocos2dxGLSurfaceView;
 import org.cocos2dx.lib.Cocos2dxHelper;
 import org.cocos2dx.lib.Cocos2dxRenderer;
 
+import java.util.concurrent.CountDownLatch;
+
 
 /**
  * Created by david on 2020/10/14.
@@ -36,17 +38,19 @@ public class CCGameRoomImpl implements CCGameRoomView {
     private boolean hasFocus = false;
     private boolean gainAudioFocus = false;
     private boolean isPaused = false;
+    private FrameLayout parentView;
 
 
     public CCGameRoomImpl(Context context, FrameLayout parent) {
         this.context = context.getApplicationContext();
-
+        this.parentView = parent;
         Cocos2dxHelper.init((Activity) context);
 
         gameRoomJNI.setDesignResolution(1125, 1);
         gLContextAttrs = gameRoomJNI.getGLContextAttrs();
 
         glSurfaceView = new Cocos2dxGLSurfaceView(parent.getContext());
+
         glSurfaceView.setZOrderMediaOverlay(true);
 
         // this line is need on some device if we specify an alpha bits
@@ -56,10 +60,13 @@ public class CCGameRoomImpl implements CCGameRoomView {
         glSurfaceView.setEGLConfigChooser(chooser);
         glSurfaceView.setCocos2dxRenderer(new Cocos2dxRenderer());
         glSurfaceView.setMultipleTouchEnabled(false);
+
+        runOnGLThread(() -> gameRoomJNI.init());
+
 //        glSurfaceView.setOnTouchDetector(event -> {});
         parent.addView(glSurfaceView, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
-        runOnGLThread(() -> gameRoomJNI.init());
+
 
         Cocos2dxEngineDataManager.init(context.getApplicationContext(), glSurfaceView);
     }
@@ -123,7 +130,20 @@ public class CCGameRoomImpl implements CCGameRoomView {
         if(gainAudioFocus)
             Cocos2dxAudioFocusManager.unregisterAudioFocusListener(context);
         Cocos2dxEngineDataManager.destroy();
-        runOnGLThread(() -> gameRoomJNI.releaseResource());
+
+        CountDownLatch lock = new CountDownLatch(1);
+        runOnGLThread(() -> {
+            gameRoomJNI.releaseResource();
+            lock.countDown();
+        });
+        try {
+            lock.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        if (parentView != null && glSurfaceView != null) {
+            parentView.removeView(glSurfaceView);
+        }
     }
 
     @Override
