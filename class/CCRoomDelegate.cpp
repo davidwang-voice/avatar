@@ -475,7 +475,7 @@ void CCRoomDelegate::receiveGiftMessage(const char* uid, const char* url) {
 
     auto _avatar = this->findAvatar(uid);
 
-    if (nullptr != _avatar) {
+    if (nullptr != _avatar && _avatar->offline != 1) {
         _avatar->jumpByPresent();
         createAndPresentGift(_avatar->getPosition(), url);
     } else {
@@ -502,7 +502,7 @@ void CCRoomDelegate::receiveChatMessage(const char* uid, const char* content) {
     if (isApplicationReleased("receiveChatMessage")) return;
     if (isApplicationInvalid("receiveChatMessage")) return;
     auto _avatar = this->findAvatar(uid);
-    if (nullptr == _avatar) return;
+    if (nullptr == _avatar || _avatar->offline == 1) return;
 
     _avatar->popChatBubble(content);
 }
