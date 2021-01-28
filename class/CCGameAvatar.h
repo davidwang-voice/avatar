@@ -53,12 +53,12 @@ private:
     string _name;
     string _uid;
 
-    unsigned int _last_rare;//avatar等级 1,2,3对应N,R,SR
-    unsigned int _rare;//avatar等级 1,2,3对应N,R,SR
+    int _last_rare;//avatar等级 1,2,3对应N,R,SR
+    int _rare;//avatar等级 1,2,3对应N,R,SR
     bool _loaded;
     float _target_x;
     float _target_y;
-    unsigned int _self_chat_bubble_count;
+    int _self_chat_bubble_count;
     float _scale_factor;
     Sprite *_inner_sprite;
 
@@ -81,12 +81,12 @@ protected:
 public:
     virtual ~CCGameAvatar();
     bool isOnStage = false;
-    unsigned int _real_local_z_order;
-    unsigned int realRanking;
+    int _real_local_z_order;
+    int realRanking;
 
     //for stage.
-    unsigned int stageIndex = 0;
-    unsigned int offline;
+    int stageIndex = 0;
+    int offline;
 
     static CCGameAvatar* create(int id, int ranking, string uid, string skin, string name, int priority = 0);
 
@@ -107,7 +107,7 @@ public:
     void popChatBubble(const char* content);
     void runSnoreAnim();
 
-    void setOffline(unsigned int offline);
+    void setOffline(int offline);
     void setUid(const char* uid);
     const char* getUid();
 };

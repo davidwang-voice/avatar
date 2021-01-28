@@ -19,7 +19,7 @@ USING_NS_CC;
 
 using namespace cocos2d::network;
 
-static unsigned int _chat_local_z_order = 0;
+static int _chat_local_z_order = 0;
 
 const std::string CCGameAvatar::_BG_NAME_NORMAL_PNG = "bg_name_nor9.png";
 const std::string CCGameAvatar::_BG_RANK_LABEL_PNG = "bg_rank_label9.png";
@@ -167,10 +167,11 @@ void CCGameAvatar::initAvatar() {
     _target_x = 0.0;
     _target_y = 0.0;
     _rare = 0;
+    _last_rare = 0;
     _self_chat_bubble_count = 0;
     _real_local_z_order = 0;
     offline = 0;
-    realRanking = false;
+    realRanking = 0;
 
     isRequestRetry = false;
 }
@@ -233,11 +234,11 @@ void CCGameAvatar::onTouchEnded(Touch *touch, Event *event) {
 
 void CCGameAvatar::updateRank(int rank) {
     this->realRanking = rank;
-    unsigned int _column = _FRONT_COLUMN_COUNT;
+    int _column = _FRONT_COLUMN_COUNT;
 
-    unsigned int _new_local_z_order = rank;
+    int _new_local_z_order = rank;
     if (rank < 100) {
-        _new_local_z_order = (rank / _column) * _column + (_column - (rank - 1) % _column);
+        _new_local_z_order = ((rank - 1) / _column) * _column + (_column - (rank - 1) % _column);
     } else {
         _new_local_z_order = rank;
     }
@@ -246,8 +247,8 @@ void CCGameAvatar::updateRank(int rank) {
     if (this->getLocalZOrder() < _CHAT_LOCAL_Z_ORDER_BASE)
         this->setLocalZOrder(_new_local_z_order);
 
-    if ((_new_local_z_order == this->_real_local_z_order) && (this->_last_rare == this->_rare))
-        return;
+//    if ((_new_local_z_order == this->_real_local_z_order) && (this->_last_rare == this->_rare))
+//        return;
 
     this->_last_rare = this->_rare;
     this->_real_local_z_order = _new_local_z_order;
@@ -256,7 +257,7 @@ void CCGameAvatar::updateRank(int rank) {
     auto _rank_layer = dynamic_cast<ui::Scale9Sprite*>(this->getChildByTag(_TAG_RANK_LAYER));
     auto _name_layer = dynamic_cast<ui::Scale9Sprite*>(this->getChildByTag(_TAG_NAME_LAYER));
 
-    bool _is_front = rank <= _column;
+    bool _is_front = rank <= _FRONT_COLUMN_COUNT;
     bool _is_sr = this->_rare == 3;
     if (_is_front) {
         float _labelWidth = 0;
@@ -409,7 +410,7 @@ void CCGameAvatar::updateElement(const char *name, const char *path, int rare, i
     }
 }
 
-void CCGameAvatar::setOffline(unsigned int offline) {
+void CCGameAvatar::setOffline(int offline) {
     if (this->offline != offline) {
         this->offline = offline;
         auto _ssr_marker = dynamic_cast<Sprite*>(this->getChildByTag(_TAG_SSR_MARKER));
@@ -498,7 +499,7 @@ void CCGameAvatar::jumpByPresent() {
     auto _self = this;
     _self->setLocalZOrder(_PRESENT_LOCAL_Z_ORDER);
     auto _resetSelfZOrder = CallFunc::create([_self](){
-        unsigned int _current_z_order = _self->getLocalZOrder();
+        int _current_z_order = _self->getLocalZOrder();
         if (_current_z_order == _PRESENT_LOCAL_Z_ORDER) {
             if (_self->_self_chat_bubble_count <= 0)
                 _self->setLocalZOrder(_self->_real_local_z_order);

@@ -146,7 +146,7 @@ void CCRoomDelegate::setStageBackground(const char *url) {
 
         if (nullptr == _stage_background) {
             _stage_background = CCBaseSprite::create();
-            _scene->addChild(_stage_background, 0, _TAG_STAGE_BACKGROUND);
+            _scene->addChild(_stage_background, -1, _TAG_STAGE_BACKGROUND);
         }
     }
 
@@ -401,10 +401,11 @@ void CCRoomDelegate::updateStandAvatars(const char* json) {
 
     rapidjson::Value& _data_arr = _document;
 
+    int _index_offset = 0;
     Vector<CCGameAvatar*> _new_stand_avatars;
     for (int i = 0; i < _data_arr.Size(); ++i) {
-        auto _position = getStandPosition(i);
-        if (_position.isZero()) continue;
+//        auto _position = getStandPosition(i);
+//        if (_position.isZero()) continue;
 
         rapidjson::Value& _value = _data_arr[i];
 
@@ -421,12 +422,28 @@ void CCRoomDelegate::updateStandAvatars(const char* json) {
         std::string _uid_str(_uid);
         if (_uid_str.empty()) continue;
 
+        int _index_real = i;
+        if (_offline == 1 && _index_offset == 0) {
+            if (_index_real < _STAND_MAX_COLUMN_COUNT) {
+                _index_offset = _STAND_MAX_COLUMN_COUNT - _index_real;
+            }
+        }
+
+        if (_index_offset > 0) {
+            _index_real = _index_real + _index_offset;
+        }
+
+        auto _position = this->getStandPosition(_index_real);
+        if (_position.isZero()) continue;
+
+
+
         if (nullptr != _cur_self_avatar && !_cur_self_avatar->isOnStage) {
             _new_stand_avatars.pushBack(_cur_self_avatar);
         } else if ( auto _old_stand_avatar = this->findStandAvatar(_uid)) {
             _new_stand_avatars.pushBack(_old_stand_avatar);
         } else {
-            auto _new_stand_avatar = createAvatar(i + 1, _uid, _name, _url, _position);
+            auto _new_stand_avatar = createAvatar(_index_real + 1, _uid, _name, _url, _position);
             _new_stand_avatars.pushBack(_new_stand_avatar);
         }
 
@@ -872,7 +889,7 @@ void CCRoomDelegate::reorganizeStageAvatars() {
 }
 
 void CCRoomDelegate::reorganizeStandAvatars() {
-    unsigned int _index_offset = 0;
+    int _index_offset = 0;
     for (int i = 0; i < _standAvatars.size(); ++i) {
         auto _stand_avatar = _standAvatars.at(i);
         int _index_real = i;
@@ -911,7 +928,7 @@ void CCRoomDelegate::reorganizeSelfAvatar() {
             auto _aperture = _scene->getChildByTag(_TAG_SELF_APERTURE);
             if (_aperture) {
                 _aperture->setPosition(_self_avatar->getCenterPosition());
-                unsigned int _local_z_order = MAX(_self_avatar->_real_local_z_order - 1, 1);
+                int _local_z_order = MAX(_self_avatar->_real_local_z_order - 1, 0);
                 _aperture->setLocalZOrder(_local_z_order);
 //                _aperture->setVisible(!_self_avatar->isOnStage);
             }
