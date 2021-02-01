@@ -25,8 +25,9 @@ const std::string CCGameAvatar::_BG_NAME_NORMAL_PNG = "bg_name_nor9.png";
 const std::string CCGameAvatar::_BG_RANK_LABEL_PNG = "bg_rank_label9.png";
 const std::string CCGameAvatar::_BG_RANK_NAME_PNG = "bg_rank_name9.png";
 const std::string CCGameAvatar::_BG_SR_NAME_NORMAL_PNG = "bg_sr_name_nor9.png";
-const std::string CCGameAvatar::_BG_SR_RANK_LABEL_PNG = "bg_sr_rank_label9.png";
 const std::string CCGameAvatar::_BG_SR_RANK_NAME_PNG = "bg_sr_rank_name9.png";
+const std::string CCGameAvatar::_BG_SSR_NAME_NORMAL_PNG = "bg_ssr_name_nor9.png";
+const std::string CCGameAvatar::_BG_SSR_RANK_NAME_PNG = "bg_ssr_rank_name9.png";
 
 CCGameAvatar *CCGameAvatar::create(int id, int ranking, string uid, string skin, string name, int priority) {
     auto avatar = new (nothrow) CCGameAvatar(id, ranking, uid, move(skin), move(name), priority);
@@ -147,7 +148,7 @@ void CCGameAvatar::initAvatar() {
     _ssr_marker->setTag(_TAG_SSR_MARKER);
     _ssr_marker->setLocalZOrder(3);
     _ssr_marker->setAnchorPoint(Point::ANCHOR_BOTTOM_RIGHT);
-    _ssr_marker->setPosition(getContentSize().width + 10 / _scale_factor, 0);
+    _ssr_marker->setPosition(getContentSize().width / _scale_factor, 0);
     addChild(_ssr_marker);
     _ssr_marker->setVisible(false);
 
@@ -259,6 +260,7 @@ void CCGameAvatar::updateRank(int rank) {
 
     bool _is_front = rank <= _FRONT_COLUMN_COUNT;
     bool _is_sr = this->_rare == 3;
+    bool _is_ssr = this->_rare == 4;
     if (_is_front) {
         float _labelWidth = 0;
         float _labelHeight = 0;
@@ -267,11 +269,18 @@ void CCGameAvatar::updateRank(int rank) {
             _rank_label->setString(std::to_string(rank) + "名");
             _labelWidth = _rank_label->getContentSize().width;
             _labelHeight = _rank_label->getContentSize().height;
+
+
+            if (rank <= 3) {
+                _rank_label->setColor(Color3B(255, 230, 138));
+            } else {
+                _rank_label->setColor(Color3B(255, 255, 255));
+            }
         }
         if (_rank_layer) {
             _rank_layer->setVisible(true);
 
-            std::string _bg_rank_label = _is_sr ? _BG_SR_RANK_LABEL_PNG : _BG_RANK_LABEL_PNG;
+            std::string _bg_rank_label = _BG_RANK_LABEL_PNG;
             string _origin_name = _rank_layer->getName();
             if ((strcmp(_bg_rank_label.c_str(), _origin_name.c_str()) != 0)) {
                 _rank_layer->setTexture("cocos/avatar/" + _bg_rank_label);
@@ -295,6 +304,8 @@ void CCGameAvatar::updateRank(int rank) {
     std::string _bg_name_label;
     if (_is_sr) {
         _bg_name_label = _is_front ? _BG_SR_RANK_NAME_PNG : _BG_SR_NAME_NORMAL_PNG;
+    } else if (_is_ssr) {
+        _bg_name_label = _is_front ? _BG_SSR_RANK_NAME_PNG : _BG_SSR_NAME_NORMAL_PNG;
     } else {
         _bg_name_label = _is_front ? _BG_RANK_NAME_PNG : _BG_NAME_NORMAL_PNG;
     }
@@ -323,6 +334,7 @@ void CCGameAvatar::updateElement(const char *name, const char *path, int rare, i
     this->offline = offline;
 
     bool _is_sr = rare == 3;
+    bool _is_ssr = rare == 4;
     bool _is_guard = guard == 1;
     auto _rank_label = dynamic_cast<Label*>(this->getChildByTag(_TAG_RANK_LABEL));
     auto _rank_layer = dynamic_cast<ui::Scale9Sprite*>(this->getChildByTag(_TAG_RANK_LAYER));
@@ -373,56 +385,70 @@ void CCGameAvatar::updateElement(const char *name, const char *path, int rare, i
     if (_is_guard) {
         if (_name_label)
             _name_label->setColor(Color3B(255, 230, 138));
-        if (_rank_label)
-            _rank_label->setColor(Color3B(255, 230, 138));
+//        if (_rank_label)
+//            _rank_label->setColor(Color3B(255, 230, 138));
     } else {
         if (_name_label)
             _name_label->setColor(Color3B(255, 255, 255));
-        if (_rank_label)
-            _rank_label->setColor(Color3B(255, 255, 255));
+//        if (_rank_label)
+//            _rank_label->setColor(Color3B(255, 255, 255));
     }
 
     if (_ssr_marker) {
-        _ssr_marker->setVisible(_is_sr);
+        if (_is_sr) {
+            _ssr_marker->setVisible(true);
+            _ssr_marker->setTexture("cocos/avatar/avatar_rare_sr.png");
+        } else if (_is_ssr) {
+            _ssr_marker->setVisible(true);
+            _ssr_marker->setTexture("cocos/avatar/avatar_rare_ssr.png");
+        } else {
+            _ssr_marker->setVisible(false);
+        }
     }
 
-    if (offline == 1) {
-        _rank_label->setOpacity(_is_sr ? 179 : 125);
-        _rank_layer->setOpacity(_is_sr ? 230 : 255);
-        _name_label->setOpacity(_is_sr ? 179 : 125);
-        _name_layer->setOpacity(_is_sr ? 230 : 255);
-    } else {
-        _rank_label->setOpacity(255);
-        _rank_layer->setOpacity(255);
-        _name_label->setOpacity(255);
-        _name_layer->setOpacity(255);
+    if (offline != 1) {
         _snore_anim->setVisible(false);
     }
-    cocos2d::GLProgramState* glProgramState = offline == 1 ? getDarkGLProgramState() : getLightGLProgramState();
 
-    if (nullptr != glProgramState) {
-        if (this->_inner_sprite) {
-            this->_inner_sprite->setGLProgramState(glProgramState);
-        }
-        if (_ssr_marker) {
-            _ssr_marker->setGLProgramState(glProgramState);
-        }
-    }
+
+
+//    if (offline == 1) {
+//        _rank_label->setOpacity(_is_sr ? 179 : 125);
+//        _rank_layer->setOpacity(_is_sr ? 230 : 255);
+//        _name_label->setOpacity(_is_sr ? 179 : 125);
+//        _name_layer->setOpacity(_is_sr ? 230 : 255);
+//    } else {
+//        _rank_label->setOpacity(255);
+//        _rank_layer->setOpacity(255);
+//        _name_label->setOpacity(255);
+//        _name_layer->setOpacity(255);
+//        _snore_anim->setVisible(false);
+//    }
+//    cocos2d::GLProgramState* glProgramState = offline == 1 ? getDarkGLProgramState() : getLightGLProgramState();
+//
+//    if (nullptr != glProgramState) {
+//        if (this->_inner_sprite) {
+//            this->_inner_sprite->setGLProgramState(glProgramState);
+//        }
+//        if (_ssr_marker) {
+//            _ssr_marker->setGLProgramState(glProgramState);
+//        }
+//    }
 }
 
 void CCGameAvatar::setOffline(int offline) {
     if (this->offline != offline) {
         this->offline = offline;
-        auto _ssr_marker = dynamic_cast<Sprite*>(this->getChildByTag(_TAG_SSR_MARKER));
-        cocos2d::GLProgramState* glProgramState = offline == 1 ? getDarkGLProgramState() : getLightGLProgramState();
-        if (nullptr != glProgramState) {
-            if (this->_inner_sprite) {
-                this->_inner_sprite->setGLProgramState(glProgramState);
-            }
-            if (_ssr_marker) {
-                _ssr_marker->setGLProgramState(glProgramState);
-            }
-        }
+//        auto _ssr_marker = dynamic_cast<Sprite*>(this->getChildByTag(_TAG_SSR_MARKER));
+//        cocos2d::GLProgramState* glProgramState = offline == 1 ? getDarkGLProgramState() : getLightGLProgramState();
+//        if (nullptr != glProgramState) {
+//            if (this->_inner_sprite) {
+//                this->_inner_sprite->setGLProgramState(glProgramState);
+//            }
+//            if (_ssr_marker) {
+//                _ssr_marker->setGLProgramState(glProgramState);
+//            }
+//        }
     }
 }
 

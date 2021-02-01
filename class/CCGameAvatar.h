@@ -20,8 +20,9 @@ private:
     static const std::string _BG_RANK_LABEL_PNG;
     static const std::string _BG_RANK_NAME_PNG;
     static const std::string _BG_SR_NAME_NORMAL_PNG;
-    static const std::string _BG_SR_RANK_LABEL_PNG;
     static const std::string _BG_SR_RANK_NAME_PNG;
+    static const std::string _BG_SSR_NAME_NORMAL_PNG;
+    static const std::string _BG_SSR_RANK_NAME_PNG;
 
     static const unsigned int _FRONT_COLUMN_COUNT = 11;
 
