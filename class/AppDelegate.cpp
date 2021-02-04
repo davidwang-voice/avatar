@@ -167,6 +167,8 @@ void AppDelegate::applicationDidEnterBackground() {
     this->_in_background = true;
     log("Screen applicationDidEnterBackground");
     Director::getInstance()->stopAnimation();
+    CCRoomDelegate::getInstance()->pause();
+
 
 #if USE_AUDIO_ENGINE
     AudioEngine::pauseAll();

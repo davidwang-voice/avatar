@@ -31,6 +31,7 @@ private:
     static const unsigned int _TAG_JUMP_BY_ACTION = 1003;
     static const unsigned int _TAG_REST_ORDER_ACTION = 1004;
     static const unsigned int _TAG_SNORE_ANIM_ACTION = 1005;
+    static const unsigned int _TAG_JUMP_END_ACTION = 1006;
 
     static const unsigned int _TAG_RANK_LABEL = 101;
     static const unsigned int _TAG_RANK_LAYER = 102;
@@ -63,7 +64,8 @@ private:
     float _scale_factor;
     Sprite *_inner_sprite;
 
-
+    int _jump_times;
+    bool _jump_ing;
 
     void initAvatar();
     void shakingBody();
@@ -105,6 +107,7 @@ public:
     void updateElement(const char* name, const char* path, int rare, int guard, int offline = 0);
     void jumpToPosition(const Vec2& target);
     void jumpByPresent();
+    void jumpByRepeat();
     void popChatBubble(const char* content);
     void runSnoreAnim();
 

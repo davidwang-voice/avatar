@@ -79,8 +79,8 @@ extern "C" {
     }
 
     JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_receiveGiftMessage(JNIEnv *env, jobject thiz,
-                                                                                                   jstring uid, jstring url) {
-        CCRoomDelegate::getInstance()->receiveGiftMessage(jstringToChar(env, uid), jstringToChar(env, url));
+                                                                                                   jstring uid, jstring url, jint count) {
+        CCRoomDelegate::getInstance()->receiveGiftMessage(jstringToChar(env, uid), jstringToChar(env, url), count);
     }
     JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_receiveChatMessage(JNIEnv *env, jobject thiz,
                                                                                                    jstring uid, jstring content) {

@@ -125,6 +125,11 @@ void CCRoomDelegate::resumeFromCache() {
     }
 }
 
+void CCRoomDelegate::pause() {
+    Director::getInstance()->getScheduler()->unscheduleAllForTarget(this);
+    cacheWillPresentGift();
+}
+
 void CCRoomDelegate::setStageBackground(const char *url) {
     if (isApplicationReleased("setStageBackground")) return;
     if (isApplicationInvalid("setStageBackground")) {
@@ -476,22 +481,56 @@ void CCRoomDelegate::backOffStandAvatar(const char* uid) {
 
 }
 
-void CCRoomDelegate::receiveGiftMessage(const char* uid, const char* url) {
+void CCRoomDelegate::receiveGiftMessage(const char* uid, const char* url, int count) {
     std::string _uid_str(uid);
     if (_uid_str.empty()) return;
 
     if (isApplicationReleased("receiveGiftMessage")) return;
     if (isApplicationInvalid("receiveGiftMessage")) {
-        if (_giftCache.size() >= _GIFT_HOLDER_SIZE * 2) {
-            _giftCache.erase(_giftCache.begin());
+        for (int i = 0; i < count; ++i) {
+            cacheBackPresentGift(url);
         }
-
-        _giftCache.push_back(url);
         return;
     }
 
-    auto _avatar = this->findAvatar(uid);
 
+    long long _current_ms = cocos2d::utils::getTimeInMilliseconds();
+    std::string _schedule_key("present_gift_bundle_");
+    _schedule_key.append(to_string(_current_ms));
+
+    _scheduleMap[_schedule_key];
+    for (int i = 0; i < count; ++i) {
+        _scheduleMap[_schedule_key].push_back(url);
+    }
+
+    log("delegate:receiveGiftMessage, scheduleKey:%s, size:%d", _schedule_key.c_str(), count);
+
+    Director::getInstance()->getScheduler()->schedule(CC_CALLBACK_0(CCRoomDelegate::schedulePresentGift, this, _schedule_key, uid, url),
+            this, 60.0 / 1000.0, MAX(count - 1, 0), 0.0, false, _schedule_key);
+}
+
+void CCRoomDelegate::schedulePresentGift(const std::string &key, const char* uid, const char* url) {
+
+    std::map<std::string, std::vector<std::string>>::iterator _iterator;
+    _iterator = _scheduleMap.find(key.c_str());
+    if (_iterator != _scheduleMap.end())  {
+        std::vector<std::string>& _urls = _scheduleMap[key];
+        if (!_urls.empty()) {
+            _urls.pop_back();
+        }
+        if(_urls.empty()) {
+            _scheduleMap.erase(key);
+        }
+    }
+
+    if (isApplicationReleased("receiveGiftMessage")) return;
+    if (isApplicationInvalid("receiveGiftMessage")) {
+        cacheBackPresentGift(url);
+        return;
+    }
+
+
+    auto _avatar = this->findAvatar(uid);
     if (nullptr != _avatar && _avatar->offline != 1) {
         _avatar->jumpByPresent();
         createAndPresentGift(_avatar->getPosition(), url);
@@ -513,6 +552,36 @@ void CCRoomDelegate::receiveGiftMessage(const char* uid, const char* url) {
 
         createAndPresentGift(this->getNonePosition(_where), url);
     }
+
+}
+
+void CCRoomDelegate::cacheBackPresentGift(const char *url) {
+    if (_giftCache.size() >= _GIFT_HOLDER_SIZE * 2) {
+        _giftCache.erase(_giftCache.begin());
+    }
+    _giftCache.push_back(url);
+}
+
+void CCRoomDelegate::cacheWillPresentGift() {
+    log("delegate:cacheWillPresentGift, scheduleMap total size:%d", _scheduleMap.size());
+    std::map<std::string, std::vector<std::string>>::iterator _map_iter;
+    _map_iter = _scheduleMap.begin();
+    while(_map_iter != _scheduleMap.end()) {
+        std::vector<std::string>& _url_vec = _map_iter->second;
+        log("delegate:cacheWillPresentGift, scheduleKey:%s, size:%d", (_map_iter->first).c_str(), _url_vec.size());
+        if (!_url_vec.empty()) {
+            std::vector<std::string>::iterator _vec_iter;
+            _vec_iter = _url_vec.begin();
+            while(_vec_iter != _url_vec.end()) {
+                cacheBackPresentGift(_vec_iter->c_str());
+                _vec_iter++;
+            }
+            _url_vec.clear();
+        }
+        _map_iter++;
+    }
+
+    _scheduleMap.clear();
 }
 
 void CCRoomDelegate::receiveChatMessage(const char* uid, const char* content) {
@@ -575,6 +644,7 @@ void CCRoomDelegate::releaseResource() {
     _stageCache.clear();
     _giftCache.clear();
     _targetCache.clear();
+    _scheduleMap.clear();
 
     if (_scene) {
         _scene->removeAllChildren();

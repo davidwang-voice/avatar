@@ -167,8 +167,8 @@ public class CCGameRoomImpl implements CCGameRoomView {
     }
 
     @Override
-    public void presentGift(String userId, String url) {
-        runOnGLThread(() -> gameRoomJNI.receiveGiftMessage(userId, url));
+    public void presentGift(String userId, String url, int count) {
+        runOnGLThread(() -> gameRoomJNI.receiveGiftMessage(userId, url, count));
     }
 
     @Override

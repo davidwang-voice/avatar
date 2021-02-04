@@ -122,7 +122,7 @@ public class CCGameRoomJNI {
     /**
      * 收到用户送礼消息
      */
-    public native void receiveGiftMessage(String uid, String url);
+    public native void receiveGiftMessage(String uid, String url, int count);
 
     /**
      * 收到用户聊天消息

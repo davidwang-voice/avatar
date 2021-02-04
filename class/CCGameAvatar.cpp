@@ -173,6 +173,8 @@ void CCGameAvatar::initAvatar() {
     _real_local_z_order = 0;
     offline = 0;
     realRanking = 0;
+    _jump_times = 0;
+    _jump_ing = false;
 
     isRequestRetry = false;
 }
@@ -503,18 +505,14 @@ void CCGameAvatar::jumpToPosition(const Vec2 &target) {
 }
 
 void CCGameAvatar::jumpByPresent() {
+    auto _self = this;
+    _self->_jump_times = 0;
 
     auto _jump_action = getActionByTag(_TAG_JUMP_BY_ACTION);
-    if (nullptr == _jump_action || _jump_action->isDone()) {
-        auto _self = this;
-        auto _callback = CallFunc::create([_self](){
-            _self->setPosition(Vec2(_self->_target_x, _self->_target_y));
-        });
 
-        auto _jumpBy = JumpBy::create(0.5f, Vec2(0, 0), 60  / _scale_factor, 1);
-        auto _action = Sequence::create(_jumpBy, _callback, nullptr);
-        _action->setTag(_TAG_JUMP_BY_ACTION);
-        runAction(_action);
+    if (!_self->_jump_ing) {
+        this->stopAction(_jump_action);
+        jumpByRepeat();
     }
 
     auto _reset_order_action = getActionByTag(_TAG_REST_ORDER_ACTION);
@@ -522,7 +520,6 @@ void CCGameAvatar::jumpByPresent() {
         this->stopAction(_reset_order_action);
     }
 
-    auto _self = this;
     _self->setLocalZOrder(_PRESENT_LOCAL_Z_ORDER);
     auto _resetSelfZOrder = CallFunc::create([_self](){
         int _current_z_order = _self->getLocalZOrder();
@@ -536,6 +533,27 @@ void CCGameAvatar::jumpByPresent() {
     _action->setTag(_TAG_REST_ORDER_ACTION);
     runAction(_action);
 }
+
+void CCGameAvatar::jumpByRepeat() {
+    auto _self = this;
+
+    auto _callback = CallFunc::create([_self](){
+        _self->setPosition(Vec2(_self->_target_x, _self->_target_y));
+        if (_self->_jump_times < 3) {
+            _self->jumpByRepeat();
+            _self->_jump_times++;
+        } else {
+            _self->_jump_times = 0;
+            _self->_jump_ing = false;
+        }
+    });
+    auto _jumpBy = JumpBy::create(0.5f, Vec2(0, 0), 120  / _scale_factor, 1);
+    auto _action = Sequence::create(_jumpBy, _callback, nullptr);
+    _action->setTag(_TAG_JUMP_BY_ACTION);
+    _self->runAction(_action);
+    _self->_jump_ing = true;
+}
+
 void CCGameAvatar::popChatBubble(const char* content) {
 
     TTFConfig _label_config;

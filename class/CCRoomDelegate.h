@@ -97,6 +97,7 @@ private:
     std::string _standCache;
     std::string _stageCache;
     std::vector<std::string> _giftCache;
+    map<std::string, std::vector<std::string>> _scheduleMap;
 
     void ensureStageSteps();
 
@@ -125,6 +126,10 @@ private:
     void refreshTargetAvatar(const char* json);
     void tryRefreshCacheAvatar();
 
+
+    void schedulePresentGift(const std::string &key, const char* uid, const char* url);
+    void cacheWillPresentGift();
+    void cacheBackPresentGift(const char* url);
     void createAndPresentGift(const Vec2& pos, const char* url);
     void tryPresentCacheGift();
     void limitGiftHolderSize();
@@ -136,6 +141,7 @@ public:
     void init();
     void attachScene(Scene* scene);
     void resumeFromCache();
+    void pause();
 
     void setStageBackground(const char* url);
     void setupStageGiftHeap(const char* json);
@@ -147,7 +153,7 @@ public:
     void backOffStageAvatar(const char* uid);
     void backOffStandAvatar(const char* uid);
 
-    void receiveGiftMessage(const char* uid, const char* url);
+    void receiveGiftMessage(const char* uid, const char* url, int count);
     void receiveChatMessage(const char* uid, const char* content);
     void receiveVoiceWave(const char* uids);
     void receiveRandomSnore(const char* uids);
