@@ -127,7 +127,7 @@ private:
     void tryRefreshCacheAvatar();
 
 
-    void schedulePresentGift(const std::string &key, const char* uid, const char* url);
+    void schedulePresentGift(const std::string &key, const std::string &uid, const std::string &url);
     void cacheWillPresentGift();
     void cacheBackPresentGift(const char* url);
     void createAndPresentGift(const Vec2& pos, const char* url);

@@ -504,12 +504,12 @@ void CCRoomDelegate::receiveGiftMessage(const char* uid, const char* url, int co
     }
 
     log("delegate:receiveGiftMessage, scheduleKey:%s, size:%d", _schedule_key.c_str(), count);
-
-    Director::getInstance()->getScheduler()->schedule(CC_CALLBACK_0(CCRoomDelegate::schedulePresentGift, this, _schedule_key, uid, url),
+    std::string _url_str(url);
+    Director::getInstance()->getScheduler()->schedule(CC_CALLBACK_0(CCRoomDelegate::schedulePresentGift, this, _schedule_key, _uid_str, _url_str),
             this, 60.0 / 1000.0, MAX(count - 1, 0), 0.0, false, _schedule_key);
 }
 
-void CCRoomDelegate::schedulePresentGift(const std::string &key, const char* uid, const char* url) {
+void CCRoomDelegate::schedulePresentGift(const std::string &key, const std::string &uid, const std::string &url) {
 
     std::map<std::string, std::vector<std::string>>::iterator _iterator;
     _iterator = _scheduleMap.find(key.c_str());
@@ -525,15 +525,15 @@ void CCRoomDelegate::schedulePresentGift(const std::string &key, const char* uid
 
     if (isApplicationReleased("receiveGiftMessage")) return;
     if (isApplicationInvalid("receiveGiftMessage")) {
-        cacheBackPresentGift(url);
+        cacheBackPresentGift(url.c_str());
         return;
     }
 
 
-    auto _avatar = this->findAvatar(uid);
+    auto _avatar = this->findAvatar(uid.c_str());
     if (nullptr != _avatar && _avatar->offline != 1) {
         _avatar->jumpByPresent();
-        createAndPresentGift(_avatar->getPosition(), url);
+        createAndPresentGift(_avatar->getPosition(), url.c_str());
     } else {
 
         if (_randomWheres.size() >= 10) {
@@ -550,7 +550,7 @@ void CCRoomDelegate::schedulePresentGift(const std::string &key, const char* uid
             _randomWheres.insert(pair<std::string, unsigned int>(uid, _where));
         }
 
-        createAndPresentGift(this->getNonePosition(_where), url);
+        createAndPresentGift(this->getNonePosition(_where), url.c_str());
     }
 
 }
