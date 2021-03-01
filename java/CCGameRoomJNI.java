@@ -81,7 +81,7 @@ public class CCGameRoomJNI {
 
     /**
      * 初始化房间礼物堆
-     * @param json = "[{"id": 100, "url": "xxx.png", "count": 5}, ...]"
+     * @param json = "[{"id": 100, "type": 1, "urls": "xxx.png,xxx.png,...", "count": 5}, ...]"
      */
     public native void setupStageGiftHeap(String json);
 
@@ -121,8 +121,9 @@ public class CCGameRoomJNI {
 
     /**
      * 收到用户送礼消息
+     * @param json = "{"type": 1, "uid":"100001", "count": 20, "urls": "xxx.png,xxx.png,..."}"
      */
-    public native void receiveGiftMessage(String uid, String url, int count);
+    public native void receiveGiftMessage(String json);
 
     /**
      * 收到用户聊天消息

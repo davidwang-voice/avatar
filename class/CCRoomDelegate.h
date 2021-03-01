@@ -52,8 +52,8 @@ private:
     static const int _STAND_MAX_ROW_COUNT = 6;
     static const int _STAND_MAX_COLUMN_COUNT = 11;
     static const int _STAND_ROW_HEIGHT = 135;
-    static const int _STAND_FRONT_ROW_HEIGHT = 250;
-    static const int _STAND_FRONT_ROW_TOP = 1120;
+    static const int _STAND_FRONT_ROW_HEIGHT = 135;
+    static const int _STAND_FRONT_ROW_TOP = 1120 + 135;
 
     static const int _STAGE_BLOCK_COUNT = 3;
     static const int _STAGE_BLOCK_WIDTH = 144;
@@ -64,11 +64,14 @@ private:
     static const int _STAGE_TABLE_WIDTH = 1329;
     static const int _STAGE_TABLE_HEIGHT = 320;
 
-    static const int _GIFT_HOLDER_SIZE = 100;
-    static const int _GIFT_TABLE_WIDTH = 978;
+    static const int _S_GIFT_HOLDER_SIZE = 200;
+    static const int _M_GIFT_HOLDER_SIZE = 25;
+    static const int _B_GIFT_HOLDER_SIZE = 8;
+
+    static const int _GIFT_TABLE_WIDTH = 1125;
     static const int _GIFT_TABLE_HEIGHT_MIN = 100;
-    static const int _GIFT_TABLE_HEIGHT_MAX = 174;
-    static const int _GIFT_TABLE_TOP = 912;
+    static const int _GIFT_TABLE_HEIGHT_MAX = 240;
+    static const int _GIFT_TABLE_TOP = 960;
 
     static const int _NONE_SPACE_X = 100;
     static const int _NONE_SPACE_Y = 1600;
@@ -84,8 +87,10 @@ private:
     Vector<CCGameAvatar*> _standAvatars;
     Vector<CCGameAvatar*> _stageAvatars;
     Vector<CCGameStep*> _stageSteps;
-    Vector<CCGameGift*> _giftHolder;
 
+    Vector<CCGameGift*> _s_giftHolder;
+    Vector<CCGameGift*> _m_giftHolder;
+    Vector<CCGameGift*> _b_giftHolder;
 
     map<std::string, unsigned int> _randomWheres;
     std::string _bgCache;
@@ -96,8 +101,13 @@ private:
     std::string _heapCache;
     std::string _standCache;
     std::string _stageCache;
-    std::vector<std::string> _giftCache;
-    map<std::string, std::vector<std::string>> _scheduleMap;
+    std::vector<std::string> _s_giftCache;
+    std::vector<std::string> _m_giftCache;
+    std::vector<std::string> _b_giftCache;
+
+    map<std::string, std::vector<std::string>> _s_scheduleMap;
+    map<std::string, std::vector<std::string>> _m_scheduleMap;
+    map<std::string, std::vector<std::string>> _b_scheduleMap;
 
     void ensureStageSteps();
 
@@ -105,7 +115,7 @@ private:
     const Vec2 getStagePosition(int index) const;
     const Vec2 getStandPosition(int index) const;
     const Vec2 getSelfPosition() const;
-    const Vec2 getGiftPosition() const;
+    const Vec2 getGiftPosition(int type) const;
     const Vec2 getNonePosition(unsigned int where) const;
 
 
@@ -126,13 +136,19 @@ private:
     void refreshTargetAvatar(const char* json);
     void tryRefreshCacheAvatar();
 
-
-    void schedulePresentGift(const std::string &key, const std::string &uid, const std::string &url);
+    map<std::string, std::vector<std::string>>& getGiftScheduleMap(int type);
+    Vector<CCGameGift*>& getGiftHolder(int type);
+    std::vector<std::string>& getGiftCache(int type);
+    void schedulePresentGift(int type, const std::string &key, const std::string &uid, const std::string &urls);
     void cacheWillPresentGift();
-    void cacheBackPresentGift(const char* url);
-    void createAndPresentGift(const Vec2& pos, const char* url);
+    void cachePresentTargetGift(int type);
+    void cacheBackPresentGift(int type, const char* urls);
+    void createAndPresentGift(int type, const Vec2& pos, const char* urls);
     void tryPresentCacheGift();
-    void limitGiftHolderSize();
+    void presentTargetGift(int type);
+    int getLimitHolderSize(int type);
+    void limitAllGiftHolder();
+    void limitTargetGiftHolder(int type = 0, int count = 0);
     bool isApplicationInvalid(const char* tag);
     bool isApplicationReleased(const char* tag);
 
@@ -153,7 +169,7 @@ public:
     void backOffStageAvatar(const char* uid);
     void backOffStandAvatar(const char* uid);
 
-    void receiveGiftMessage(const char* uid, const char* url, int count);
+    void receiveGiftMessage(const char* json);
     void receiveChatMessage(const char* uid, const char* content);
     void receiveVoiceWave(const char* uids);
     void receiveRandomSnore(const char* uids);

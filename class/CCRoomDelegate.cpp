@@ -34,9 +34,7 @@ CCRoomDelegate *CCRoomDelegate::getInstance() {
 }
 
 CCRoomDelegate::~CCRoomDelegate() {
-    _giftHolder.clear();
-    _standAvatars.clear();
-    _stageAvatars.clear();
+    releaseResource();
 }
 
 void CCRoomDelegate::init() {
@@ -114,7 +112,7 @@ void CCRoomDelegate::resumeFromCache() {
         updateStageAvatars(json.c_str());
         log("delegate:resumeFromCache->updateStageAvatars");
     }
-    if (!_giftCache.empty()) {
+    if (!_s_giftCache.empty() || !_m_giftCache.empty() || !_b_giftCache.empty()) {
         tryPresentCacheGift();
         log("delegate:resumeFromCache->tryPresentCacheGift");
     }
@@ -151,7 +149,7 @@ void CCRoomDelegate::setStageBackground(const char *url) {
 
         if (nullptr == _stage_background) {
             _stage_background = CCBaseSprite::create();
-            _scene->addChild(_stage_background, -1, _TAG_STAGE_BACKGROUND);
+            _scene->addChild(_stage_background, -2, _TAG_STAGE_BACKGROUND);
         }
     }
 
@@ -192,34 +190,57 @@ void CCRoomDelegate::setupStageGiftHeap(const char *json) {
     }
     rapidjson::Value& _data_arr = _document;
 
-    Vector<CCGameGift*> _new_game_gifts;
-
+    Vector<CCGameGift*> _new_s_gifts;
+    Vector<CCGameGift*> _new_m_gifts;
+    Vector<CCGameGift*> _new_b_gifts;
     for (int i = 0; i < _data_arr.Size(); ++i) {
         rapidjson::Value &_value = _data_arr[i];
 
-        const char *_url = cocostudio::DICTOOL->getStringValue_json(_value, "url");
-        int count = cocostudio::DICTOOL->getIntValue_json(_value, "count");
+        const char *_urls = cocostudio::DICTOOL->getStringValue_json(_value, "urls", "");
+        int _count = cocostudio::DICTOOL->getIntValue_json(_value, "count");
+        int _type = cocostudio::DICTOOL->getIntValue_json(_value, "type");
 
-        for (int i = 0; i < count; ++i) {
-            if (_new_game_gifts.size() >= _GIFT_HOLDER_SIZE * 2) {
+        Vector<CCGameGift*>& _new_gifts = _new_s_gifts;
+        if (_type == CCGameGift::_GIFT_TYPE_SMALL) {
+            _new_gifts = _new_s_gifts;
+        } else if (_type == CCGameGift::_GIFT_TYPE_MIDDLE) {
+            _new_gifts = _new_m_gifts;
+        } else if (_type == CCGameGift::_GIFT_TYPE_BIGGER) {
+            _new_gifts = _new_b_gifts;
+        } else {
+            break;
+        }
+
+        for (int i = 0; i < _count; ++i) {
+            if (_new_s_gifts.size() >= _S_GIFT_HOLDER_SIZE
+                || _new_m_gifts.size() >= _M_GIFT_HOLDER_SIZE
+                || _new_b_gifts.size() >= _B_GIFT_HOLDER_SIZE) {
                 break;
             }
 
-            auto gift = CCGameGift::create(i, i, _url);
-            gift->setPosition(getGiftPosition());
+            auto gift = CCGameGift::create(i, i, _type, _urls);
+            gift->setPosition(getGiftPosition(_type));
 
             if (_scene) {
-                _scene->addChild(gift, 0);
+                _scene->addChild(gift, _type == CCGameGift::_GIFT_TYPE_BIGGER ? -1 :0);
             }
-            _new_game_gifts.pushBack(gift);
+            _new_gifts.pushBack(gift);
 
         }
     }
+    _new_s_gifts.pushBack(_s_giftHolder);
+    _s_giftHolder.clear();
+    _s_giftHolder.pushBack(_new_s_gifts);
 
-    _new_game_gifts.pushBack(_giftHolder);
-    _giftHolder.clear();
-    _giftHolder.pushBack(_new_game_gifts);
-    limitGiftHolderSize();
+    _new_m_gifts.pushBack(_m_giftHolder);
+    _m_giftHolder.clear();
+    _m_giftHolder.pushBack(_new_m_gifts);
+
+    _new_b_gifts.pushBack(_b_giftHolder);
+    _b_giftHolder.clear();
+    _b_giftHolder.pushBack(_new_b_gifts);
+
+    limitAllGiftHolder();
 }
 
 void CCRoomDelegate::updateSelfAvatar(const char *json) {
@@ -241,9 +262,9 @@ void CCRoomDelegate::updateSelfAvatar(const char *json) {
         return;
     }
     rapidjson::Value& _value = _document;
-    const char *_url = cocostudio::DICTOOL->getStringValue_json(_value, "url");
-    const char *_uid = cocostudio::DICTOOL->getStringValue_json(_value, "uid");
-    const char *_name = cocostudio::DICTOOL->getStringValue_json(_value, "name");
+    const char *_url = cocostudio::DICTOOL->getStringValue_json(_value, "url", "");
+    const char *_uid = cocostudio::DICTOOL->getStringValue_json(_value, "uid", "");
+    const char *_name = cocostudio::DICTOOL->getStringValue_json(_value, "name", "");
 
     int _rare = cocostudio::DICTOOL->getIntValue_json(_value, "rare");
     int _guard = cocostudio::DICTOOL->getIntValue_json(_value, "guard");
@@ -329,9 +350,9 @@ void CCRoomDelegate::updateStageAvatars(const char* json) {
         if (_position.isZero()) continue;
 
         rapidjson::Value& _value = _data_arr[i];
-        const char *_url = cocostudio::DICTOOL->getStringValue_json(_value, "url");
-        const char *_uid = cocostudio::DICTOOL->getStringValue_json(_value, "uid");
-        const char *_name = cocostudio::DICTOOL->getStringValue_json(_value, "name");
+        const char *_url = cocostudio::DICTOOL->getStringValue_json(_value, "url", "");
+        const char *_uid = cocostudio::DICTOOL->getStringValue_json(_value, "uid", "");
+        const char *_name = cocostudio::DICTOOL->getStringValue_json(_value, "name", "");
 
         int _rare = cocostudio::DICTOOL->getIntValue_json(_value, "rare");
         int _guard = cocostudio::DICTOOL->getIntValue_json(_value, "guard");
@@ -414,9 +435,9 @@ void CCRoomDelegate::updateStandAvatars(const char* json) {
 
         rapidjson::Value& _value = _data_arr[i];
 
-        const char *_url = cocostudio::DICTOOL->getStringValue_json(_value, "url");
-        const char *_uid = cocostudio::DICTOOL->getStringValue_json(_value, "uid");
-        const char *_name = cocostudio::DICTOOL->getStringValue_json(_value, "name");
+        const char *_url = cocostudio::DICTOOL->getStringValue_json(_value, "url", "");
+        const char *_uid = cocostudio::DICTOOL->getStringValue_json(_value, "uid", "");
+        const char *_name = cocostudio::DICTOOL->getStringValue_json(_value, "name", "");
         int _rare = cocostudio::DICTOOL->getIntValue_json(_value, "rare");
         int _guard = cocostudio::DICTOOL->getIntValue_json(_value, "guard");
         int _offline = cocostudio::DICTOOL->getIntValue_json(_value, "offline");
@@ -481,36 +502,55 @@ void CCRoomDelegate::backOffStandAvatar(const char* uid) {
 
 }
 
-void CCRoomDelegate::receiveGiftMessage(const char* uid, const char* url, int count) {
-    std::string _uid_str(uid);
-    if (_uid_str.empty()) return;
+void CCRoomDelegate::receiveGiftMessage(const char *json) {
+    rapidjson::Document _document;
+    _document.Parse<rapidjson::kParseDefaultFlags>(json);
+    if (_document.HasParseError()) {
+        log("parse self avatar json error %d\n", _document.GetParseError());
+        return;
+    }
+    if (!_document.IsObject()) {
+        log("self json is not object %s\n", json);
+        return;
+    }
+    rapidjson::Value& _value = _document;
+    const char *_urls = cocostudio::DICTOOL->getStringValue_json(_value, "urls", "");
+    const char *_uid = cocostudio::DICTOOL->getStringValue_json(_value, "uid", "");
+    int _count = cocostudio::DICTOOL->getIntValue_json(_value, "count");
+    int _type = cocostudio::DICTOOL->getIntValue_json(_value, "type");
 
     if (isApplicationReleased("receiveGiftMessage")) return;
     if (isApplicationInvalid("receiveGiftMessage")) {
-        for (int i = 0; i < count; ++i) {
-            cacheBackPresentGift(url);
+        for (int i = 0; i < _count; ++i) {
+            cacheBackPresentGift(_type, _urls);
         }
         return;
     }
+    limitTargetGiftHolder(_type, _count);
 
 
     long long _current_ms = cocos2d::utils::getTimeInMilliseconds();
     std::string _schedule_key("present_gift_bundle_");
     _schedule_key.append(to_string(_current_ms));
 
+    auto& _scheduleMap = getGiftScheduleMap(_type);
+
     _scheduleMap[_schedule_key];
-    for (int i = 0; i < count; ++i) {
-        _scheduleMap[_schedule_key].push_back(url);
+    for (int i = 0; i < _count; ++i) {
+        _scheduleMap[_schedule_key].push_back(_urls);
     }
 
-    log("delegate:receiveGiftMessage, scheduleKey:%s, size:%d", _schedule_key.c_str(), count);
-    std::string _url_str(url);
-    Director::getInstance()->getScheduler()->schedule(CC_CALLBACK_0(CCRoomDelegate::schedulePresentGift, this, _schedule_key, _uid_str, _url_str),
-            this, 60.0 / 1000.0, MAX(count - 1, 0), 0.0, false, _schedule_key);
+    std::string _uid_str(_uid);
+
+    log("delegate:receiveGiftMessage, scheduleKey:%s, size:%d", _schedule_key.c_str(), _count);
+    std::string _urls_str(_urls);
+    Director::getInstance()->getScheduler()->schedule(CC_CALLBACK_0(CCRoomDelegate::schedulePresentGift, this, _type, _schedule_key, _uid_str, _urls_str),
+                                                      this, 60.0 / 1000.0, MAX(_count - 1, 0), 0.0, false, _schedule_key);
 }
 
-void CCRoomDelegate::schedulePresentGift(const std::string &key, const std::string &uid, const std::string &url) {
+void CCRoomDelegate::schedulePresentGift(int type, const std::string &key, const std::string &uid, const std::string &urls) {
 
+    auto& _scheduleMap = getGiftScheduleMap(type);
     std::map<std::string, std::vector<std::string>>::iterator _iterator;
     _iterator = _scheduleMap.find(key.c_str());
     if (_iterator != _scheduleMap.end())  {
@@ -525,7 +565,7 @@ void CCRoomDelegate::schedulePresentGift(const std::string &key, const std::stri
 
     if (isApplicationReleased("receiveGiftMessage")) return;
     if (isApplicationInvalid("receiveGiftMessage")) {
-        cacheBackPresentGift(url.c_str());
+        cacheBackPresentGift(type, urls.c_str());
         return;
     }
 
@@ -533,7 +573,7 @@ void CCRoomDelegate::schedulePresentGift(const std::string &key, const std::stri
     auto _avatar = this->findAvatar(uid.c_str());
     if (nullptr != _avatar && _avatar->offline != 1) {
         _avatar->jumpByPresent();
-        createAndPresentGift(_avatar->getPosition(), url.c_str());
+        createAndPresentGift(type, _avatar->getPosition(), urls.c_str());
     } else {
 
         if (_randomWheres.size() >= 10) {
@@ -550,30 +590,49 @@ void CCRoomDelegate::schedulePresentGift(const std::string &key, const std::stri
             _randomWheres.insert(pair<std::string, unsigned int>(uid, _where));
         }
 
-        createAndPresentGift(this->getNonePosition(_where), url.c_str());
+        createAndPresentGift(type,this->getNonePosition(_where), urls.c_str());
     }
 
 }
 
-void CCRoomDelegate::cacheBackPresentGift(const char *url) {
-    if (_giftCache.size() >= _GIFT_HOLDER_SIZE * 2) {
-        _giftCache.erase(_giftCache.begin());
+void CCRoomDelegate::cacheBackPresentGift(int type, const char *urls) {
+    if (type == CCGameGift::_GIFT_TYPE_SMALL) {
+        if (_s_giftCache.size() >= _S_GIFT_HOLDER_SIZE) {
+            _s_giftCache.erase(_s_giftCache.begin());
+        }
+        _s_giftCache.push_back(urls);
+    } else if (type == CCGameGift::_GIFT_TYPE_MIDDLE) {
+        if (_m_giftCache.size() >= _M_GIFT_HOLDER_SIZE) {
+            _m_giftCache.erase(_m_giftCache.begin());
+        }
+        _m_giftCache.push_back(urls);
+    } else if (type == CCGameGift::_GIFT_TYPE_BIGGER) {
+        if (_b_giftCache.size() >= _B_GIFT_HOLDER_SIZE) {
+            _b_giftCache.erase(_b_giftCache.begin());
+        }
+        _b_giftCache.push_back(urls);
     }
-    _giftCache.push_back(url);
 }
 
 void CCRoomDelegate::cacheWillPresentGift() {
-    log("delegate:cacheWillPresentGift, scheduleMap total size:%d", _scheduleMap.size());
+    cachePresentTargetGift(CCGameGift::_GIFT_TYPE_SMALL);
+    cachePresentTargetGift(CCGameGift::_GIFT_TYPE_MIDDLE);
+    cachePresentTargetGift(CCGameGift::_GIFT_TYPE_BIGGER);
+}
+
+void CCRoomDelegate::cachePresentTargetGift(int type) {
+    auto& _schedule_map = getGiftScheduleMap(type);
+    log("delegate:cacheWillPresentGift, type:%d, scheduleMap total size:%d", type, _schedule_map.size());
     std::map<std::string, std::vector<std::string>>::iterator _map_iter;
-    _map_iter = _scheduleMap.begin();
-    while(_map_iter != _scheduleMap.end()) {
+    _map_iter = _schedule_map.begin();
+    while(_map_iter != _schedule_map.end()) {
         std::vector<std::string>& _url_vec = _map_iter->second;
         log("delegate:cacheWillPresentGift, scheduleKey:%s, size:%d", (_map_iter->first).c_str(), _url_vec.size());
         if (!_url_vec.empty()) {
             std::vector<std::string>::iterator _vec_iter;
             _vec_iter = _url_vec.begin();
             while(_vec_iter != _url_vec.end()) {
-                cacheBackPresentGift(_vec_iter->c_str());
+                cacheBackPresentGift(type, _vec_iter->c_str());
                 _vec_iter++;
             }
             _url_vec.clear();
@@ -581,8 +640,44 @@ void CCRoomDelegate::cacheWillPresentGift() {
         _map_iter++;
     }
 
-    _scheduleMap.clear();
+    _schedule_map.clear();
 }
+
+map<std::string, std::vector<std::string>>& CCRoomDelegate::getGiftScheduleMap(int type) {
+    if (type == CCGameGift::_GIFT_TYPE_SMALL) {
+        return _s_scheduleMap;
+    } else if (type == CCGameGift::_GIFT_TYPE_MIDDLE) {
+        return _m_scheduleMap;
+    } else if (type == CCGameGift::_GIFT_TYPE_BIGGER) {
+        return _b_scheduleMap;
+    }
+    return _s_scheduleMap;
+}
+
+Vector<CCGameGift*>& CCRoomDelegate::getGiftHolder(int type) {
+    if (type == CCGameGift::_GIFT_TYPE_SMALL) {
+        return _s_giftHolder;
+    } else if (type == CCGameGift::_GIFT_TYPE_MIDDLE) {
+        return _m_giftHolder;
+    } else if (type == CCGameGift::_GIFT_TYPE_BIGGER) {
+        return _b_giftHolder;
+    }
+    return _s_giftHolder;
+}
+
+std::vector<std::string> & CCRoomDelegate::getGiftCache(int type) {
+    if (type == CCGameGift::_GIFT_TYPE_SMALL) {
+        return _s_giftCache;
+    } else if (type == CCGameGift::_GIFT_TYPE_MIDDLE) {
+        return _m_giftCache;
+    } else if (type == CCGameGift::_GIFT_TYPE_BIGGER) {
+        return _b_giftCache;
+    }
+    return _s_giftCache;
+}
+
+
+
 
 void CCRoomDelegate::receiveChatMessage(const char* uid, const char* content) {
     if (isApplicationReleased("receiveChatMessage")) return;
@@ -631,7 +726,16 @@ void CCRoomDelegate::releaseResource() {
     _is_released = true;
     _is_attached = false;
 
-    _giftHolder.clear();
+    _s_giftHolder.clear();
+    _m_giftHolder.clear();
+    _b_giftHolder.clear();
+    _s_giftCache.clear();
+    _m_giftCache.clear();
+    _b_giftCache.clear();
+    _s_scheduleMap.clear();
+    _m_scheduleMap.clear();
+    _b_scheduleMap.clear();
+
     _standAvatars.clear();
     _stageAvatars.clear();
     _stageSteps.clear();
@@ -642,9 +746,8 @@ void CCRoomDelegate::releaseResource() {
     _heapCache.clear();
     _standCache.clear();
     _stageCache.clear();
-    _giftCache.clear();
     _targetCache.clear();
-    _scheduleMap.clear();
+
 
     if (_scene) {
         _scene->removeAllChildren();
@@ -714,10 +817,10 @@ const Vec2 CCRoomDelegate::getSelfPosition() const {
     return Vec2(_centerPosition.x ,  _SELF_GROUND_BOTTOM / _scaleFactor);
 }
 
-const Vec2 CCRoomDelegate::getGiftPosition() const {
+const Vec2 CCRoomDelegate::getGiftPosition(int type) const {
     float _coord_x = _GIFT_TABLE_WIDTH / _scaleFactor / 2;
     float _coord_y = _GIFT_TABLE_HEIGHT_MAX / _scaleFactor / 2;
-    float _space_x = 40 / _scaleFactor;
+    float _space_x = 20 / _scaleFactor;
     float _space_y = 20 / _scaleFactor;
 
     float _rand_x = RandomHelper::random_real(- (_coord_x - _space_x), (_coord_x - _space_x));
@@ -837,77 +940,101 @@ CCGameAvatar* CCRoomDelegate::removeAvatar(const char *uid) {
     return _avatar;
 }
 
-void CCRoomDelegate::createAndPresentGift(const Vec2& pos, const char* url) {
+void CCRoomDelegate::createAndPresentGift(int type, const Vec2& pos, const char* urls) {
 
 //    AudioManager::getInstance()->playBG();
 
     float start_x = pos.x;
     float start_y = pos.y + 60 / _scaleFactor;
 
-    int _gift_index = _giftHolder.size();
-    auto _gift = CCGameGift::create(_gift_index, _gift_index, url);
+
+    auto& _gift_holder = getGiftHolder(type);
+
+    int _gift_index = _gift_holder.size();
+    auto _gift = CCGameGift::create(_gift_index, _gift_index, type, urls);
     _gift->setPosition(Vec2(start_x, start_y));
 
-    auto _position = getGiftPosition();
+    auto _position = getGiftPosition(type);
 
     _gift->present(_position);
     if (_scene) {
         _scene->addChild(_gift, 399);
     }
-    _giftHolder.pushBack(_gift);
-
-//    int _star_index = cocos2d::RandomHelper::random_int(1, 5);
-//    std::string _star_path = "gift/star_" + std::to_string(_star_index) + ".png";
-
-
-    limitGiftHolderSize();
+    _gift_holder.pushBack(_gift);
 }
 
 void CCRoomDelegate::tryPresentCacheGift() {
-    for (int i = 0; i < _giftCache.size(); ++i) {
+    presentTargetGift(CCGameGift::_GIFT_TYPE_SMALL);
+    presentTargetGift(CCGameGift::_GIFT_TYPE_MIDDLE);
+    presentTargetGift(CCGameGift::_GIFT_TYPE_BIGGER);
+    limitAllGiftHolder();
+}
 
-        int _gift_index = _giftHolder.size();
-        auto _cache_gift = CCGameGift::create(_gift_index, _gift_index, _giftCache.at(i));
-        _cache_gift->setPosition(getGiftPosition());
+void CCRoomDelegate::presentTargetGift(int type) {
+    auto& _gift_cache = getGiftCache(type);
+    auto& _gift_holder = getGiftHolder(type);
+
+    for (int i = 0; i < _gift_cache.size(); ++i) {
+        int _gift_index = _gift_cache.size();
+        auto _cache_gift = CCGameGift::create(_gift_index, _gift_index, type, _gift_cache.at(i));
+        _cache_gift->setPosition(getGiftPosition(type));
         if (_scene) {
-            _scene->addChild(_cache_gift, 0);
+            _scene->addChild(_cache_gift, type == CCGameGift::_GIFT_TYPE_BIGGER ? -1 : 0);
         }
-        _giftHolder.pushBack(_cache_gift);
+        _gift_holder.pushBack(_cache_gift);
     }
-    _giftCache.clear();
-    limitGiftHolderSize();
+    _gift_cache.clear();
 }
 
 
-void CCRoomDelegate::limitGiftHolderSize() {
-    int _length = _giftHolder.size();
-    int _limit = _GIFT_HOLDER_SIZE;
-    if(_length > _limit * 2) {
-        unsigned int _remove_size = _length - _limit;
-        auto _removeList = Vector<CCGameGift*>(_remove_size);
+int CCRoomDelegate::getLimitHolderSize(int type) {
+    if (type == CCGameGift::_GIFT_TYPE_SMALL) {
+        return _S_GIFT_HOLDER_SIZE;
+    } else if (type == CCGameGift::_GIFT_TYPE_MIDDLE) {
+        return _M_GIFT_HOLDER_SIZE;
+    } else if (type == CCGameGift::_GIFT_TYPE_BIGGER) {
+        return _B_GIFT_HOLDER_SIZE;
+    }
+    return 0;
+}
 
-        for (int i = 0; i < _remove_size; ++i) {
-            _removeList.pushBack(_giftHolder.at(i));
+void CCRoomDelegate::limitAllGiftHolder() {
+    limitTargetGiftHolder(CCGameGift::_GIFT_TYPE_SMALL, 0);
+    limitTargetGiftHolder(CCGameGift::_GIFT_TYPE_MIDDLE, 0);
+    limitTargetGiftHolder(CCGameGift::_GIFT_TYPE_BIGGER, 0);
+}
+
+void CCRoomDelegate::limitTargetGiftHolder(int type, int count) {
+    auto& _gift_holder = getGiftHolder(type);
+    int _limit_size = getLimitHolderSize(type);
+
+    int _limit_real = _gift_holder.size() + count - _limit_size;
+    if (_limit_real > 0) {
+
+        auto _remove_list = Vector<CCGameGift*>(_limit_real);
+        for (int i = 0; i < _limit_real; ++i) {
+            _remove_list.pushBack(_gift_holder.at(i));
         }
 
-        for (int i = 0; i < _remove_size; ++i) {
-            auto _gift = dynamic_cast<CCGameGift*>(_removeList.at(i));
+        for (int i = 0; i < _limit_real; ++i) {
+            auto _gift = dynamic_cast<CCGameGift*>(_remove_list.at(i));
 
             auto _removeFunc = CallFunc::create([_gift](){
                 _gift->removeFromParentAndCleanup(true);
             });
             auto _action = Spawn::createWithTwoActions(
                     JumpBy::create(0.6f, Vec2(0, 0), 80  / _scaleFactor, 1),
-//                    JumpBy::create(0.4, Vec2(0, 100 / _scaleFactor)),
                     FadeOut::create(0.5f)
-                    );
+            );
             auto _sequence = Sequence::create(_action, _removeFunc, nullptr);
             _gift->runAction(_sequence);
-            _giftHolder.eraseObject(_gift);
+            _gift_holder.eraseObject(_gift);
         }
-        _removeList.clear();
+        _remove_list.clear();
     }
 }
+
+
 
 void CCRoomDelegate::refreshTargetAvatar(const char *json) {
     log("delegate:refreshTargetAvatar json:%s", json);
@@ -923,9 +1050,9 @@ void CCRoomDelegate::refreshTargetAvatar(const char *json) {
         return;
     }
     rapidjson::Value& _value = _document;
-    const char *_url = cocostudio::DICTOOL->getStringValue_json(_value, "url");
-    const char *_uid = cocostudio::DICTOOL->getStringValue_json(_value, "uid");
-    const char *_name = cocostudio::DICTOOL->getStringValue_json(_value, "name");
+    const char *_url = cocostudio::DICTOOL->getStringValue_json(_value, "url", "");
+    const char *_uid = cocostudio::DICTOOL->getStringValue_json(_value, "uid", "");
+    const char *_name = cocostudio::DICTOOL->getStringValue_json(_value, "name", "");
 
     int _rare = cocostudio::DICTOOL->getIntValue_json(_value, "rare");
     int _guard = cocostudio::DICTOOL->getIntValue_json(_value, "guard");

@@ -26,7 +26,7 @@ public interface CCGameRoomView {
 
     void setTargetAvatar(String json);
 
-    void presentGift(String userId, String url, int count);
+    void presentGift(String json);
 
     void presentChat(String userId, String content);
 

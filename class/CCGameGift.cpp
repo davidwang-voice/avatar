@@ -5,8 +5,8 @@
 #include "CCGameGift.h"
 
 
-CCGameGift *CCGameGift::create(int id, int ranking, string skin, int priority) {
-    auto gift = new (nothrow) CCGameGift(id, ranking, move(skin), priority);
+CCGameGift *CCGameGift::create(int id, int ranking, int type, string skin, int priority) {
+    auto gift = new (nothrow) CCGameGift(id, ranking, type, move(skin), priority);
     if (gift && gift->init()) {
         gift->autorelease();
     } else {
@@ -31,13 +31,19 @@ void CCGameGift::setTexture(const std::string &filename) {
 void CCGameGift::initGift() {
     this->_scale_factor = Director::getInstance()->getContentScaleFactor();
 
-    std::string _skin_str(_skin);
-    if (_skin_str.empty()) {
+    std::vector<string> _url_arr;
+    std::string _raw = _skin.c_str(), _tmp;
+    std::stringstream input(_raw);
+    while (getline(input, _tmp, ',')) _url_arr.push_back(_tmp);
+    int _random_count = _url_arr.size();
+
+    if (_random_count <= 0) {
         int _star_index = cocos2d::RandomHelper::random_int(1, 5);
         std::string _star_path = "cocos/gift/star_" + std::to_string(_star_index) + ".png";
         setTexture(_star_path);
     } else {
-        loadTexture(_skin.c_str());
+        int _gift_index = cocos2d::RandomHelper::random_int(1, _random_count) - 1;
+        loadTexture(_url_arr[_gift_index].c_str());
     }
     setAnchorPoint(Point::ANCHOR_MIDDLE_BOTTOM);
     setRotation((rand() % (60)) - 30);
@@ -77,7 +83,7 @@ void CCGameGift::present(const Vec2 &target) {
 //    auto rotateBy = RotateBy::create(1, (rand() % (90)) - 45);
 
     auto callback = CallFunc::create([&](){
-        setLocalZOrder(0);
+        setLocalZOrder(_type == CCGameGift::_GIFT_TYPE_BIGGER ? -1 : 0);
     });
     auto sequence = Sequence::create(easeOut, callback, nullptr);
     runAction(sequence);

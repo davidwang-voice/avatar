@@ -20,18 +20,23 @@ private:
     static const int _CONTENT_SIZE_HEIGHT_MAX = 500;
 
     string _skin;
+    int _type;
     float _scale_factor;
     void initGift();
 
 
 protected:
-    CCGameGift(int id, int ranking, string skin, int priority)
+    CCGameGift(int id, int ranking, int type, string skin, int priority)
             : CCBaseSprite(id, ranking, priority)
-            , _skin(move(skin)) {}
+            , _type(type), _skin(move(skin)) {}
 
 public:
+    static const int _GIFT_TYPE_SMALL = 1;
+    static const int _GIFT_TYPE_MIDDLE = 2;
+    static const int _GIFT_TYPE_BIGGER = 3;
+
     virtual ~CCGameGift() = default;
-    static CCGameGift* create(int id, int ranking, string skin, int priority = 0);
+    static CCGameGift* create(int id, int ranking, int type, string skin, int priority = 0);
     void setTexture(const std::string &filename) override ;
     void present(const Vec2& target);
 };
