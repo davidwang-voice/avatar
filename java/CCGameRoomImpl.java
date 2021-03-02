@@ -172,6 +172,11 @@ public class CCGameRoomImpl implements CCGameRoomView {
     }
 
     @Override
+    public void clearGiftPool(int type) {
+        runOnGLThread(() -> gameRoomJNI.clearTargetGiftPool(type));
+    }
+
+    @Override
     public void presentChat(String userId, String content) {
         runOnGLThread(() -> gameRoomJNI.receiveChatMessage(userId, content));
     }

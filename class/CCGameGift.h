@@ -16,13 +16,22 @@ using namespace cocos2d;
 class CCGameGift : public CCBaseSprite {
 
 private:
-    static const int _CONTENT_SIZE_WIDTH_MAX = 500;
-    static const int _CONTENT_SIZE_HEIGHT_MAX = 500;
+    static const int _CONTENT_SIZE_WIDTH_MAX = 200;
+    static const int _CONTENT_SIZE_HEIGHT_MAX = 200;
+
+    static const int _CONTENT_SIZE_WIDTH_MIN = 120;
+    static const int _CONTENT_SIZE_HEIGHT_MIN = 120;
+
+    Sprite *_anim_sprite;
 
     string _skin;
     int _type;
+
     float _scale_factor;
     void initGift();
+    float getMaxScale();
+    float getMinScale();
+
 
 
 protected:
@@ -39,6 +48,8 @@ public:
     static CCGameGift* create(int id, int ranking, int type, string skin, int priority = 0);
     void setTexture(const std::string &filename) override ;
     void present(const Vec2& target);
+
+    static bool isIllegalGiftType(int type);
 };
 
 

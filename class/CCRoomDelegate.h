@@ -64,17 +64,28 @@ private:
     static const int _STAGE_TABLE_WIDTH = 1329;
     static const int _STAGE_TABLE_HEIGHT = 320;
 
-    static const int _S_GIFT_HOLDER_SIZE = 200;
+    static const int _S_GIFT_HOLDER_SIZE = 250;
     static const int _M_GIFT_HOLDER_SIZE = 25;
     static const int _B_GIFT_HOLDER_SIZE = 8;
 
     static const int _GIFT_TABLE_WIDTH = 1125;
     static const int _GIFT_TABLE_HEIGHT_MIN = 100;
-    static const int _GIFT_TABLE_HEIGHT_MAX = 240;
-    static const int _GIFT_TABLE_TOP = 960;
+    static const int _GIFT_TABLE_HEIGHT_MAX = 200;
+    static const int _GIFT_TABLE_TOP = 980;
 
     static const int _NONE_SPACE_X = 100;
     static const int _NONE_SPACE_Y = 1600;
+
+    std::vector<Vec2> _randomPosition {
+            Vec2(186, 897),
+            Vec2(294, 882),
+            Vec2(402, 900),
+            Vec2(510, 909),
+            Vec2(618, 900),
+            Vec2(726, 888),
+            Vec2(834, 900),
+            Vec2(942, 909)
+    };
 
     bool _is_attached = false;
     bool _is_released = true;
@@ -104,6 +115,7 @@ private:
     std::vector<std::string> _s_giftCache;
     std::vector<std::string> _m_giftCache;
     std::vector<std::string> _b_giftCache;
+    std::vector<int> _clearGift;
 
     map<std::string, std::vector<std::string>> _s_scheduleMap;
     map<std::string, std::vector<std::string>> _m_scheduleMap;
@@ -145,6 +157,7 @@ private:
     void cacheBackPresentGift(int type, const char* urls);
     void createAndPresentGift(int type, const Vec2& pos, const char* urls);
     void tryPresentCacheGift();
+    void tryExecuteClearGift();
     void presentTargetGift(int type);
     int getLimitHolderSize(int type);
     void limitAllGiftHolder();
@@ -168,6 +181,8 @@ public:
     void updateStandAvatars(const char* json);
     void backOffStageAvatar(const char* uid);
     void backOffStandAvatar(const char* uid);
+
+    void clearTargetGiftPool(int type);
 
     void receiveGiftMessage(const char* json);
     void receiveChatMessage(const char* uid, const char* content);

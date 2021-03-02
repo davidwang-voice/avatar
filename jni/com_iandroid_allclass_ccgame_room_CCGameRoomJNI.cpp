@@ -78,6 +78,11 @@ extern "C" {
         CCRoomDelegate::getInstance()->backOffStandAvatar(jstringToChar(env, uid));
     }
 
+    JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_clearTargetGiftPool(JNIEnv *env, jobject thiz,
+                                                                                                   jint type) {
+        CCRoomDelegate::getInstance()->clearTargetGiftPool(type);
+    }
+
     JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_receiveGiftMessage(JNIEnv *env, jobject thiz,
                                                                                                    jstring json) {
         CCRoomDelegate::getInstance()->receiveGiftMessage(jstringToChar(env, json));

@@ -120,6 +120,12 @@ public class CCGameRoomJNI {
     public native void backOffStandAvatar(String uid);
 
     /**
+     * 清空指定类型礼物池
+     * @param type 1=小 2=中 3=大
+     */
+    public native void clearTargetGiftPool(int type);
+
+    /**
      * 收到用户送礼消息
      * @param json = "{"type": 1, "uid":"100001", "count": 20, "urls": "xxx.png,xxx.png,..."}"
      */

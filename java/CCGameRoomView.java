@@ -28,6 +28,8 @@ public interface CCGameRoomView {
 
     void presentGift(String json);
 
+    void clearGiftPool(int type);
+
     void presentChat(String userId, String content);
 
     void syncStageUsers(String json);

@@ -24,6 +24,8 @@ using namespace rapidjson;
 
 USING_NS_CC;
 
+static int _big_gift_cursor = 0;
+
 static CCRoomDelegate *instance = NULL;
 
 CCRoomDelegate *CCRoomDelegate::getInstance() {
@@ -45,6 +47,9 @@ void CCRoomDelegate::init() {
     this->_is_released = false;
     this->_is_attached = false;
     log("delegate: init.");
+
+    _big_gift_cursor = 0;
+    std::random_shuffle(this->_randomPosition.begin(), this->_randomPosition.end());
 }
 
 void CCRoomDelegate::attachScene(Scene* scene) {
@@ -115,6 +120,11 @@ void CCRoomDelegate::resumeFromCache() {
     if (!_s_giftCache.empty() || !_m_giftCache.empty() || !_b_giftCache.empty()) {
         tryPresentCacheGift();
         log("delegate:resumeFromCache->tryPresentCacheGift");
+    }
+
+    if (!_clearGift.empty()) {
+        tryExecuteClearGift();
+        log("delegate:resumeFromCache->tryExecuteClearGift");
     }
 
     if (!_targetCache.empty()) {
@@ -218,27 +228,25 @@ void CCRoomDelegate::setupStageGiftHeap(const char *json) {
                 break;
             }
 
-            auto gift = CCGameGift::create(i, i, _type, _urls);
-            gift->setPosition(getGiftPosition(_type));
+            auto _gift = CCGameGift::create(i, i, _type, _urls);
+            _gift->setPosition(getGiftPosition(_type));
 
             if (_scene) {
-                _scene->addChild(gift, _type == CCGameGift::_GIFT_TYPE_BIGGER ? -1 :0);
+                _scene->addChild(_gift, _type == CCGameGift::_GIFT_TYPE_BIGGER ? -1 :0);
             }
-            _new_gifts.pushBack(gift);
+            _new_gifts.pushBack(_gift);
 
         }
     }
-    _new_s_gifts.pushBack(_s_giftHolder);
-    _s_giftHolder.clear();
+
     _s_giftHolder.pushBack(_new_s_gifts);
+    _new_s_gifts.clear();
 
-    _new_m_gifts.pushBack(_m_giftHolder);
-    _m_giftHolder.clear();
     _m_giftHolder.pushBack(_new_m_gifts);
+    _new_m_gifts.clear();
 
-    _new_b_gifts.pushBack(_b_giftHolder);
-    _b_giftHolder.clear();
     _b_giftHolder.pushBack(_new_b_gifts);
+    _new_b_gifts.clear();
 
     limitAllGiftHolder();
 }
@@ -502,6 +510,42 @@ void CCRoomDelegate::backOffStandAvatar(const char* uid) {
 
 }
 
+void CCRoomDelegate::clearTargetGiftPool(int type) {
+    if (CCGameGift::isIllegalGiftType(type)) return;
+    if (isApplicationReleased("clearTargetGiftPool")) return;
+    if (isApplicationInvalid("clearTargetGiftPool")) {
+        _clearGift.push_back(type);
+        return;
+    }
+
+    getGiftCache(type).clear();
+    getGiftScheduleMap(type).clear();
+    auto& _gift_holder = getGiftHolder(type);
+
+    for (int i = 0; i < _gift_holder.size(); ++i) {
+        auto _gift = dynamic_cast<CCGameGift*>(_gift_holder.at(i));
+
+        auto _removeFunc = CallFunc::create([_gift](){
+            _gift->removeFromParentAndCleanup(true);
+        });
+        auto _action = Spawn::createWithTwoActions(
+                JumpBy::create(0.6f, Vec2(0, 0), 80  / _scaleFactor, 1),
+                FadeOut::create(0.5f)
+        );
+        auto _sequence = Sequence::create(_action, _removeFunc, nullptr);
+        _gift->runAction(_sequence);
+    }
+
+    _gift_holder.clear();
+}
+
+void CCRoomDelegate::tryExecuteClearGift() {
+    for (int i = 0; i < _clearGift.size(); ++i) {
+        clearTargetGiftPool(_clearGift.at(i));
+    }
+    _clearGift.clear();
+}
+
 void CCRoomDelegate::receiveGiftMessage(const char *json) {
     rapidjson::Document _document;
     _document.Parse<rapidjson::kParseDefaultFlags>(json);
@@ -519,6 +563,8 @@ void CCRoomDelegate::receiveGiftMessage(const char *json) {
     int _count = cocostudio::DICTOOL->getIntValue_json(_value, "count");
     int _type = cocostudio::DICTOOL->getIntValue_json(_value, "type");
 
+    if (CCGameGift::isIllegalGiftType(_type)) return;
+
     if (isApplicationReleased("receiveGiftMessage")) return;
     if (isApplicationInvalid("receiveGiftMessage")) {
         for (int i = 0; i < _count; ++i) {
@@ -526,8 +572,6 @@ void CCRoomDelegate::receiveGiftMessage(const char *json) {
         }
         return;
     }
-    limitTargetGiftHolder(_type, _count);
-
 
     long long _current_ms = cocos2d::utils::getTimeInMilliseconds();
     std::string _schedule_key("present_gift_bundle_");
@@ -593,6 +637,8 @@ void CCRoomDelegate::schedulePresentGift(int type, const std::string &key, const
         createAndPresentGift(type,this->getNonePosition(_where), urls.c_str());
     }
 
+
+    limitTargetGiftHolder(type, 0);
 }
 
 void CCRoomDelegate::cacheBackPresentGift(int type, const char *urls) {
@@ -735,6 +781,7 @@ void CCRoomDelegate::releaseResource() {
     _s_scheduleMap.clear();
     _m_scheduleMap.clear();
     _b_scheduleMap.clear();
+    _clearGift.clear();
 
     _standAvatars.clear();
     _stageAvatars.clear();
@@ -818,6 +865,15 @@ const Vec2 CCRoomDelegate::getSelfPosition() const {
 }
 
 const Vec2 CCRoomDelegate::getGiftPosition(int type) const {
+
+    if (type == CCGameGift::_GIFT_TYPE_BIGGER) {
+        int _index = _big_gift_cursor % _B_GIFT_HOLDER_SIZE;
+        _big_gift_cursor = (_big_gift_cursor + 1) % _B_GIFT_HOLDER_SIZE;
+
+        auto _position =_randomPosition[_index];
+        return Vec2(_position.x , _centerPosition.y - _position.y);
+    }
+
     float _coord_x = _GIFT_TABLE_WIDTH / _scaleFactor / 2;
     float _coord_y = _GIFT_TABLE_HEIGHT_MAX / _scaleFactor / 2;
     float _space_x = 20 / _scaleFactor;
@@ -986,7 +1042,6 @@ void CCRoomDelegate::presentTargetGift(int type) {
     _gift_cache.clear();
 }
 
-
 int CCRoomDelegate::getLimitHolderSize(int type) {
     if (type == CCGameGift::_GIFT_TYPE_SMALL) {
         return _S_GIFT_HOLDER_SIZE;
@@ -1006,9 +1061,10 @@ void CCRoomDelegate::limitAllGiftHolder() {
 
 void CCRoomDelegate::limitTargetGiftHolder(int type, int count) {
     auto& _gift_holder = getGiftHolder(type);
+    int _total_size = _gift_holder.size();
     int _limit_size = getLimitHolderSize(type);
 
-    int _limit_real = _gift_holder.size() + count - _limit_size;
+    int _limit_real = MIN((_total_size + count - _limit_size), _total_size);
     if (_limit_real > 0) {
 
         auto _remove_list = Vector<CCGameGift*>(_limit_real);
