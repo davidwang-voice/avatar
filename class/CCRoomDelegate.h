@@ -64,13 +64,13 @@ private:
     static const int _STAGE_TABLE_WIDTH = 1329;
     static const int _STAGE_TABLE_HEIGHT = 320;
 
-    static const int _S_GIFT_HOLDER_SIZE = 250;
-    static const int _M_GIFT_HOLDER_SIZE = 25;
+    static const int _S_GIFT_HOLDER_SIZE = 300;
+    static const int _M_GIFT_HOLDER_SIZE = 12;
     static const int _B_GIFT_HOLDER_SIZE = 8;
 
     static const int _GIFT_TABLE_WIDTH = 1125;
     static const int _GIFT_TABLE_HEIGHT_MIN = 100;
-    static const int _GIFT_TABLE_HEIGHT_MAX = 200;
+    static const int _GIFT_TABLE_HEIGHT_MAX = 220;
     static const int _GIFT_TABLE_TOP = 980;
 
     static const int _NONE_SPACE_X = 100;
@@ -151,6 +151,8 @@ private:
     map<std::string, std::vector<std::string>>& getGiftScheduleMap(int type);
     Vector<CCGameGift*>& getGiftHolder(int type);
     std::vector<std::string>& getGiftCache(int type);
+
+    void scheduleHandleGift(int type, const char* uid, const char* urls, int count, float delay, float interval);
     void schedulePresentGift(int type, const std::string &key, const std::string &uid, const std::string &urls);
     void cacheWillPresentGift();
     void cachePresentTargetGift(int type);

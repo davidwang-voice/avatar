@@ -127,7 +127,7 @@ public class CCGameRoomJNI {
 
     /**
      * 收到用户送礼消息
-     * @param json = "{"type": 1, "uid":"100001", "count": 20, "urls": "xxx.png,xxx.png,..."}"
+     * @param json = "{"type": 1, "uid":"100001", "count": 20, "urls": "xxx.png,xxx.png,...", "bigUrl": "xxx.png"}"
      */
     public native void receiveGiftMessage(String json);
 
