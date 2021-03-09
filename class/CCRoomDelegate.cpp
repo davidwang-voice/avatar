@@ -207,8 +207,12 @@ void CCRoomDelegate::setupStageGiftHeap(const char *json) {
         rapidjson::Value &_value = _data_arr[i];
 
         const char *_urls = cocostudio::DICTOOL->getStringValue_json(_value, "urls", "");
+        const char *_big = cocostudio::DICTOOL->getStringValue_json(_value, "bigUrl", "");
         int _count = cocostudio::DICTOOL->getIntValue_json(_value, "count");
         int _type = cocostudio::DICTOOL->getIntValue_json(_value, "type");
+
+
+        if (CCGameGift::isIllegalGiftType(_type)) continue;
 
         Vector<CCGameGift*>& _new_gifts = _new_s_gifts;
         if (_type == CCGameGift::_GIFT_TYPE_SMALL) {
@@ -217,8 +221,6 @@ void CCRoomDelegate::setupStageGiftHeap(const char *json) {
             _new_gifts = _new_m_gifts;
         } else if (_type == CCGameGift::_GIFT_TYPE_BIGGER) {
             _new_gifts = _new_b_gifts;
-        } else {
-            break;
         }
 
         for (int i = 0; i < _count; ++i) {
@@ -236,6 +238,16 @@ void CCRoomDelegate::setupStageGiftHeap(const char *json) {
             }
             _new_gifts.pushBack(_gift);
 
+        }
+        std::string _big_url(_big);
+        if (!_big_url.empty()) {
+            int _big_index = _new_b_gifts.size() + 1;
+            auto _big_gift = CCGameGift::create(_big_index, _big_index, CCGameGift::_GIFT_TYPE_BIGGER, _big_url);
+            _big_gift->setPosition(getGiftPosition(CCGameGift::_GIFT_TYPE_BIGGER));
+            if (_scene) {
+                _scene->addChild(_big_gift, -1);
+            }
+            _new_b_gifts.pushBack(_big_gift);
         }
     }
 
@@ -564,6 +576,8 @@ void CCRoomDelegate::receiveGiftMessage(const char *json) {
     int _count = cocostudio::DICTOOL->getIntValue_json(_value, "count");
     int _type = cocostudio::DICTOOL->getIntValue_json(_value, "type");
 
+    std::string _uid_str(_uid);
+    std::string _urls_str(_urls);
     std::string _big_url(_big);
 
     if (CCGameGift::isIllegalGiftType(_type)) return;
@@ -580,14 +594,14 @@ void CCRoomDelegate::receiveGiftMessage(const char *json) {
     }
 
     float _interval = 60.0 / 1000.0;
-    scheduleHandleGift(_type, _uid, _urls, _count, 0.0, _interval);
+    scheduleHandleGift(_type, _uid_str, _urls_str, _count, 0.0, _interval);
     if (!_big_url.empty()) {
-        scheduleHandleGift(CCGameGift::_GIFT_TYPE_BIGGER, _uid, _big_url.c_str(), 1, _interval * _count, _interval);
+        scheduleHandleGift(CCGameGift::_GIFT_TYPE_BIGGER, _uid_str, _big_url, 1, _interval * _count, _interval);
     }
 
 }
 
-void CCRoomDelegate::scheduleHandleGift(int type, const char *uid, const char *urls, int count, float delay, float interval) {
+void CCRoomDelegate::scheduleHandleGift(int type, const std::string &uid, const std::string &urls, int count, float delay, float interval) {
     double _current_ms = cocos2d::utils::gettime();
     std::string _schedule_key("present_gift_bundle_");
     _schedule_key.append(to_string(_current_ms));
@@ -599,12 +613,12 @@ void CCRoomDelegate::scheduleHandleGift(int type, const char *uid, const char *u
         _scheduleMap[_schedule_key].push_back(urls);
     }
 
-    std::string _uid_str(uid);
-
     log("delegate:receiveGiftMessage, scheduleKey:%s, size:%d", _schedule_key.c_str(), count);
-    std::string _urls_str(urls);
+
+//    std::string _uid_str(uid);
+//    std::string _urls_str(urls);
     Director::getInstance()->getScheduler()->schedule(
-            CC_CALLBACK_0(CCRoomDelegate::schedulePresentGift, this, type, _schedule_key, _uid_str, _urls_str),
+            CC_CALLBACK_0(CCRoomDelegate::schedulePresentGift, this, type, _schedule_key, uid, urls),
             this, interval, MAX(count - 1, 0), delay, false, _schedule_key);
 
 

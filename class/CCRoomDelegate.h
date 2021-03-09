@@ -152,7 +152,7 @@ private:
     Vector<CCGameGift*>& getGiftHolder(int type);
     std::vector<std::string>& getGiftCache(int type);
 
-    void scheduleHandleGift(int type, const char* uid, const char* urls, int count, float delay, float interval);
+    void scheduleHandleGift(int type, const std::string &uid, const std::string &urls, int count, float delay, float interval);
     void schedulePresentGift(int type, const std::string &key, const std::string &uid, const std::string &urls);
     void cacheWillPresentGift();
     void cachePresentTargetGift(int type);

@@ -106,8 +106,15 @@ void CCGameGift::present(const Vec2 &target) {
     cfg.controlPoint_1 = q1;
     cfg.controlPoint_2 = q2;
     cfg.endPosition = Vec2(target.x, _target_y);
+
+//    float _percent = _type == _GIFT_TYPE_SMALL ? 1.2 : 1.0;
+//
+//    float _distance = position.distance(target);
+//    float _duration = (_percent / _MAX_GIFT_THROW_DISTANCE) * _distance;
+    float _duration = _type == _GIFT_TYPE_SMALL ? 0.8 : 0.6;
+
     //使用CCEaseInOut让曲线运动有一个由慢到快的变化，显得更自然
-    auto easeOut = CCEaseOut::create(CCBezierTo::create(0.8 , cfg),1.0f);
+    auto easeOut = CCEaseOut::create(CCBezierTo::create(_duration , cfg),1.0f);
 
 //    auto rotateBy = RotateBy::create(1, (rand() % (90)) - 45);
 
@@ -140,11 +147,11 @@ void CCGameGift::present(const Vec2 &target) {
             _self->runAction(ScaleTo::create(0.1, _self->getMaxScale()));
             _self->runAction(RotateTo::create(0.1, _angle));
             _self->runAction(CCEaseOut::create(MoveTo::create(0.2, _target),0.8));
+            _self->setLocalZOrder(-1);
         });
 
 
         auto _callback = CallFunc::create([_self, _sprite](){
-            _self->setLocalZOrder(-1);
             _sprite->setVisible(false);
         });
 
