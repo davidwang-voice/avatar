@@ -129,7 +129,17 @@ void CCGameGift::present(const Vec2 &target) {
 
         auto _target = Vec2(target.x, target.y);
         auto _self = this;
-        auto _anim_func = CallFunc::create([_self, _sprite, _target](){
+
+        auto _action_func = CallFunc::create([_self, _sprite, _target](){
+            int _angle = (rand() % (20)) - 10;
+
+            _self->runAction(CCEaseBackOut::create(ScaleTo::create(0.2, _self->getMaxScale())));
+            _self->runAction(RotateTo::create(0.2, _angle));
+            _self->runAction(CCEaseOut::create(MoveTo::create(0.3, _target),0.8));
+            _self->setLocalZOrder(-1);
+        });
+
+        auto _anim_func = CallFunc::create([_self, _sprite](){
 
             Animation *_animation = Animation::create();
             for (int i = 0; i <= 29; i++) {
@@ -141,13 +151,6 @@ void CCGameGift::present(const Vec2 &target) {
             Animate *_animate = Animate::create(_animation);
 
             _sprite->runAction(_animate);
-
-            int _angle = (rand() % (20)) - 10;
-
-            _self->runAction(ScaleTo::create(0.1, _self->getMaxScale()));
-            _self->runAction(RotateTo::create(0.1, _angle));
-            _self->runAction(CCEaseOut::create(MoveTo::create(0.2, _target),0.8));
-            _self->setLocalZOrder(-1);
         });
 
 
@@ -155,7 +158,7 @@ void CCGameGift::present(const Vec2 &target) {
             _sprite->setVisible(false);
         });
 
-        auto _sequence = Sequence::create(easeOut, _anim_func, DelayTime::create(1.2), _callback, nullptr);
+        auto _sequence = Sequence::create(easeOut, _action_func, DelayTime::create(0.2), _anim_func, DelayTime::create(1.2), _callback, nullptr);
         runAction(_sequence);
     } else {
         auto _callback = CallFunc::create([&](){
