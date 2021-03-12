@@ -256,7 +256,7 @@ void CCRoomDelegate::setupStageGiftHeap(const char *json) {
             auto _extra_gift = CCGameGift::create(_extra_index, _extra_index, _extra_type, _extra_url_str);
             _extra_gift->setPosition(getGiftPosition(_extra_type));
             if (_scene) {
-                _scene->addChild(_extra_gift, -1);
+                _scene->addChild(_extra_gift, _extra_type == CCGameGift::_GIFT_TYPE_BIGGER ? -1 :0);
             }
             _extra_gifts.pushBack(_extra_gift);
         }
@@ -583,10 +583,11 @@ void CCRoomDelegate::receiveGiftMessage(const char *json) {
     rapidjson::Value& _value = _document;
     const char *_urls = cocostudio::DICTOOL->getStringValue_json(_value, "urls", "");
     const char *_uid = cocostudio::DICTOOL->getStringValue_json(_value, "uid", "");
-    const char *_extra_url = cocostudio::DICTOOL->getStringValue_json(_value, "extraUrl", "");
-    int _extra_type = cocostudio::DICTOOL->getIntValue_json(_value, "extraType");
     int _count = cocostudio::DICTOOL->getIntValue_json(_value, "count");
     int _type = cocostudio::DICTOOL->getIntValue_json(_value, "type");
+
+    const char *_extra_url = cocostudio::DICTOOL->getStringValue_json(_value, "extraUrl", "");
+    int _extra_type = cocostudio::DICTOOL->getIntValue_json(_value, "extraType");
 
     std::string _uid_str(_uid);
     std::string _urls_str(_urls);
