@@ -207,7 +207,8 @@ void CCRoomDelegate::setupStageGiftHeap(const char *json) {
         rapidjson::Value &_value = _data_arr[i];
 
         const char *_urls = cocostudio::DICTOOL->getStringValue_json(_value, "urls", "");
-        const char *_big = cocostudio::DICTOOL->getStringValue_json(_value, "bigUrl", "");
+        const char *_extra_url = cocostudio::DICTOOL->getStringValue_json(_value, "extraUrl", "");
+        int _extra_type = cocostudio::DICTOOL->getIntValue_json(_value, "extraType");
         int _count = cocostudio::DICTOOL->getIntValue_json(_value, "count");
         int _type = cocostudio::DICTOOL->getIntValue_json(_value, "type");
 
@@ -239,15 +240,25 @@ void CCRoomDelegate::setupStageGiftHeap(const char *json) {
             _new_gifts.pushBack(_gift);
 
         }
-        std::string _big_url(_big);
-        if (!_big_url.empty()) {
-            int _big_index = _new_b_gifts.size() + 1;
-            auto _big_gift = CCGameGift::create(_big_index, _big_index, CCGameGift::_GIFT_TYPE_BIGGER, _big_url);
-            _big_gift->setPosition(getGiftPosition(CCGameGift::_GIFT_TYPE_BIGGER));
-            if (_scene) {
-                _scene->addChild(_big_gift, -1);
+        std::string _extra_url_str(_extra_url);
+        if (!_extra_url_str.empty() && !CCGameGift::isIllegalGiftType(_extra_type)) {
+
+            Vector<CCGameGift*>& _extra_gifts = _new_s_gifts;
+            if (_extra_type == CCGameGift::_GIFT_TYPE_SMALL) {
+                _extra_gifts = _new_s_gifts;
+            } else if (_extra_type == CCGameGift::_GIFT_TYPE_MIDDLE) {
+                _extra_gifts = _new_m_gifts;
+            } else if (_extra_type == CCGameGift::_GIFT_TYPE_BIGGER) {
+                _extra_gifts = _new_b_gifts;
             }
-            _new_b_gifts.pushBack(_big_gift);
+
+            int _extra_index = _extra_gifts.size() + 1;
+            auto _extra_gift = CCGameGift::create(_extra_index, _extra_index, _extra_type, _extra_url_str);
+            _extra_gift->setPosition(getGiftPosition(_extra_type));
+            if (_scene) {
+                _scene->addChild(_extra_gift, -1);
+            }
+            _extra_gifts.pushBack(_extra_gift);
         }
     }
 
@@ -572,13 +583,14 @@ void CCRoomDelegate::receiveGiftMessage(const char *json) {
     rapidjson::Value& _value = _document;
     const char *_urls = cocostudio::DICTOOL->getStringValue_json(_value, "urls", "");
     const char *_uid = cocostudio::DICTOOL->getStringValue_json(_value, "uid", "");
-    const char *_big = cocostudio::DICTOOL->getStringValue_json(_value, "bigUrl", "");
+    const char *_extra_url = cocostudio::DICTOOL->getStringValue_json(_value, "extraUrl", "");
+    int _extra_type = cocostudio::DICTOOL->getIntValue_json(_value, "extraType");
     int _count = cocostudio::DICTOOL->getIntValue_json(_value, "count");
     int _type = cocostudio::DICTOOL->getIntValue_json(_value, "type");
 
     std::string _uid_str(_uid);
     std::string _urls_str(_urls);
-    std::string _big_url(_big);
+    std::string _extra_url_str(_extra_url);
 
     if (CCGameGift::isIllegalGiftType(_type)) return;
 
@@ -587,16 +599,16 @@ void CCRoomDelegate::receiveGiftMessage(const char *json) {
         for (int i = 0; i < _count; ++i) {
             cacheBackPresentGift(_type, _urls);
         }
-        if (!_big_url.empty()) {
-            cacheBackPresentGift(CCGameGift::_GIFT_TYPE_BIGGER, _big_url.c_str());
+        if (!_extra_url_str.empty() && !CCGameGift::isIllegalGiftType(_extra_type)) {
+            cacheBackPresentGift(_extra_type, _extra_url_str.c_str());
         }
         return;
     }
 
     float _interval = 60.0 / 1000.0;
     scheduleHandleGift(_type, _uid_str, _urls_str, _count, 0.0, _interval);
-    if (!_big_url.empty()) {
-        scheduleHandleGift(CCGameGift::_GIFT_TYPE_BIGGER, _uid_str, _big_url, 1, _interval * _count, _interval);
+    if (!_extra_url_str.empty() && !CCGameGift::isIllegalGiftType(_extra_type)) {
+        scheduleHandleGift(_extra_type, _uid_str, _extra_url_str, 1, _interval * _count, _interval);
     }
 
 }
