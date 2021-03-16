@@ -212,17 +212,7 @@ void CCRoomDelegate::setupStageGiftHeap(const char *json) {
         int _count = cocostudio::DICTOOL->getIntValue_json(_value, "count");
         int _type = cocostudio::DICTOOL->getIntValue_json(_value, "type");
 
-
         if (CCGameGift::isIllegalGiftType(_type)) continue;
-
-        Vector<CCGameGift*>& _new_gifts = _new_s_gifts;
-        if (_type == CCGameGift::_GIFT_TYPE_SMALL) {
-            _new_gifts = _new_s_gifts;
-        } else if (_type == CCGameGift::_GIFT_TYPE_MIDDLE) {
-            _new_gifts = _new_m_gifts;
-        } else if (_type == CCGameGift::_GIFT_TYPE_BIGGER) {
-            _new_gifts = _new_b_gifts;
-        }
 
         for (int i = 0; i < _count; ++i) {
             if (_new_s_gifts.size() >= _S_GIFT_HOLDER_SIZE
@@ -237,28 +227,40 @@ void CCRoomDelegate::setupStageGiftHeap(const char *json) {
             if (_scene) {
                 _scene->addChild(_gift, _type == CCGameGift::_GIFT_TYPE_BIGGER ? -1 :0);
             }
-            _new_gifts.pushBack(_gift);
 
+            if (_type == CCGameGift::_GIFT_TYPE_SMALL) {
+                _new_s_gifts.pushBack(_gift);
+            } else if (_type == CCGameGift::_GIFT_TYPE_MIDDLE) {
+                _new_m_gifts.pushBack(_gift);
+            } else if (_type == CCGameGift::_GIFT_TYPE_BIGGER) {
+                _new_b_gifts.pushBack(_gift);
+            }
         }
         std::string _extra_url_str(_extra_url);
         if (!_extra_url_str.empty() && !CCGameGift::isIllegalGiftType(_extra_type)) {
 
-            Vector<CCGameGift*>& _extra_gifts = _new_s_gifts;
+
+            int _extra_index = 0;
             if (_extra_type == CCGameGift::_GIFT_TYPE_SMALL) {
-                _extra_gifts = _new_s_gifts;
+                _extra_index = _new_s_gifts.size() + 1;
             } else if (_extra_type == CCGameGift::_GIFT_TYPE_MIDDLE) {
-                _extra_gifts = _new_m_gifts;
+                _extra_index = _new_m_gifts.size() + 1;
             } else if (_extra_type == CCGameGift::_GIFT_TYPE_BIGGER) {
-                _extra_gifts = _new_b_gifts;
+                _extra_index = _new_b_gifts.size() + 1;
             }
 
-            int _extra_index = _extra_gifts.size() + 1;
             auto _extra_gift = CCGameGift::create(_extra_index, _extra_index, _extra_type, _extra_url_str);
             _extra_gift->setPosition(getGiftPosition(_extra_type));
             if (_scene) {
                 _scene->addChild(_extra_gift, _extra_type == CCGameGift::_GIFT_TYPE_BIGGER ? -1 :0);
             }
-            _extra_gifts.pushBack(_extra_gift);
+            if (_extra_type == CCGameGift::_GIFT_TYPE_SMALL) {
+                _new_s_gifts.pushBack(_extra_gift);
+            } else if (_extra_type == CCGameGift::_GIFT_TYPE_MIDDLE) {
+                _new_m_gifts.pushBack(_extra_gift);
+            } else if (_extra_type == CCGameGift::_GIFT_TYPE_BIGGER) {
+                _new_b_gifts.pushBack(_extra_gift);
+            }
         }
     }
 
