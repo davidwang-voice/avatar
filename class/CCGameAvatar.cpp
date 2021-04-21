@@ -12,6 +12,7 @@
 #include <cocos/editor-support/spine/extension.h>
 #include "platform/CCDevice.h"
 #include "ui/UIScale9Sprite.h"
+#include "CCGamePicture.h"
 
 using namespace cocos2d::ui;
 
@@ -554,8 +555,7 @@ void CCGameAvatar::jumpByRepeat() {
     _self->_jump_ing = true;
 }
 
-void CCGameAvatar::popChatBubble(const char* content) {
-
+void CCGameAvatar::popChatMsgBubble(const char* content, ChatBubbleType type) {
     TTFConfig _label_config;
     _label_config.fontFilePath = "font/droid.ttf";
     _label_config.fontSize = 25;
@@ -568,46 +568,59 @@ void CCGameAvatar::popChatBubble(const char* content) {
     auto _chat_label = Label::createWithSystemFont(StringUtils::toString(content) + "\n", "Arial", 24  / _scale_factor, Size(_CHAT_POP_BUBBLE_WIDTH / _scale_factor, 0));
     _chat_label->setAnchorPoint(Point::ANCHOR_MIDDLE);
     _chat_label->setPosition(10 / _scale_factor + _chat_label->getContentSize().width / 2 , 10 / _scale_factor + _chat_label->getContentSize().height / 2 );
-    Color4B  textColor(0,0,0,255);
-    _chat_label->setTextColor(textColor);
 
+    if (type == MESSAGE) {
+        _chat_label->setTextColor(Color4B(0,0,0,255));
+    }else if (type == INFO) {
+        _chat_label->setTextColor(Color4B(255,255,255,255));
+    }
+    completeBubble(_chat_label, type);
+}
 
-    auto _name_label = Label::createWithSystemFont(_name, "Arial", 20 / _scale_factor, Size::ZERO, TextHAlignment::RIGHT);
-    _name_label->setOverflow(Label::Overflow::CLAMP);
-    _name_label->setAnchorPoint(Point::ANCHOR_BOTTOM_RIGHT);
-    _name_label->setPosition(_chat_label->getContentSize().width + 10 / _scale_factor ,  10 / _scale_factor);
-    _name_label->setDimensions(_CHAT_POP_BUBBLE_WIDTH / _scale_factor, _name_label->getContentSize().height);
-    _name_label->setTextColor(Color4B(0,0,0,127));
+void CCGameAvatar::popChatPicBubble(const char *url) {
+    auto _chat_picture = CCGamePicture::create(0, 0, url);
+    _chat_picture->setAnchorPoint(Point::ANCHOR_MIDDLE);
+    _chat_picture->loadTexture(url);
+    _chat_picture->setPosition(10 / _scale_factor + _chat_picture->getContentSize().width / 2 , 10 / _scale_factor + _chat_picture->getContentSize().height / 2 );
+    completeBubble(_chat_picture, ChatBubbleType::PIC);
+}
 
-
+void CCGameAvatar::completeBubble(Node *content, ChatBubbleType type) {
     auto _chat_bubble = CCBaseSprite::create();
     _chat_bubble->setAnchorPoint(Point::ANCHOR_MIDDLE_BOTTOM);
     _chat_bubble->setPosition(getContentSize().width/ 2, _LABEL_HEIGHT_DEFAULT / _scale_factor);;
-    _chat_bubble->setContentSize(Size(_chat_label->getContentSize().width + 20  / _scale_factor, _chat_label->getContentSize().height + 20  / _scale_factor));
+    _chat_bubble->setContentSize(Size(content->getContentSize().width + 20  / _scale_factor, content->getContentSize().height + 20  / _scale_factor));
 
 
-    auto _background = ui::Scale9Sprite::create("cocos/avatar/chat_bubble9.png",
-            Rect(0, 0, 25, 25), Rect(13, 13, 1, 1));
+    auto _background = ui::Scale9Sprite::create();
+    if (type == INFO) {
+        _background->initWithFile("cocos/avatar/chat_bubble_info9.png.png", Rect(0, 0, 25, 25), Rect(13, 13, 1, 1));
+    } else {
+        if (type == MESSAGE) {
+            auto _name_label = Label::createWithSystemFont(_name, "Arial", 20 / _scale_factor, Size::ZERO, TextHAlignment::RIGHT);
+            _name_label->setOverflow(Label::Overflow::CLAMP);
+            _name_label->setAnchorPoint(Point::ANCHOR_BOTTOM_RIGHT);
+            _name_label->setPosition(content->getContentSize().width + 10 / _scale_factor ,  10 / _scale_factor);
+            _name_label->setDimensions(_CHAT_POP_BUBBLE_WIDTH / _scale_factor, _name_label->getContentSize().height);
+            _name_label->setTextColor(Color4B(0,0,0,127));
+            _chat_bubble->addChild(_name_label, 1);
+        }
+        _background->initWithFile("cocos/avatar/chat_bubble9.png", Rect(0, 0, 25, 25), Rect(13, 13, 1, 1));
+    }
+
     _background->setAnchorPoint(Point::ANCHOR_MIDDLE);
     _background->setPosition(_chat_bubble->getContentSize().width / 2, _chat_bubble->getContentSize().height / 2);
     _background->setContentSize(Size(_chat_bubble->getContentSize().width, _chat_bubble->getContentSize().height));
 
-//    auto _drawNode = DrawNode::create();
-//    const Vec2 &origin = Vec2(0,0);
-//    const Vec2 &destination = Vec2(_chat_bubble->getContentSize().width, _chat_bubble->getContentSize().height);
-//    Color4F color4F(1, 1, 1, 0.95);
-//
-//    drawRoundRect(_drawNode, origin, destination,12  / _scale_factor, 88,  color4F);
 
     _chat_bubble->addChild(_background);
-    _chat_bubble->addChild(_chat_label);
-    _chat_bubble->addChild(_name_label);
+    _chat_bubble->addChild(content);
     this->addChild(_chat_bubble, 3);
 
     auto _moveBy = MoveBy::create(4, Vec2(0, 30 / _scale_factor));
 
-    auto _fadeFunc = CallFunc::create([_chat_label, _background](){
-        _chat_label->runAction(FadeOut::create(2));
+    auto _fadeFunc = CallFunc::create([content, _background](){
+        content->runAction(FadeOut::create(2));
         _background->runAction(FadeOut::create(2));
     });
 
@@ -640,6 +653,7 @@ void CCGameAvatar::popChatBubble(const char* content) {
     runAction(Sequence::create(DelayTime::create(8), _resetChatZOrder, nullptr));
 
 }
+
 
 void CCGameAvatar::drawRoundRect(DrawNode *drawNode, const Vec2 &origin, const Vec2 &destination,
                                  float radius, unsigned int segments, const Color4F &color)

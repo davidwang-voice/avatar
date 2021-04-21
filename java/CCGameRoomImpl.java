@@ -182,6 +182,16 @@ public class CCGameRoomImpl implements CCGameRoomView {
     }
 
     @Override
+    public void presentInfo(String userId, String content) {
+        runOnGLThread(() -> gameRoomJNI.receiveInfoMessage(userId, content));
+    }
+
+    @Override
+    public void presentPicture(String userId, String url) {
+        runOnGLThread(() -> gameRoomJNI.receiveChatPicture(userId, url));
+    }
+
+    @Override
     public void syncStageUsers(String json) {
         runOnGLThread(() -> gameRoomJNI.updateStageAvatars(json));
     }

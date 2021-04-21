@@ -188,6 +188,9 @@ public:
 
     void receiveGiftMessage(const char* json);
     void receiveChatMessage(const char* uid, const char* content);
+    void receiveInfoMessage(const char* uid, const char* content);
+    void receiveChatPicture(const char* uid, const char* url);
+
     void receiveVoiceWave(const char* uids);
     void receiveRandomSnore(const char* uids);
     void releaseResource();

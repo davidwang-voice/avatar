@@ -775,10 +775,35 @@ std::vector<std::string> & CCRoomDelegate::getGiftCache(int type) {
 void CCRoomDelegate::receiveChatMessage(const char* uid, const char* content) {
     if (isApplicationReleased("receiveChatMessage")) return;
     if (isApplicationInvalid("receiveChatMessage")) return;
+    string _str(content);
+    if (_str.empty()) return;
     auto _avatar = this->findAvatar(uid);
     if (nullptr == _avatar || _avatar->offline == 1) return;
 
-    _avatar->popChatBubble(content);
+    _avatar->popChatMsgBubble(content, CCGameAvatar::MESSAGE);
+}
+
+void CCRoomDelegate::receiveInfoMessage(const char* uid, const char* content) {
+    if (isApplicationReleased("receiveInfoMessage")) return;
+    if (isApplicationInvalid("receiveInfoMessage")) return;
+    string _str(content);
+    if (_str.empty()) return;
+    auto _avatar = this->findAvatar(uid);
+    if (nullptr == _avatar || _avatar->offline == 1) return;
+
+    _avatar->popChatMsgBubble(content, CCGameAvatar::INFO);
+}
+
+
+void CCRoomDelegate::receiveChatPicture(const char *uid, const char *url) {
+    if (isApplicationReleased("receiveChatMessage")) return;
+    if (isApplicationInvalid("receiveChatMessage")) return;
+    string _str(url);
+    if (_str.empty()) return;
+    auto _avatar = this->findAvatar(uid);
+    if (nullptr == _avatar || _avatar->offline == 1) return;
+
+    _avatar->popChatPicBubble(url);
 }
 
 void CCRoomDelegate::receiveVoiceWave(const char *uids) {

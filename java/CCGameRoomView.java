@@ -32,6 +32,10 @@ public interface CCGameRoomView {
 
     void presentChat(String userId, String content);
 
+    void presentInfo(String userId, String content);
+
+    void presentPicture(String userId, String url);
+
     void syncStageUsers(String json);
 
     void syncStandUsers(String json);

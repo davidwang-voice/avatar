@@ -91,6 +91,10 @@ public:
     int stageIndex = 0;
     int offline;
 
+
+    ////聊天气泡样式_普通发言 提醒（家族）
+    static enum ChatBubbleType {MESSAGE, INFO, PIC};
+
     static CCGameAvatar* create(int id, int ranking, string uid, string skin, string name, int priority = 0);
 
     void setPosition(const Vec2& pos) override;
@@ -108,7 +112,9 @@ public:
     void jumpToPosition(const Vec2& target);
     void jumpByPresent();
     void jumpByRepeat();
-    void popChatBubble(const char* content);
+    void popChatMsgBubble(const char* content, ChatBubbleType type);
+    void popChatPicBubble(const char* url);
+    void completeBubble(Node *content, ChatBubbleType type);
     void runSnoreAnim();
 
     void setOffline(int offline);

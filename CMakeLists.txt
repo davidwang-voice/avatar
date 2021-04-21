@@ -60,6 +60,27 @@ list(APPEND GAME_SOURCE
         Classes/CCGameStep.cpp
         Classes/CCRoomDelegate.cpp
         Classes/CCImageLoader.cpp
+        Classes/CCGamePicture.cpp
+
+
+        Classes/Gif/gif_lib/dgif_lib.c
+        Classes/Gif/gif_lib/gif_err.c
+        Classes/Gif/gif_lib/gif_font.c
+        Classes/Gif/gif_lib/gif_hash.c
+        Classes/Gif/gif_lib/gifalloc.c
+        Classes/Gif/gif_lib/quantize.c
+
+        Classes/Gif/Bitmap.cpp
+        Classes/Gif/CacheGif.cpp
+        Classes/Gif/CacheGifData.cpp
+        Classes/Gif/FileData.cpp
+        Classes/Gif/GifBase.cpp
+        Classes/Gif/GifMovie.cpp
+        Classes/Gif/GifMovieData.cpp
+        Classes/Gif/InstantGif.cpp
+        Classes/Gif/InstantGifData.cpp
+        Classes/Gif/Movie.cpp
+
      )
 list(APPEND GAME_HEADER
         Classes/AppDelegate.h
@@ -75,6 +96,27 @@ list(APPEND GAME_HEADER
         Classes/CCGameStep.h
         Classes/CCRoomDelegate.h
         Classes/CCImageLoader.h
+        Classes/CCGamePicture.h
+
+
+        Classes/Gif/gif_lib/gif_hash.h
+        Classes/Gif/gif_lib/gif_lib.h
+        Classes/Gif/gif_lib/gif_lib_private.h
+
+        Classes/Gif/Bitmap.h
+        Classes/Gif/CacheGif.h
+        Classes/Gif/CacheGifData.h
+        Classes/Gif/FileData.h
+        Classes/Gif/GifBase.h
+        Classes/Gif/GifMovie.h
+        Classes/Gif/GifMovieData.h
+        Classes/Gif/InstantGif.h
+        Classes/Gif/InstantGifData.h
+        Classes/Gif/Movie.h
+
+        Classes/Gif/GifMacros.h
+        Classes/Gif/GifUtils.h
+
      )
 
 if(ANDROID)

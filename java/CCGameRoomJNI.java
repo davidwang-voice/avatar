@@ -137,6 +137,16 @@ public class CCGameRoomJNI {
     public native void receiveChatMessage(String uid, String content);
 
     /**
+     * 收到用户提醒消息
+     */
+    public native void receiveInfoMessage(String uid, String content);
+
+    /**
+     * 收到用户聊天贴图
+     */
+    public native void receiveChatPicture(String uid, String url);
+
+    /**
      * 收到麦位主播声纹
      * @param uids = "100001,100002,..."
      */

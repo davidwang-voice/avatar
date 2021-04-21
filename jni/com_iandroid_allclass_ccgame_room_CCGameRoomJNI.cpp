@@ -92,6 +92,16 @@ extern "C" {
         CCRoomDelegate::getInstance()->receiveChatMessage(jstringToChar(env, uid), jstringToChar(env, content));
     }
 
+    JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_receiveInfoMessage(JNIEnv *env, jobject thiz,
+                                                                                                   jstring uid, jstring content) {
+        CCRoomDelegate::getInstance()->receiveInfoMessage(jstringToChar(env, uid), jstringToChar(env, content));
+    }
+
+    JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_receiveChatPicture(JNIEnv *env, jobject thiz,
+                                                                                                   jstring uid, jstring url) {
+        CCRoomDelegate::getInstance()->receiveChatPicture(jstringToChar(env, uid), jstringToChar(env, url));
+    }
+
     JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_receiveVoiceWave(JNIEnv *env, jobject thiz,
                                                                       jstring uids) {
         CCRoomDelegate::getInstance()->receiveVoiceWave(jstringToChar(env, uids));
