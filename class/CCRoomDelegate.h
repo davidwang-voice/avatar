@@ -53,7 +53,7 @@ private:
     static const int _STAND_MAX_COLUMN_COUNT = 11;
     static const int _STAND_ROW_HEIGHT = 135;
     static const int _STAND_FRONT_ROW_HEIGHT = 135;
-    static const int _STAND_FRONT_ROW_TOP = 1120 + 135;
+    static const int _STAND_FRONT_ROW_TOP = 1120 + 55;
 
     static const int _STAGE_BLOCK_COUNT = 3;
     static const int _STAGE_BLOCK_WIDTH = 144;
@@ -70,8 +70,8 @@ private:
 
     static const int _GIFT_TABLE_WIDTH = 1125;
     static const int _GIFT_TABLE_HEIGHT_MIN = 100;
-    static const int _GIFT_TABLE_HEIGHT_MAX = 220;
-    static const int _GIFT_TABLE_TOP = 980;
+    static const int _GIFT_TABLE_HEIGHT_MAX = 200;
+    static const int _GIFT_TABLE_TOP = 980 - 30;
 
     static const int _NONE_SPACE_X = 100;
     static const int _NONE_SPACE_Y = 1600;

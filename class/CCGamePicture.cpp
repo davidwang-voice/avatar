@@ -17,16 +17,21 @@ CCGamePicture *CCGamePicture::create(int id, int ranking, string skin, int prior
 }
 
 void CCGamePicture::setTexture(const std::string &filename) {
-    if (nullptr == _picture) return;
+
     if (GifUtils::isGif(filename.c_str())) {
-        _picture->init(filename.c_str());
+        if (nullptr == _picture_gif) return;
+        _picture_gif->init(filename.c_str());
+        _picture_gif->setAnchorPoint(Point::ANCHOR_MIDDLE);
+        _picture_gif->setPosition(this->getContentSize().width / 2, this->getContentSize().height / 2);
+        _picture_gif->setScale(getMaxScale(_picture_gif));
     } else {
-        _picture->setTexture(filename.c_str());
+        if (nullptr == _picture_png) return;
+        _picture_png->setTexture(filename.c_str());
+        _picture_png->setAnchorPoint(Point::ANCHOR_MIDDLE);
+        _picture_png->setPosition(this->getContentSize().width / 2, this->getContentSize().height / 2);
+        _picture_png->setScale(getMaxScale(_picture_png));
     }
 
-    _picture->setAnchorPoint(Point::ANCHOR_MIDDLE);
-    _picture->setPosition(this->getContentSize().width / 2, this->getContentSize().height / 2);
-    _picture->setScale(getMaxScale());
 }
 
 void CCGamePicture::initPicture() {
@@ -34,30 +39,22 @@ void CCGamePicture::initPicture() {
     setContentSize(Size(_CONTENT_SIZE_WIDTH_MAX, _CONTENT_SIZE_HEIGHT_MAX));
     setAnchorPoint(Point::ANCHOR_MIDDLE_BOTTOM);
 
-    _picture = CacheGif::create("");
-    if (nullptr == _picture) return;
+    _picture_gif = CacheGif::create("");
+    if (nullptr != _picture_gif) {
+        addChild(_picture_gif);
+    }
+    _picture_png = Sprite::create();
+    addChild(_picture_png);
 
-    addChild(_picture);
     loadTexture(_skin.c_str());
 }
 
-float CCGamePicture::getMaxScale() {
+float CCGamePicture::getMaxScale(Node* node) {
     float _max_width = _CONTENT_SIZE_WIDTH_MAX / _scale_factor;
     float _max_height = _CONTENT_SIZE_HEIGHT_MAX / _scale_factor;
-    if (_picture->getContentSize().width > _max_width  || _picture->getContentSize().height > _max_height) {
-        float _width_ratio = _picture->getContentSize().width / _max_width;
-        float _height_ratio = _picture->getContentSize().height / _max_height;
-        return 1 / MAX(_width_ratio, _height_ratio);
-    }
-    return 1.0;
-}
-
-float CCGamePicture::getMinScale() {
-    float _min_width = _CONTENT_SIZE_WIDTH_MIN / _scale_factor;
-    float _min_height = _CONTENT_SIZE_HEIGHT_MIN / _scale_factor;
-    if (getContentSize().width > _min_width  || getContentSize().height > _min_height) {
-        float _width_ratio = getContentSize().width / _min_width;
-        float _height_ratio = getContentSize().height / _min_height;
+    if (node->getContentSize().width > _max_width  || node->getContentSize().height > _max_height) {
+        float _width_ratio = node->getContentSize().width / _max_width;
+        float _height_ratio = node->getContentSize().height / _max_height;
         return 1 / MAX(_width_ratio, _height_ratio);
     }
     return 1.0;
@@ -65,6 +62,8 @@ float CCGamePicture::getMinScale() {
 
 void CCGamePicture::setOpacity(GLubyte opacity) {
     Node::setOpacity(opacity);
-    if (nullptr != _picture)
-        _picture->setOpacity(opacity);
+    if (nullptr != _picture_gif)
+        _picture_gif->setOpacity(opacity);
+    if (nullptr != _picture_png)
+        _picture_png->setOpacity(opacity);
 }

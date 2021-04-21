@@ -29,12 +29,12 @@ private:
     string _skin;
 
 
-    CacheGif *_picture;
+    CacheGif *_picture_gif;
+    Sprite *_picture_png;
 
     float _scale_factor;
     void initPicture();
-    float getMaxScale();
-    float getMinScale();
+    float getMaxScale(Node* node);
 
 
 
