@@ -46,7 +46,11 @@ void CCGamePicture::initPicture() {
     _picture_png = Sprite::create();
     addChild(_picture_png);
 
-    loadTexture(_skin.c_str());
+    if (startWith(_skin, "http")) {
+        loadTexture(_skin.c_str());
+    } else {
+        setTexture(_skin);
+    }
 }
 
 float CCGamePicture::getMaxScale(Node* node) {
@@ -66,4 +70,18 @@ void CCGamePicture::setOpacity(GLubyte opacity) {
         _picture_gif->setOpacity(opacity);
     if (nullptr != _picture_png)
         _picture_png->setOpacity(opacity);
+}
+
+
+bool CCGamePicture::startWith(const std::string& str, const std::string& start)
+{
+    int srclen = str.size();
+    int startlen = start.size();
+    if(srclen >= startlen)
+    {
+        string temp = str.substr(0, startlen);
+        if(temp == start)
+            return true;
+    }
+    return false;
 }

@@ -580,7 +580,6 @@ void CCGameAvatar::popChatMsgBubble(const char* content, ChatBubbleType type) {
 void CCGameAvatar::popChatPicBubble(const char *url) {
     auto _chat_picture = CCGamePicture::create(0, 0, url);
     _chat_picture->setAnchorPoint(Point::ANCHOR_MIDDLE);
-    _chat_picture->loadTexture(url);
     _chat_picture->setPosition(10 / _scale_factor + _chat_picture->getContentSize().width / 2 , 10 / _scale_factor + _chat_picture->getContentSize().height / 2 );
     completeBubble(_chat_picture, ChatBubbleType::PIC);
 }

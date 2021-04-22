@@ -23,9 +23,6 @@ private:
     static const int _CONTENT_SIZE_WIDTH_MAX = 200;
     static const int _CONTENT_SIZE_HEIGHT_MAX = 200;
 
-    static const int _CONTENT_SIZE_WIDTH_MIN = 120;
-    static const int _CONTENT_SIZE_HEIGHT_MIN = 120;
-
     string _skin;
 
 
@@ -35,6 +32,7 @@ private:
     float _scale_factor;
     void initPicture();
     float getMaxScale(Node* node);
+    bool startWith(const std::string& str, const std::string& start);
 
 
 
