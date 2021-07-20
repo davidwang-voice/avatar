@@ -24,13 +24,12 @@ THE SOFTWARE.
  ****************************************************************************/
 package org.cocos2dx.lib;
 
-import android.opengl.GLSurfaceView;
-import android.util.Log;
+import org.cocos2dx.lib.glview.GLTextureView;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-public class Cocos2dxRenderer implements GLSurfaceView.Renderer {
+public class Cocos2dxRenderer implements GLTextureView.Renderer {
     // ===========================================================
     // Constants
     // ===========================================================
@@ -114,6 +113,11 @@ public class Cocos2dxRenderer implements GLSurfaceView.Renderer {
             this.mLastTickInNanoSeconds = System.nanoTime();
             Cocos2dxRenderer.nativeRender();
         }
+    }
+
+    @Override
+    public void onSurfaceDestroyed(GL10 gl) {
+
     }
 
     // ===========================================================

@@ -36,6 +36,13 @@ extern "C" {
         return glContextAttrsJava;
     }
 
+    JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_setRoomType(JNIEnv *env, jobject thiz,
+                                                                                                    jint roomType,
+                                                                                                    jfloat topPixel) {
+
+        CCRoomDelegate::getInstance()->updateRoomType(roomType == 0 ? AUDIO : VIDEO, topPixel, 1.0);
+    }
+
     JNIEXPORT void JNICALL Java_com_iandroid_allclass_ccgame_room_CCGameRoomJNI_setDesignResolution(JNIEnv *env, jobject thiz,
                                                                              jfloat width,
                                                                              jfloat height) {

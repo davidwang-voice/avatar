@@ -6,11 +6,12 @@ import android.util.Log;
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.egl.EGLDisplay;
+import org.cocos2dx.lib.glview.GLTextureView;
 
 /**
  * Created by david on 2020/10/1.
  */
-public class CCEGLConfigChooser implements GLSurfaceView.EGLConfigChooser {
+public class CCEGLConfigChooser implements GLTextureView.EGLConfigChooser {
     private int[] mConfigAttributes;
     private  final int EGL_OPENGL_ES2_BIT = 0x04;
     private  final int EGL_OPENGL_ES3_BIT = 0x40;

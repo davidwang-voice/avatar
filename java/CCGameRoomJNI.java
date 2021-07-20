@@ -69,6 +69,14 @@ public class CCGameRoomJNI {
 
     public native int[] getGLContextAttrs();
 
+
+    /**
+     * 设置房间类型
+     * @param roomType 房间类型 0 = 音频， 1 = 视频
+     * @param topPixel 视频播放器距离屏幕顶部的距离 单位px
+     */
+    public native void setRoomType(int roomType, float topPixel);
+
     /**
      * 设置场景分辨率 默认1080 内部自适应屏幕宽度
      */

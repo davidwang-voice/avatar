@@ -50,11 +50,14 @@ public class CCGameRoomImpl implements CCGameRoomView {
         gLContextAttrs = gameRoomJNI.getGLContextAttrs();
 
         glSurfaceView = new Cocos2dxGLSurfaceView(parent.getContext());
+        glSurfaceView.setOpaque(false);
 
-        glSurfaceView.setZOrderMediaOverlay(true);
+//        glSurfaceView.setZOrderOnTop(true);
+//        glSurfaceView.setZOrderMediaOverlay(true);
 
         // this line is need on some device if we specify an alpha bits
-        if(this.gLContextAttrs[3] > 0) glSurfaceView.getHolder().setFormat(PixelFormat.TRANSLUCENT);
+//        if(this.gLContextAttrs[3] > 0)
+//            glSurfaceView.getHolder().setFormat(PixelFormat.TRANSLUCENT);
         // use custom EGLConfigureChooser
         CCEGLConfigChooser chooser = new CCEGLConfigChooser(this.gLContextAttrs);
         glSurfaceView.setEGLConfigChooser(chooser);
@@ -64,9 +67,18 @@ public class CCGameRoomImpl implements CCGameRoomView {
         runOnGLThread(() -> gameRoomJNI.init());
 
 //        glSurfaceView.setOnTouchDetector(event -> {});
-        parent.addView(glSurfaceView, new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
 
+        FrameLayout.LayoutParams layoutParams;
+        int parentWidth = parent.getWidth();
+        int parentHeight = parent.getHeight();
+        if (parentWidth > 0 && parentHeight > 0 && parentHeight > parentWidth) {
+            layoutParams = new FrameLayout.LayoutParams(parentWidth, parentHeight);
+        } else {
+            layoutParams = new FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);
+        }
+
+        parent.addView(glSurfaceView, layoutParams);
 
         Cocos2dxEngineDataManager.init(context.getApplicationContext(), glSurfaceView);
     }
@@ -144,6 +156,11 @@ public class CCGameRoomImpl implements CCGameRoomView {
         if (parentView != null && glSurfaceView != null) {
             parentView.removeView(glSurfaceView);
         }
+    }
+
+    @Override
+    public void setRoomType(int type, float topPixel) {
+        runOnGLThread(() -> gameRoomJNI.setRoomType(type, topPixel));
     }
 
     @Override

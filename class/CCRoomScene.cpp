@@ -26,7 +26,9 @@ bool CCRoomScene::init() {
 
     _stage = nullptr;
 
-    Director::getInstance()->setClearColor(cocos2d::Color4F(0, 0, 0, 1));
+    #if CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID
+        Director::getInstance()->setClearColor(cocos2d::Color4F(0, 0, 0, 0));
+    #endif
 
 //    auto visibleSize = Director::getInstance()->getVisibleSize();
 //    Vec2 origin = Director::getInstance()->getVisibleOrigin();

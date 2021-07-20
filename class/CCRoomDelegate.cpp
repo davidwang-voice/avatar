@@ -52,6 +52,16 @@ void CCRoomDelegate::init() {
     std::random_shuffle(this->_randomPosition.begin(), this->_randomPosition.end());
 }
 
+void CCRoomDelegate::updateRoomType(RoomType type, float topMargin, float scale) {
+    this->_player_to_top_margin = topMargin;
+    this->_roomType = type;
+    //根据播放器距离屏幕顶部的距离计算背景图的偏移量
+    this->_bg_to_top_offset = _VIDEO_PLAYER_TO_BG_TOP - (topMargin * scale)/_ratio;
+    
+    //视频房舞台相对音频的偏移量
+    this->_video_stage_offset = (topMargin * scale) / _ratio + (_VIDEO_PLAYER_HEIGHT + _VIDEO_PLAYER_TO_STAND - _AUDIO_GIFT_TABLE_TO_TOP_MARGIN) / _scaleFactor;
+}
+
 void CCRoomDelegate::attachScene(Scene* scene) {
     log("delegate: attach scene.");
     this->_is_attached = true;
@@ -60,9 +70,9 @@ void CCRoomDelegate::attachScene(Scene* scene) {
     this->_visibleSize = Director::getInstance()->getVisibleSize();
     this->_scaleFactor = Director::getInstance()->getContentScaleFactor();
     this->_centerPosition = Vec2(_visibleOrigin.x + _visibleSize.width / 2, _visibleOrigin.y + _visibleSize.height);
-
-//    auto size = Director::getInstance()->getOpenGLView()->getFrameSize();
-
+    
+    auto size = Director::getInstance()->getOpenGLView()->getFrameSize();
+    this->_ratio = size.width / this->_visibleSize.width;
 
     for (int i = 0; i < _STAND_MAX_ROW_COUNT; ++i) {
         if (i == 0) {
@@ -75,6 +85,9 @@ void CCRoomDelegate::attachScene(Scene* scene) {
 }
 
 void CCRoomDelegate::ensureStageSteps() {
+    if (this->_roomType == RoomType::VIDEO) {
+        return;
+    }
     if (_stageSteps.empty()) {
         for (int i = 0; i < _STAGE_BLOCK_COUNT; ++i) {
             auto _stage_step = CCGameStep::create(i, i, "");
@@ -167,14 +180,19 @@ void CCRoomDelegate::setStageBackground(const char *url) {
         return;
     }
 
+    const char *placeHolder = "cocos/bg_game_room.png";
+    if (this->_roomType == RoomType::VIDEO) {
+        placeHolder = "cocos/bg_video_avatar.png";
+    }
     if (strcmp("placeholder", url) == 0) {
-        _stage_background->loadTexture("", "cocos/bg_game_room.png");
+        _stage_background->loadTexture("", placeHolder);
     } else {
-        _stage_background->loadTexture(url, "cocos/bg_game_room.png");
+        _stage_background->loadTexture(url, placeHolder);
     }
 
+    float _bg_offset = this->_roomType == VIDEO ? _bg_to_top_offset : 0;
     float _target_x = _centerPosition.x;
-    float _target_y = _centerPosition.y - _stage_background->getContentSize().height / 2;
+    float _target_y = _centerPosition.y - _stage_background->getContentSize().height / 2 + _bg_offset;
     _stage_background->setPosition(Vec2(_target_x, _target_y));
 
     ensureStageSteps();
@@ -356,6 +374,9 @@ void CCRoomDelegate::updateTargetAvatar(const char *json) {
 }
 
 void CCRoomDelegate::updateStageAvatars(const char* json) {
+    if (this->_roomType == RoomType::VIDEO) {
+        return;
+    }
     if (isApplicationReleased("updateStageAvatars")) return;
     if (isApplicationInvalid("updateStageAvatars")) {
         _stageCache = json;
@@ -899,7 +920,8 @@ const Vec2 CCRoomDelegate::getStagePosition(int index) const {
 const Vec2 CCRoomDelegate::getStandPosition(int index) const {
 
     int _row = -1;
-    for (int i = 0; i < _STAND_MAX_ROW_COUNT; ++i) {
+    int _max_row_count = this->_roomType == VIDEO ? _VIDEO_STAND_MAX_ROW_COUNT : _STAND_MAX_ROW_COUNT;
+    for (int i = 0; i < _max_row_count; ++i) {
         if (index < _standRowCount[i]) {
             _row = i;
             break;
@@ -911,8 +933,9 @@ const Vec2 CCRoomDelegate::getStandPosition(int index) const {
     int _count = _row == 0 ? _standRowCount[0] : _standRowCount[_row] - _standRowCount[_row - 1];
     float _block_w = (float) _visibleSize.width / _count;
 
+    float _stage_offset = this->_roomType == VIDEO ? _video_stage_offset : 0;
     float _refer_x = _centerPosition.x;
-    float _refer_y = _centerPosition.y - _STAND_FRONT_ROW_TOP / _scaleFactor -
+    float _refer_y = _centerPosition.y - _STAND_FRONT_ROW_TOP / _scaleFactor - _stage_offset -
             (_row == 0 ? 0 : (_STAND_FRONT_ROW_HEIGHT + (_row - 1) * _STAND_ROW_HEIGHT) / _scaleFactor);
     float _arc_seg = _STAND_ARC_HEIGHT / (_count / 2) / _scaleFactor;
 
@@ -938,12 +961,13 @@ const Vec2 CCRoomDelegate::getSelfPosition() const {
 
 const Vec2 CCRoomDelegate::getGiftPosition(int type) const {
 
+    float _stage_offset = this->_roomType == VIDEO ? _video_stage_offset : 0;
     if (type == CCGameGift::_GIFT_TYPE_BIGGER) {
         int _index = _big_gift_cursor % _B_GIFT_HOLDER_SIZE;
         _big_gift_cursor = (_big_gift_cursor + 1) % _B_GIFT_HOLDER_SIZE;
 
         auto _position =_randomPosition[_index];
-        return Vec2(_position.x , _centerPosition.y - _position.y);
+        return Vec2(_position.x , _centerPosition.y - _position.y - _stage_offset);
     }
 
     float _coord_x = _GIFT_TABLE_WIDTH / _scaleFactor / 2;
@@ -960,7 +984,7 @@ const Vec2 CCRoomDelegate::getGiftPosition(int type) const {
 //    float _result_y_l = std::sqrt((1 - _rand_x * _rand_x / _coord_x / _coord_x) * _coord_y_l * _coord_y_l);
 
     float _target_x = _rand_x + _centerPosition.x;
-    float _target_y = _centerPosition.y - (_GIFT_TABLE_TOP / _scaleFactor + _rand_y);
+    float _target_y = _centerPosition.y - ((_GIFT_TABLE_TOP + _stage_offset) / _scaleFactor + _rand_y);
 
     return Vec2(_target_x , _target_y);
 }

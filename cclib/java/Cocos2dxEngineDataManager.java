@@ -30,6 +30,7 @@ import android.content.Context;
 import android.opengl.GLSurfaceView;
 import android.os.Handler;
 import android.util.Log;
+import org.cocos2dx.lib.glview.GLTextureView;
 
 import org.cocos2dx.enginedata.EngineDataManager;
 import org.cocos2dx.enginedata.IEngineDataManager;
@@ -68,7 +69,7 @@ public class Cocos2dxEngineDataManager {
     }
 
     // Lifecycle functions
-    public static boolean init(Context context, final GLSurfaceView glSurfaceView) {
+    public static boolean init(Context context, final GLTextureView glSurfaceView) {
         if (context == null) {
             Log.e(TAG, "Context is null");
             return false;

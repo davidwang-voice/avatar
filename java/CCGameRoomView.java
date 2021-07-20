@@ -18,6 +18,8 @@ public interface CCGameRoomView {
 
     void release();
 
+    void setRoomType(int type, float topPixel);
+
     void setBackground(String url);
 
     void setupGiftHeap(String json);

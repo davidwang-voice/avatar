@@ -27,17 +27,18 @@ package org.cocos2dx.lib;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
-import android.opengl.GLSurfaceView;
 import android.os.Handler;
 import android.os.Message;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
-public class Cocos2dxGLSurfaceView extends GLSurfaceView {
+import org.cocos2dx.lib.glview.GLTextureView;
+
+
+public class Cocos2dxGLSurfaceView extends GLTextureView {
     // ===========================================================
     // Constants
     // ===========================================================

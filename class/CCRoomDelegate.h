@@ -34,6 +34,8 @@ typedef struct {
     bool wave;
 } _Avatar_I;
 
+//房间舞台类型
+enum RoomType {AUDIO, VIDEO};
 
 class CCRoomDelegate {
 
@@ -50,6 +52,7 @@ private:
 
     static const int _STAND_ARC_HEIGHT = 66;
     static const int _STAND_MAX_ROW_COUNT = 6;
+    static const int _VIDEO_STAND_MAX_ROW_COUNT = 4;
     static const int _STAND_MAX_COLUMN_COUNT = 11;
     static const int _STAND_ROW_HEIGHT = 135;
     static const int _STAND_FRONT_ROW_HEIGHT = 135;
@@ -75,6 +78,11 @@ private:
 
     static const int _NONE_SPACE_X = 100;
     static const int _NONE_SPACE_Y = 1600;
+    
+    static const int _VIDEO_PLAYER_HEIGHT = 630;//视频播放器高度
+    static const int _VIDEO_PLAYER_TO_STAND = 75;//视频播放器底部距离礼物舞台顶部的距离
+    static const int _AUDIO_GIFT_TABLE_TO_TOP_MARGIN = 840;
+    static const int _VIDEO_PLAYER_TO_BG_TOP = 690;//视频播放器距离背景图顶部距离
 
     std::vector<Vec2> _randomPosition {
             Vec2(186, 897),
@@ -89,6 +97,11 @@ private:
 
     bool _is_attached = false;
     bool _is_released = true;
+    float _player_to_top_margin = 0;//播放器距离顶部的距离
+    float _bg_to_top_offset = 0;//背景距离顶部的偏移量
+    float _video_stage_offset = 0;//视频房舞台相对音频的偏移量
+    float _ratio = 1; //缩放比例
+    RoomType _roomType = RoomType::AUDIO; //房间类型 默认音频
     Scene* _scene;
     Vec2 _visibleOrigin = Vec2::ZERO;
     CCSize _visibleSize = CCSize::ZERO;
@@ -174,6 +187,8 @@ public:
     void resumeFromCache();
     void pause();
 
+    // topMargin 视频播放器距顶部的距离
+    void updateRoomType(RoomType type, float topMargin, float scale);
     void setStageBackground(const char* url);
     void setupStageGiftHeap(const char* json);
     void updateSelfAvatar(const char* json);
