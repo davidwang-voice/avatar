@@ -27,6 +27,15 @@ void CCGameStep::initStep() {
 //    setTexture("bg_stage_step.png");
     setAnchorPoint(Point::ANCHOR_MIDDLE_BOTTOM);
 
+
+
+    auto _step_base = CCBaseSprite::create();
+    _step_base->setTexture("cocos/step_base.png");
+    _step_base->setAnchorPoint(Point::ANCHOR_MIDDLE_TOP);
+    _step_base->setPosition(Vec2(getContentSize().width / 2, 100 / _scale_factor));
+    this->addChild(_step_base, 1, _TAG_STEP_BASE);
+
+
     auto _step_place = Sprite::create();
     _step_place->setTexture("cocos/anim/wave_ani_1.png");
     _step_place->setAnchorPoint(Point::ANCHOR_MIDDLE);
@@ -44,14 +53,16 @@ void CCGameStep::initStep() {
 
 
 
-    auto _step_label = Label::createWithSystemFont("連麥", "Arial", 24 / _scale_factor);
+    auto _step_label = Label::createWithSystemFont("连麦", "Arial", 24 / _scale_factor);
     _step_label->setOverflow(Label::Overflow::CLAMP);
     _step_label->setAnchorPoint(Point::ANCHOR_MIDDLE);
     _step_label->setPosition(_step_place->getPosition());
     _step_label->setTextColor(Color4B(255,255,255,255));
     this->addChild(_step_label, 1, _TAG_STEP_LABEL);
 
+
     setUid("");
+    setBase("");
     setMute(false);
 }
 
@@ -115,6 +126,19 @@ void CCGameStep::setUid(const char *uid) {
 
 const char* CCGameStep::getUid() {
     return this->_uid.c_str();
+}
+
+void CCGameStep::setBase(const char *base) {
+
+    string _base_url(base);
+    if (auto _step_base = dynamic_cast<CCBaseSprite *>(this->getChildByTag(_TAG_STEP_BASE))) {
+
+        if (_base_url.empty()) {
+            _step_base->setTexture("cocos/step_base.png");
+        } else {
+            _step_base->loadTexture(_base_url.c_str(), "cocos/step_base.png");
+        }
+    }
 }
 
 bool CCGameStep::onTouchBegan(Touch *touch, Event *event) {

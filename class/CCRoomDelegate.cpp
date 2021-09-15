@@ -407,6 +407,7 @@ void CCRoomDelegate::updateStageAvatars(const char* json) {
         const char *_url = cocostudio::DICTOOL->getStringValue_json(_value, "url", "");
         const char *_uid = cocostudio::DICTOOL->getStringValue_json(_value, "uid", "");
         const char *_name = cocostudio::DICTOOL->getStringValue_json(_value, "name", "");
+        const char *_base = cocostudio::DICTOOL->getStringValue_json(_value, "base", "");
 
         int _rare = cocostudio::DICTOOL->getIntValue_json(_value, "rare");
         int _guard = cocostudio::DICTOOL->getIntValue_json(_value, "guard");
@@ -442,6 +443,7 @@ void CCRoomDelegate::updateStageAvatars(const char* json) {
 
         auto _stageStep = _stageSteps.at(i);
         _stageStep->setUid(_uid);
+        _stageStep->setBase(_base);
         _stageStep->setMute(_mute);
     }
 

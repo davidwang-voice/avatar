@@ -18,7 +18,8 @@ private:
     static const int _TAG_WAVE_ANIM_ACTION = 1001;
     static const int _TAG_STEP_PLACE = 100;
     static const int _TAG_STEP_ADD = 101;
-    static const int _TAG_STEP_LABEL = 102;
+    static const int _TAG_STEP_BASE = 102;
+    static const int _TAG_STEP_LABEL = 103;
 
     static const int _CONTENT_SIZE_WIDTH = 125;
     static const int _CONTENT_SIZE_HEIGHT = 195;
@@ -39,6 +40,7 @@ public:
     void runVoiceWave();
     void setMute(bool mute);
     void setUid(const char *uid);
+    void setBase(const char *base);
     const char* getUid();
 
     void bindTargetNode(EventListener *listener) override;
